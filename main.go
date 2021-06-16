@@ -11,6 +11,10 @@ import (
 )
 
 func main() {
+	initializeGowid()
+}
+
+func initializeGowid() {
 	palette := gowid.Palette{
 		"title": gowid.MakePaletteEntry(gowid.ColorWhite, gowid.ColorBlack),
 		"key":   gowid.MakePaletteEntry(gowid.ColorCyan, gowid.ColorBlack),
