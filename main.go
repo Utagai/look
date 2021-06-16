@@ -1,6 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"flag"
+	"io/ioutil"
+	"log"
+	"os"
+
 	"github.com/gcla/gowid"
 	"github.com/gcla/gowid/examples"
 	"github.com/gcla/gowid/widgets/list"
@@ -10,11 +16,50 @@ import (
 	"github.com/utagai/look/data"
 )
 
-func main() {
-	initializeGowid()
+type Config struct {
+	source *os.File
 }
 
-func initializeGowid() {
+func main() {
+	cfg := getConfig()
+	bytes, err := ioutil.ReadAll(cfg.source)
+	if err != nil {
+		log.Fatalf("failed to read all the bytes from the source (%q): %v", cfg.source.Name(), err)
+	}
+
+	datums := []data.Datum{}
+	if err := json.Unmarshal(bytes, &datums); err != nil {
+		log.Fatalf("failed to unmarshal data into JSON: %v", err)
+	}
+
+	initializeGowid(data.NewMemoryData(datums))
+}
+
+func getConfig() *Config {
+	sourcePtr := flag.String("source", "", "the source of data")
+
+	flag.Parse()
+
+	if *sourcePtr == "" {
+		log.Fatalf("must specify a source of data")
+	}
+
+	source := *sourcePtr
+	fi := os.Stdin
+	var err error
+	if source != "-" {
+		fi, err = os.Open(source)
+		if err != nil {
+			log.Fatalf("failed to open source (%q): %v", source, err)
+		}
+	}
+
+	return &Config{
+		source: fi,
+	}
+}
+
+func initializeGowid(d data.Data) {
 	palette := gowid.Palette{
 		"title": gowid.MakePaletteEntry(gowid.ColorWhite, gowid.ColorBlack),
 		"key":   gowid.MakePaletteEntry(gowid.ColorCyan, gowid.ColorBlack),
@@ -49,15 +94,7 @@ func initializeGowid() {
 
 	footerText := styled.New(text.NewFromContent(text.NewContent(footerContent)), foot)
 
-	datums := make([]data.Datum, 100)
-	for i := range datums {
-		datums[i] = map[string]interface{}{
-			"foo": "bar",
-			"a":   i,
-		}
-	}
-	memData := data.NewMemoryData(datums)
-	walker := data.NewDataWalker(memData)
+	walker := data.NewDataWalker(d)
 	lb := list.NewBounded(walker)
 	styledLb := styled.New(lb, body)
 
