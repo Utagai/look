@@ -9,6 +9,8 @@ import (
 
 	"github.com/gcla/gowid"
 	"github.com/gcla/gowid/examples"
+	"github.com/gcla/gowid/widgets/divider"
+	"github.com/gcla/gowid/widgets/edit"
 	"github.com/gcla/gowid/widgets/list"
 	"github.com/gcla/gowid/widgets/pile"
 	"github.com/gcla/gowid/widgets/styled"
@@ -98,7 +100,23 @@ func initializeGowid(d data.Data) {
 	lb := list.NewBounded(walker)
 	styledLb := styled.New(lb, body)
 
+	textbox := edit.New(edit.Options{Caption: "Query: "})
+	textbox.OnTextSet(gowid.WidgetCallback{
+		Name: "on query text change",
+		WidgetChangedFunction: func(app gowid.IApp, w gowid.IWidget) {
+			lb.SetWalker(data.NewDataWalker(d.Find(textbox.Text())), app)
+		},
+	})
+
 	view := pile.New([]gowid.IContainerWidget{
+		&gowid.ContainerWidget{
+			IWidget: textbox,
+			D:       gowid.RenderFlow{},
+		},
+		&gowid.ContainerWidget{
+			IWidget: divider.NewAscii(),
+			D:       gowid.RenderFlow{},
+		},
 		&gowid.ContainerWidget{
 			IWidget: styledLb,
 			D:       gowid.RenderWithWeight{W: 1},
