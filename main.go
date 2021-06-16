@@ -66,7 +66,7 @@ func initializeGowid(d data.Data) {
 		"title": gowid.MakePaletteEntry(gowid.ColorWhite, gowid.ColorBlack),
 		"key":   gowid.MakePaletteEntry(gowid.ColorCyan, gowid.ColorBlack),
 		"foot":  gowid.MakePaletteEntry(gowid.ColorWhite, gowid.ColorBlack),
-		"body":  gowid.MakePaletteEntry(gowid.ColorBlack, gowid.ColorCyan),
+		"body":  gowid.MakePaletteEntry(gowid.ColorWhite, gowid.ColorNone),
 		"fbody": gowid.MakePaletteEntry(gowid.ColorWhite, gowid.ColorBlack),
 	}
 
