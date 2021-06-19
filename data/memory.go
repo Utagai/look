@@ -1,11 +1,16 @@
 package data
 
-import "strings"
+import (
+	"context"
+	"strings"
+)
 
 // MemoryData is a data that lives entirely in memory.
 type MemoryData struct {
 	data []Datum
 }
+
+var _ Data = (*MemoryData)(nil)
 
 func NewMemoryData(data []Datum) *MemoryData {
 	return &MemoryData{
@@ -13,26 +18,24 @@ func NewMemoryData(data []Datum) *MemoryData {
 	}
 }
 
-var _ Data = (*MemoryData)(nil)
-
-func (md *MemoryData) Find(q string) Data {
-	newDatums := make([]Datum, 0, md.Length())
+func (md *MemoryData) Find(_ context.Context, q string) (Data, error) {
+	newDatums := make([]Datum, 0, len(md.data))
 	for _, datum := range md.data {
 		if strings.Contains(datum.String(), q) {
 			newDatums = append(newDatums, datum)
 		}
 	}
-	return NewMemoryData(newDatums)
+	return NewMemoryData(newDatums), nil
 }
 
-func (md *MemoryData) At(index int) (Datum, bool) {
+func (md *MemoryData) At(_ context.Context, index int) (Datum, error) {
 	if index >= len(md.data) || index < 0 {
-		return nil, false
+		return nil, ErrOutOfBounds
 	}
 
-	return md.data[index], true
+	return md.data[index], nil
 }
 
-func (md *MemoryData) Length() int {
-	return len(md.data)
+func (md *MemoryData) Length(context.Context) (int, error) {
+	return len(md.data), nil
 }
