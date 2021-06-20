@@ -11,12 +11,14 @@ import (
 
 	"github.com/gcla/gowid"
 	"github.com/gcla/gowid/examples"
-	"github.com/gcla/gowid/widgets/divider"
 	"github.com/gcla/gowid/widgets/edit"
+	"github.com/gcla/gowid/widgets/framed"
+	"github.com/gcla/gowid/widgets/holder"
 	"github.com/gcla/gowid/widgets/list"
 	"github.com/gcla/gowid/widgets/pile"
 	"github.com/gcla/gowid/widgets/styled"
 	"github.com/gcla/gowid/widgets/text"
+	"github.com/gcla/gowid/widgets/vpadding"
 	"github.com/utagai/look/data"
 )
 
@@ -144,27 +146,36 @@ func initializeGowid(d data.Data) {
 	styledLb := styled.New(lb, body)
 
 	textbox := edit.New(edit.Options{Caption: "Query: "})
+
+	framedTextboxValid := framed.New(textbox, framed.Options{
+		Frame: framed.UnicodeFrame,
+		Style: gowid.MakeForeground(gowid.ColorGreen),
+	})
+	framedTextboxInvalid := framed.New(textbox, framed.Options{
+		Frame: framed.UnicodeFrame,
+		Style: gowid.MakeForeground(gowid.ColorRed),
+	})
+
+	textboxHolder := holder.New(framedTextboxValid)
 	textbox.OnTextSet(gowid.WidgetCallback{
 		Name: "on query text change",
 		WidgetChangedFunction: func(app gowid.IApp, w gowid.IWidget) {
 			newData, err := d.Find(context.Background(), textbox.Text())
 			if errors.Is(err, data.ErrUnableToParseQuery) {
 				log.Printf("incomplete query: %q", textbox.Text())
+				textboxHolder.SetSubWidget(framedTextboxInvalid, app)
 				return
 			} else if err != nil {
 				log.Fatalf("failed to construct the new data: %v", err)
 			}
+			textboxHolder.SetSubWidget(framedTextboxValid, app)
 			lb.SetWalker(data.NewDataWalker(newData), app)
 		},
 	})
 
 	view := pile.New([]gowid.IContainerWidget{
 		&gowid.ContainerWidget{
-			IWidget: textbox,
-			D:       gowid.RenderFlow{},
-		},
-		&gowid.ContainerWidget{
-			IWidget: divider.NewAscii(),
+			IWidget: vpadding.New(textboxHolder, gowid.VAlignMiddle{}, gowid.RenderFlow{}),
 			D:       gowid.RenderFlow{},
 		},
 		&gowid.ContainerWidget{
