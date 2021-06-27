@@ -20,6 +20,7 @@ import (
 	"github.com/gcla/gowid/widgets/text"
 	"github.com/gcla/gowid/widgets/vpadding"
 	"github.com/utagai/look/data"
+	"github.com/utagai/look/datum"
 )
 
 type BackendType string
@@ -46,7 +47,7 @@ func main() {
 		log.Fatalf("failed to read all the bytes from the source (%q): %v", cfg.Source.Name(), err)
 	}
 
-	datums := []data.Datum{}
+	datums := []datum.Datum{}
 	// TODO: We should probably do something more abstracted here than just
 	// auto-unmarshalling from JSON.
 	if err := json.Unmarshal(bytes, &datums); err != nil {

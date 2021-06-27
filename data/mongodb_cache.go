@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/utagai/look/datum"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -73,7 +74,7 @@ type indexableResult struct {
 	coll      *mongo.Collection
 }
 
-func (ir *indexableResult) At(ctx context.Context, index int) (Datum, error) {
+func (ir *indexableResult) At(ctx context.Context, index int) (datum.Datum, error) {
 	// $skip cannot take a negative value.
 	if index < 0 {
 		return nil, ErrOutOfBounds
@@ -101,7 +102,7 @@ func (ir *indexableResult) At(ctx context.Context, index int) (Datum, error) {
 		return nil, ErrOutOfBounds
 	}
 
-	var datum Datum
+	var datum datum.Datum
 	if err := cursor.Decode(&datum); err != nil {
 		return nil, fmt.Errorf("failed to decode datum: %w", err)
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/gcla/gowid/widgets/palettemap"
 	"github.com/gcla/gowid/widgets/selectable"
 	"github.com/gcla/gowid/widgets/text"
+	"github.com/utagai/look/datum"
 )
 
 // DataWalker is a gowid List walker for Data.
@@ -53,7 +54,7 @@ func (f *DataWalker) Last() list.IWalkerPosition {
 	return list.ListPos(length - 1)
 }
 
-func createWidgetFor(datum Datum) gowid.IWidget {
+func createWidgetFor(datum datum.Datum) gowid.IWidget {
 	var res gowid.IWidget
 	res = selectable.New(
 		palettemap.New(

@@ -2,8 +2,9 @@ package data
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
+
+	"github.com/utagai/look/datum"
 )
 
 var (
@@ -16,20 +17,7 @@ var (
 type Data interface {
 	// At returns the datum at the given index. If the given index is
 	// out-of-bounds (< 0 || > .Length()), then this should return (nil, false).
-	At(ctx context.Context, index int) (Datum, error)
+	At(ctx context.Context, index int) (datum.Datum, error)
 	Find(ctx context.Context, query string) (Data, error)
 	Length(context.Context) (int, error)
-}
-
-// Datum is a JSON object.
-type Datum map[string]interface{}
-
-func (d Datum) String() string {
-	jsonString, err := json.Marshal(d)
-	if err != nil {
-		// TODO: Should we handle this a bit better?
-		panic(err)
-	}
-
-	return string(jsonString)
 }

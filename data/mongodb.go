@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/utagai/look/datum"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -35,7 +36,7 @@ var _ Data = (*MongoDBData)(nil)
 // Note that as per the official MongoDB driver behavior, the database &
 // collection specified in the URI are not respected, and therefore this
 // constructor simply uses the namespace look.{collName}.
-func NewMongoDBData(uri, dbName, collName string, datums []Datum) (*MongoDBData, error) {
+func NewMongoDBData(uri, dbName, collName string, datums []datum.Datum) (*MongoDBData, error) {
 	ctx := context.Background()
 
 	connCtx, cancel := context.WithTimeout(ctx, maxMongoDBConnectWaitTime)
@@ -64,7 +65,7 @@ func NewMongoDBData(uri, dbName, collName string, datums []Datum) (*MongoDBData,
 	}, nil
 }
 
-func loadDataIntoMongoDB(ctx context.Context, coll *mongo.Collection, datums []Datum) error {
+func loadDataIntoMongoDB(ctx context.Context, coll *mongo.Collection, datums []datum.Datum) error {
 	coll.Drop(ctx)
 	datumInterfaces := make([]interface{}, len(datums))
 	for i, datum := range datums {
@@ -78,7 +79,7 @@ func loadDataIntoMongoDB(ctx context.Context, coll *mongo.Collection, datums []D
 	return nil
 }
 
-func (md *MongoDBData) At(ctx context.Context, index int) (Datum, error) {
+func (md *MongoDBData) At(ctx context.Context, index int) (datum.Datum, error) {
 	if datum, err := md.resultSet.At(ctx, index); err != nil {
 		return nil, fmt.Errorf("failed to retrieve datum from the cache: %v", err)
 	} else {

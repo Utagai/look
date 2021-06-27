@@ -2,33 +2,36 @@ package data
 
 import (
 	"context"
-	"strings"
+	"fmt"
+
+	"github.com/utagai/look/datum"
+	"github.com/utagai/look/query"
 )
 
 // MemoryData is a data that lives entirely in memory.
 type MemoryData struct {
-	data []Datum
+	data     []datum.Datum
+	executor query.Executor
 }
 
 var _ Data = (*MemoryData)(nil)
 
-func NewMemoryData(data []Datum) *MemoryData {
+func NewMemoryData(data []datum.Datum) *MemoryData {
 	return &MemoryData{
-		data: data,
+		data:     data,
+		executor: query.NewSubstringQueryExecutor(),
 	}
 }
 
 func (md *MemoryData) Find(_ context.Context, q string) (Data, error) {
-	newDatums := make([]Datum, 0, len(md.data))
-	for _, datum := range md.data {
-		if strings.Contains(datum.String(), q) {
-			newDatums = append(newDatums, datum)
-		}
+	datums, err := md.executor.Find(q, md.data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute %q: %w", q, err)
 	}
-	return NewMemoryData(newDatums), nil
+	return NewMemoryData(datums), nil
 }
 
-func (md *MemoryData) At(_ context.Context, index int) (Datum, error) {
+func (md *MemoryData) At(_ context.Context, index int) (datum.Datum, error) {
 	if index >= len(md.data) || index < 0 {
 		return nil, ErrOutOfBounds
 	}
