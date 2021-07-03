@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -134,42 +135,62 @@ func initializeGowid(d data.Data) {
 	lb := list.NewBounded(walker)
 	styledLb := styled.New(lb, body)
 
-	textbox := edit.New(edit.Options{Caption: "Query: "})
+	queryTextbox := edit.New(edit.Options{Caption: "Query: "})
 
-	framedTextboxValid := framed.New(textbox, framed.Options{
+	framedQueryTextboxValid := framed.New(queryTextbox, framed.Options{
 		Frame: framed.UnicodeFrame,
 		Style: gowid.MakeForeground(gowid.ColorGreen),
 	})
-	framedTextboxInvalid := framed.New(textbox, framed.Options{
+	framedQueryTextboxInvalid := framed.New(queryTextbox, framed.Options{
 		Frame: framed.UnicodeFrame,
 		Style: gowid.MakeForeground(gowid.ColorRed),
 	})
 
-	textboxHolder := holder.New(framedTextboxValid)
-	textbox.OnTextSet(gowid.WidgetCallback{
+	queryStatusTextbox := edit.New(edit.Options{Text: "Done."})
+
+	framedQueryStatusTextboxValid := framed.New(queryStatusTextbox, framed.Options{
+		Frame: framed.UnicodeFrame,
+		Style: gowid.MakeForeground(gowid.ColorGreen),
+	})
+	framedQueryStatusTextboxInvalid := framed.New(queryStatusTextbox, framed.Options{
+		Frame: framed.UnicodeFrame,
+		Style: gowid.MakeForeground(gowid.ColorRed),
+	})
+	queryStatusTextboxHolder := holder.New(framedQueryStatusTextboxValid)
+
+	queryTextboxHolder := holder.New(framedQueryTextboxValid)
+	queryTextbox.OnTextSet(gowid.WidgetCallback{
 		Name: "on query text change",
 		WidgetChangedFunction: func(app gowid.IApp, w gowid.IWidget) {
-			newData, err := d.Find(context.Background(), textbox.Text())
+			newData, err := d.Find(context.Background(), queryTextbox.Text())
 			if errors.Is(err, query.ErrUnableToParseQuery) {
-				log.Printf("incomplete query: %q", textbox.Text())
-				textboxHolder.SetSubWidget(framedTextboxInvalid, app)
+				log.Printf("incomplete query: %q", queryTextbox.Text())
+				queryTextboxHolder.SetSubWidget(framedQueryTextboxInvalid, app)
+				queryStatusTextboxHolder.SetSubWidget(framedQueryStatusTextboxInvalid, app)
+				queryStatusTextbox.SetText(fmt.Sprintf("failed to execute query:\n%v", err), app)
 				return
 			} else if err != nil {
 				log.Fatalf("failed to construct the new data: %v", err)
 			}
-			textboxHolder.SetSubWidget(framedTextboxValid, app)
+			queryTextboxHolder.SetSubWidget(framedQueryTextboxValid, app)
+			queryStatusTextboxHolder.SetSubWidget(framedQueryStatusTextboxValid, app)
+			queryStatusTextbox.SetText("Done", app)
 			lb.SetWalker(data.NewDataWalker(newData), app)
 		},
 	})
 
 	view := pile.New([]gowid.IContainerWidget{
 		&gowid.ContainerWidget{
-			IWidget: vpadding.New(textboxHolder, gowid.VAlignMiddle{}, gowid.RenderFlow{}),
+			IWidget: vpadding.New(queryTextboxHolder, gowid.VAlignMiddle{}, gowid.RenderFlow{}),
 			D:       gowid.RenderFlow{},
 		},
 		&gowid.ContainerWidget{
 			IWidget: styledLb,
 			D:       gowid.RenderWithWeight{W: 1},
+		},
+		&gowid.ContainerWidget{
+			IWidget: vpadding.New(queryStatusTextboxHolder, gowid.VAlignMiddle{}, gowid.RenderFlow{}),
+			D:       gowid.RenderFlow{},
 		},
 		&gowid.ContainerWidget{
 			IWidget: footerText,
