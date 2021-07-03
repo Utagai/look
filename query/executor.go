@@ -1,6 +1,12 @@
 package query
 
-import "github.com/utagai/look/datum"
+import (
+	"errors"
+
+	"github.com/utagai/look/datum"
+)
+
+var ErrUnableToParseQuery = errors.New("unable to parse the given query")
 
 // Executor executes a given query string on a set of datums and returns a
 // resulting set of datums.

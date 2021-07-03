@@ -1,6 +1,8 @@
 package datum
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // Datum is a JSON object.
 type Datum map[string]interface{}
@@ -13,8 +15,4 @@ func (d Datum) String() string {
 	}
 
 	return string(jsonString)
-}
-
-type DatumStream interface {
-	Next() (Datum, error)
 }

@@ -89,6 +89,7 @@ type FindStream struct {
 // Next implements the datum.DatumStream interface.
 func (fs *FindStream) Next() (datum.Datum, error) {
 	// Keep iterating the stream until something passes the checks.
+outer:
 	for {
 		datum, err := fs.source.Next()
 		if err != nil {
@@ -98,8 +99,7 @@ func (fs *FindStream) Next() (datum.Datum, error) {
 		for _, check := range fs.Find.Checks {
 			// If we failed, move onto the next datum.
 			if !check.Evaluate(datum) {
-				continue
-
+				continue outer
 			}
 		}
 
@@ -140,5 +140,6 @@ func (s *Sort) Execute(datums datum.DatumStream) (datum.DatumStream, error) {
 }
 
 type Stage interface {
+	// TODO: This should be decoupled from the AST.
 	Execute(datum.DatumStream) (datum.DatumStream, error)
 }

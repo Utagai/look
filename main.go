@@ -21,6 +21,7 @@ import (
 	"github.com/gcla/gowid/widgets/vpadding"
 	"github.com/utagai/look/data"
 	"github.com/utagai/look/datum"
+	"github.com/utagai/look/query"
 )
 
 type BackendType string
@@ -149,7 +150,7 @@ func initializeGowid(d data.Data) {
 		Name: "on query text change",
 		WidgetChangedFunction: func(app gowid.IApp, w gowid.IWidget) {
 			newData, err := d.Find(context.Background(), textbox.Text())
-			if errors.Is(err, data.ErrUnableToParseQuery) {
+			if errors.Is(err, query.ErrUnableToParseQuery) {
 				log.Printf("incomplete query: %q", textbox.Text())
 				textboxHolder.SetSubWidget(framedTextboxInvalid, app)
 				return

@@ -29,6 +29,7 @@ const (
 	TokenEOF    = scanner.EOF
 )
 
+// TODO: Should test this for exhaustiveness...
 func (t Token) String() string {
 	switch t {
 	case TokenStageSeparator:

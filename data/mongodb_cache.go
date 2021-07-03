@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/utagai/look/datum"
+	"github.com/utagai/look/query"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -38,7 +39,7 @@ func newMongoDBDataCache(sourceDB *mongo.Database, sourceColl *mongo.Collection,
 func (m *mongoDBDataCache) newQuery(ctx context.Context, q string) error {
 	pipeline := []bson.M{}
 	if err := bson.UnmarshalExtJSON([]byte(q), true, &pipeline); err != nil {
-		return fmt.Errorf("%q: %w: %v", q, ErrUnableToParseQuery, err)
+		return fmt.Errorf("%q: %w: %v", q, query.ErrUnableToParseQuery, err)
 	}
 	pipelineHex := hex.EncodeToString([]byte(q))
 	outPipeline := append(pipeline, bson.M{"$out": pipelineHex})

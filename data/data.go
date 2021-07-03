@@ -8,8 +8,7 @@ import (
 )
 
 var (
-	ErrOutOfBounds        = errors.New("index out of bounds")
-	ErrUnableToParseQuery = errors.New("unable to parse the given query")
+	ErrOutOfBounds = errors.New("index out of bounds")
 )
 
 // Data is an in-memory group of JSON items.
