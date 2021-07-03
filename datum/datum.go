@@ -14,3 +14,7 @@ func (d Datum) String() string {
 
 	return string(jsonString)
 }
+
+type DatumStream interface {
+	Next() (Datum, error)
+}
