@@ -122,22 +122,9 @@ func initializeGowid(d data.Data) {
 	body := gowid.MakePaletteRef("body")
 
 	footerContent := []text.ContentSegment{
-		text.StyledContent("Data Viewer", title),
-		text.StringContent("    "),
-		text.StyledContent("UP", key),
-		text.StringContent(", "),
-		text.StyledContent("DOWN", key),
-		text.StringContent(", "),
-		text.StyledContent("PAGE_UP", key),
-		text.StringContent(", "),
-		text.StyledContent("PAGE_DOWN", key),
-		text.StringContent(", "),
-		text.StyledContent("HOME", key),
-		text.StringContent(", "),
-		text.StyledContent("CTRL-L", key),
-		text.StringContent(" move view  "),
-		text.StyledContent("Q", key),
-		text.StringContent(" exits. Try the mouse wheel."),
+		text.StyledContent("look | ", title),
+		text.StyledContent("ESC", key),
+		text.StringContent(" exits."),
 	}
 
 	footerText := styled.New(text.NewFromContent(text.NewContent(footerContent)), foot)
