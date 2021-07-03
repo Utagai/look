@@ -35,13 +35,11 @@ var _ Data = (*MongoDBData)(nil)
 // NewMongoDBData takes a URI and datums and provides a MongoDB-backed data.
 // Note that as per the official MongoDB driver behavior, the database &
 // collection specified in the URI are not respected, and therefore this
-// constructor simply uses the namespace look.{collName}.
+// constructor simply uses the namespace {dbName}.{collName}.
 func NewMongoDBData(uri, dbName, collName string, datums []datum.Datum) (*MongoDBData, error) {
 	ctx := context.Background()
 
-	connCtx, cancel := context.WithTimeout(ctx, maxMongoDBConnectWaitTime)
-	defer cancel()
-	client, err := mongo.Connect(connCtx, options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}

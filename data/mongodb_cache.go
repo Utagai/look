@@ -38,7 +38,7 @@ func newMongoDBDataCache(sourceDB *mongo.Database, sourceColl *mongo.Collection,
 func (m *mongoDBDataCache) newQuery(ctx context.Context, q string) error {
 	pipeline := []bson.M{}
 	if err := bson.UnmarshalExtJSON([]byte(q), true, &pipeline); err != nil {
-		return ErrUnableToParseQuery
+		return fmt.Errorf("%q: %w: %v", q, ErrUnableToParseQuery, err)
 	}
 	pipelineHex := hex.EncodeToString([]byte(q))
 	outPipeline := append(pipeline, bson.M{"$out": pipelineHex})
@@ -85,6 +85,11 @@ func (ir *indexableResult) At(ctx context.Context, index int) (datum.Datum, erro
 		},
 		{
 			"$limit": 1,
+		},
+		{
+			"$project": bson.M{
+				"_id": 0,
+			},
 		},
 	}
 	pipeline = append(ir.prefilter, pipeline...)
