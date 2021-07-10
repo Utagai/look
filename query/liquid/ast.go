@@ -3,6 +3,7 @@ package liquid
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/utagai/look/datum"
 )
@@ -26,8 +27,9 @@ func (c *Const) String() string {
 type BinaryOp string
 
 const (
-	BinaryOpEquals BinaryOp = "="
-	BinaryOpGeq             = ">"
+	BinaryOpEquals   BinaryOp = "="
+	BinaryOpGeq               = ">"
+	BinaryOpContains          = "contains"
 )
 
 func evaluateBinaryOp(left interface{}, right *Const, op BinaryOp) bool {
@@ -51,6 +53,13 @@ func evaluateBinaryOp(left interface{}, right *Const, op BinaryOp) bool {
 			return left.(float64) > rightFloat
 		default:
 			panic(fmt.Sprintf("unrecognized ConstKind: %q", right.Kind))
+		}
+	case BinaryOpContains:
+		switch right.Kind {
+		case ConstKindString:
+			return strings.Contains(left.(string), rightString)
+		default:
+			return false
 		}
 	default:
 		panic(fmt.Sprintf("unrecognized BinaryOp: %q", op))

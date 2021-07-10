@@ -9,6 +9,7 @@ import (
 
 type Token int
 
+// Various kinds of tokens in Liquid.
 const (
 	// Kind of ugly, but we know that scanner's tokens go in the negative range,
 	// so we start with iota and go in the positive range and avoid conflicts
@@ -19,6 +20,7 @@ const (
 	TokenStageSeparator Token = iota
 	TokenFind
 	TokenSort
+	TokenContains
 	TokenEquals
 	TokenGEQ
 	TokenChar   = scanner.Char
@@ -38,6 +40,8 @@ func (t Token) String() string {
 		return "Find"
 	case TokenSort:
 		return "Sort"
+	case TokenContains:
+		return "Contains"
 	case TokenEquals:
 		return "Equals"
 	case TokenGEQ:
@@ -138,10 +142,13 @@ func (t *Tokenizer) next() (Token, bool) {
 	case scanner.Ident:
 		switch t.s.TokenText() {
 		// Intercept stage types as special tokens.
+		// TODO: This should be its own function.
 		case "find":
 			return TokenFind, true
 		case "sort":
 			return TokenSort, true
+		case "contains":
+			return TokenContains, true
 		case StageSeparatorString:
 			return TokenStageSeparator, true
 		}

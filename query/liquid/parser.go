@@ -120,7 +120,7 @@ func (p *Parser) parseOp() (BinaryOp, error) {
 	}
 
 	switch token {
-	case TokenGEQ, TokenEquals:
+	case TokenGEQ, TokenEquals, TokenContains:
 		return BinaryOp(p.tokenizer.Text()), nil
 	default:
 		return "", fmt.Errorf("unrecognized binary operator: %q (%v)", p.tokenizer.Text(), token)
