@@ -2,6 +2,7 @@ package liquid
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -126,14 +127,74 @@ func (f *Find) Execute(datums datum.DatumStream) (datum.DatumStream, error) {
 	}, nil
 }
 
+func (f *Find) Name() string {
+	return "find"
+}
+
 type SortStream struct {
 	*Sort
-	source datum.DatumStream
+	sortedDatums []datum.Datum
+	source       datum.DatumStream
+	sortedSource datum.DatumStream
 }
 
 func (ss *SortStream) Next() (datum.Datum, error) {
+	if ss.sortedDatums == nil {
+		if err := ss.sortStream(); err != nil {
+			return nil, fmt.Errorf("failed to sort data: %w", err)
+		}
+	}
 	// TODO: Sort this...
-	return ss.source.Next()
+	return ss.sortedSource.Next()
+}
+
+func (ss *SortStream) sortStream() error {
+	// TODO: Dangerous if source is large.
+	datums, err := datum.StreamToSlice(ss.source)
+	if err != nil {
+		return fmt.Errorf("failed to read data: %w", err)
+	}
+	sortable := sortableDatums{datums: datums, fieldName: ss.Field}
+	sort.Sort(sortable)
+	ss.sortedDatums = sortable.datums
+	ss.sortedSource = datum.NewDatumSliceStream(sortable.datums)
+
+	return nil
+}
+
+type sortableDatums struct {
+	datums    []datum.Datum
+	fieldName string
+}
+
+func (ds sortableDatums) Len() int {
+	return len(ds.datums)
+}
+
+func (ds sortableDatums) Less(i, j int) bool {
+	ithDoc := ds.datums[i]
+	jthDoc := ds.datums[j]
+
+	ithValue, ok := ithDoc[ds.fieldName]
+	if !ok {
+		// Treat documents where the field does not exist as being less than.
+		return true
+	}
+
+	jthValue, ok := jthDoc[ds.fieldName]
+	if !ok {
+		// Ditto above.
+		return true
+	}
+
+	iNum := ithValue.(float64)
+	jNum := jthValue.(float64)
+
+	return iNum < jNum
+}
+
+func (ds sortableDatums) Swap(i, j int) {
+	ds.datums[i], ds.datums[j] = ds.datums[j], ds.datums[i]
 }
 
 type Sort struct {
@@ -148,7 +209,12 @@ func (s *Sort) Execute(datums datum.DatumStream) (datum.DatumStream, error) {
 	}, nil
 }
 
+func (s *Sort) Name() string {
+	return "sort"
+}
+
 type Stage interface {
 	// TODO: This should be decoupled from the AST.
 	Execute(datum.DatumStream) (datum.DatumStream, error)
+	Name() string
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 )
 
 // Parses liquid queries.
@@ -41,7 +40,6 @@ func (p *Parser) Parse() ([]Stage, error) {
 			return nil, fmt.Errorf("expected a stage separator after a stage, but got: %q", p.tokenizer.Text())
 		}
 	}
-	log.Printf("Returning stages: %+v", stages[0])
 	return stages, nil
 }
 
@@ -149,7 +147,6 @@ func (p *Parser) parseConstValue() (*Const, error) {
 		}, nil
 	case TokenChar, TokenString:
 		text := p.tokenizer.Text()
-		log.Printf("Text: %q", text)
 		if !isQuotedString(text) {
 			return nil, fmt.Errorf("expected a properly quoted string, but got %q", text)
 		}

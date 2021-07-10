@@ -2,7 +2,6 @@ package liquid
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/utagai/look/datum"
 	"github.com/utagai/look/query"
@@ -21,7 +20,6 @@ func (s *LiquidQueryExecutor) Find(q string, datums []datum.Datum) ([]datum.Datu
 		return nil, fmt.Errorf("%w: %v", query.ErrUnableToParseQuery, err)
 	}
 
-	log.Println("NUM DATUMS: ", len(datums))
 	var stream datum.DatumStream = datum.NewDatumSliceStream(datums)
 	for _, stage := range stages {
 		stream, err = stage.Execute(stream)
