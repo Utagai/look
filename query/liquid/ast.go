@@ -7,14 +7,15 @@ import (
 	"strings"
 
 	"github.com/utagai/look/datum"
+	"github.com/utagai/look/query/liquid/execution"
 )
 
-type ConstKind int
+type ConstKind string
 
 const (
-	ConstKindString ConstKind = iota
-	ConstKindNumber
-	ConstKindBool
+	ConstKindString ConstKind = "string"
+	ConstKindNumber ConstKind = "number"
+	ConstKindBool   ConstKind = "bool"
 )
 
 type Const struct {
@@ -26,6 +27,20 @@ func (c *Const) String() string {
 	return c.Stringified
 }
 
+func (c *Const) Interface() interface{} {
+	switch c.Kind {
+	case ConstKindString:
+		return c.Stringified
+	case ConstKindNumber:
+		f64, _ := strconv.ParseFloat(c.Stringified, 64)
+		return f64
+	case ConstKindBool:
+		return c.Stringified == "true"
+	default:
+		panic(fmt.Sprintf("unexpected const kind: %q", c.Kind))
+	}
+}
+
 type BinaryOp string
 
 const (
@@ -35,35 +50,13 @@ const (
 )
 
 func evaluateBinaryOp(left interface{}, right *Const, op BinaryOp) bool {
-	rightString := right.Stringified
-	rightFloat, _ := strconv.ParseFloat(right.Stringified, 64)
 	switch op {
 	case BinaryOpEquals:
-		switch right.Kind {
-		case ConstKindString:
-			return left.(string) == rightString
-		case ConstKindNumber:
-			return left.(float64) == rightFloat
-		default:
-			panic(fmt.Sprintf("unrecognized ConstKind: %q", right.Kind))
-		}
+		return execution.Compare(left, right.Interface()) == execution.Equal
 	case BinaryOpGeq:
-		switch right.Kind {
-		case ConstKindString:
-			return left.(string) > rightString
-		case ConstKindNumber:
-			return left.(float64) > rightFloat
-		default:
-			panic(fmt.Sprintf("unrecognized ConstKind: %q", right.Kind))
-		}
-    }
+		return execution.Compare(left, right.Interface()) == execution.Greater
 	case BinaryOpContains:
-		switch right.Kind {
-		case ConstKindString:
-			return strings.Contains(left.(string), rightString)
-		default:
-			return false
-		}
+		return strings.Contains(left.(string), right.Stringified)
 	default:
 		panic(fmt.Sprintf("unrecognized BinaryOp: %q", op))
 	}
@@ -189,10 +182,7 @@ func (ds sortableDatums) Less(i, j int) bool {
 		return true
 	}
 
-	iNum := ithValue.(float64)
-	jNum := jthValue.(float64)
-
-	return iNum < jNum
+	return execution.Compare(ithValue, jthValue) == execution.Lesser
 }
 
 func (ds sortableDatums) Swap(i, j int) {
