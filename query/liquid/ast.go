@@ -14,6 +14,7 @@ type ConstKind int
 const (
 	ConstKindString ConstKind = iota
 	ConstKindNumber
+	ConstKindBool
 )
 
 type Const struct {
@@ -55,6 +56,7 @@ func evaluateBinaryOp(left interface{}, right *Const, op BinaryOp) bool {
 		default:
 			panic(fmt.Sprintf("unrecognized ConstKind: %q", right.Kind))
 		}
+    }
 	case BinaryOpContains:
 		switch right.Kind {
 		case ConstKindString:
