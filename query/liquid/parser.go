@@ -40,11 +40,10 @@ func maybeWrapInParseError(t Tokenizer, query string, err error) *ParseError {
 	}
 }
 
-// ErrorDescription returns a human-readable, more helpful message for a parse
-// error.
-func (pe *ParseError) ErrorDescription() string {
+// LocalError returns the deepest, original source error that caused this
+// ParseError.
+func (pe *ParseError) LocalError() error {
 	err := pe.error
-	localErrMsg := err.Error()
 	for {
 		nextErr := errors.Unwrap(err)
 		if nextErr != nil {
@@ -52,11 +51,15 @@ func (pe *ParseError) ErrorDescription() string {
 			continue
 		} else {
 			// Otherwise, err was the innermost err.
-			localErrMsg = err.Error()
-			break
+			return err
 		}
 	}
+}
 
+// ErrorDescription returns a human-readable, more helpful message for a parse
+// error.
+func (pe *ParseError) ErrorDescription() string {
+	localErrMsg := pe.LocalError().Error()
 	var sb strings.Builder
 	sb.WriteString(pe.query)
 	sb.WriteString("\n")
