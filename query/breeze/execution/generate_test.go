@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/utagai/look/query/liquid/execution"
+	"github.com/utagai/look/query/breeze/execution"
 )
 
 // Not a real test, but some code I used to generate all of the comparison

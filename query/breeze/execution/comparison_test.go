@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/utagai/look/query/liquid/execution"
+	"github.com/utagai/look/query/breeze/execution"
 )
 
 func comparisonToSymbol(cmp execution.Comparison) string {

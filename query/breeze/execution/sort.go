@@ -5,10 +5,10 @@ import (
 	"sort"
 
 	"github.com/utagai/look/datum"
-	"github.com/utagai/look/query/liquid"
+	"github.com/utagai/look/query/breeze"
 )
 
-func executeSort(sort *liquid.Sort, stream datum.DatumStream) *SortStream {
+func executeSort(sort *breeze.Sort, stream datum.DatumStream) *SortStream {
 	return &SortStream{
 		Sort:   sort,
 		source: stream,
@@ -17,7 +17,7 @@ func executeSort(sort *liquid.Sort, stream datum.DatumStream) *SortStream {
 
 // SortStream is an implementation of datum.Stream for the sort stage.
 type SortStream struct {
-	*liquid.Sort
+	*breeze.Sort
 	sortedDatums []datum.Datum
 	source       datum.DatumStream
 	sortedSource datum.DatumStream

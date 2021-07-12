@@ -1,4 +1,4 @@
-package liquid
+package breeze
 
 import (
 	"fmt"

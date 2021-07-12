@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/utagai/look/datum"
-	"github.com/utagai/look/query/liquid"
-	"github.com/utagai/look/query/liquid/execution"
+	"github.com/utagai/look/query/breeze"
+	"github.com/utagai/look/query/breeze/execution"
 )
 
 type LiquidQueryExecutor struct{}
@@ -15,7 +15,7 @@ func NewLiquidQueryExecutor() *LiquidQueryExecutor {
 }
 
 func (s *LiquidQueryExecutor) Find(q string, datums []datum.Datum) ([]datum.Datum, error) {
-	p := liquid.NewParser(q)
+	p := breeze.NewParser(q)
 	stages, parseErr := p.Parse()
 	if parseErr != nil {
 		return nil, fmt.Errorf("%w:\n%v", ErrUnableToParseQuery, parseErr.ErrorDescription())

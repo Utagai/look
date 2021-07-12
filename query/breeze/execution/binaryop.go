@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/utagai/look/query/liquid"
+	"github.com/utagai/look/query/breeze"
 )
 
-func executeBinaryOp(left interface{}, right *liquid.Const, op liquid.BinaryOp) bool {
+func executeBinaryOp(left interface{}, right *breeze.Const, op breeze.BinaryOp) bool {
 	switch op {
-	case liquid.BinaryOpEquals:
+	case breeze.BinaryOpEquals:
 		return Compare(left, right.Interface()) == Equal
-	case liquid.BinaryOpGeq:
+	case breeze.BinaryOpGeq:
 		return Compare(left, right.Interface()) == Greater
-	case liquid.BinaryOpContains:
+	case breeze.BinaryOpContains:
 		return strings.Contains(left.(string), right.Stringified)
 	default:
 		panic(fmt.Sprintf("unrecognized BinaryOp: %q", op))

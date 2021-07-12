@@ -1,52 +1,52 @@
-package liquid_test
+package breeze_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/utagai/look/query/liquid"
+	"github.com/utagai/look/query/breeze"
 )
 
 func TestParser(t *testing.T) {
 	type testCase struct {
 		query  string
 		errMsg string
-		stages []liquid.Stage
+		stages []breeze.Stage
 	}
 
 	tcs := []testCase{
 		{
 			query: "find foo = 4.2 bar >7 car=\"hello\" | sort bar",
-			stages: []liquid.Stage{
-				&liquid.Find{
-					Checks: []*liquid.Check{
+			stages: []breeze.Stage{
+				&breeze.Find{
+					Checks: []*breeze.Check{
 						{
 							Field: "foo",
-							Value: &liquid.Const{
-								Kind:        liquid.ConstKindNumber,
+							Value: &breeze.Const{
+								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
-							Op: liquid.BinaryOpEquals,
+							Op: breeze.BinaryOpEquals,
 						},
 						{
 							Field: "bar",
-							Value: &liquid.Const{
-								Kind:        liquid.ConstKindNumber,
+							Value: &breeze.Const{
+								Kind:        breeze.ConstKindNumber,
 								Stringified: "7",
 							},
-							Op: liquid.BinaryOpGeq,
+							Op: breeze.BinaryOpGeq,
 						},
 						{
 							Field: "car",
-							Value: &liquid.Const{
-								Kind:        liquid.ConstKindString,
+							Value: &breeze.Const{
+								Kind:        breeze.ConstKindString,
 								Stringified: "hello",
 							},
-							Op: liquid.BinaryOpEquals,
+							Op: breeze.BinaryOpEquals,
 						},
 					},
 				},
-				&liquid.Sort{
+				&breeze.Sort{
 					Descending: false,
 					Field:      "bar",
 				},
@@ -60,7 +60,7 @@ func TestParser(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.query, func(t *testing.T) {
-			parser := liquid.NewParser(tc.query)
+			parser := breeze.NewParser(tc.query)
 			stages, err := parser.Parse()
 			if tc.errMsg == "" {
 				assert.NoError(t, err)

@@ -15,7 +15,7 @@ const (
 	Equal   = "equal"
 )
 
-// Compare takes two interfaces that represent some const (see liquid.Const)
+// Compare takes two interfaces that represent some const (see breeze.Const)
 // value, compares them, and returns a Comparison result.
 // For non-const types, if both types are non-const, they are Equal. If only one
 // is non-Const, then the non-Const is lesser.

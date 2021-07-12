@@ -1,4 +1,4 @@
-package liquid
+package breeze
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ type Token int
 const (
 	// Kind of ugly, but we know that scanner's tokens go in the negative range,
 	// so we start with iota and go in the positive range and avoid conflicts
-	// while avoiding the work of explicitly translating scanner tokens to liquid
+	// while avoiding the work of explicitly translating scanner tokens to breeze
 	// tokens.
 	// If we ever have issues with this, we can make everything off of iota and
 	// write a conversion function.
@@ -73,10 +73,10 @@ type peeked struct {
 	lastText string
 }
 
-// Tokenizer tokenizes an input string into liquid tokens.
+// Tokenizer tokenizes an input string into breeze tokens.
 // Under the hood, this is just a scanner.Scanner.
 // In particular, it accomplishes two things we can't do with a scanner.Scanner:
-//	* Give back tokens made for liquid in particular.
+//	* Give back tokens made for breeze in particular.
 //  * Peek at token text.
 type Tokenizer struct {
 	s      scanner.Scanner

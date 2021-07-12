@@ -1,4 +1,4 @@
-package liquid
+package breeze
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Parser parses liquid queries.
+// Parser parses breeze queries.
 type Parser struct {
 	input     string
 	tokenizer Tokenizer
@@ -82,7 +82,7 @@ func (p *Parser) Parse() ([]Stage, *ParseError) {
 }
 
 func (p *Parser) parse() ([]Stage, error) {
-	// A liquid query is a series of stages delimited by '|'. We keep parsing
+	// A breeze query is a series of stages delimited by '|'. We keep parsing
 	// these stages until we get nothing back.
 	stages := []Stage{}
 	for {

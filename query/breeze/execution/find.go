@@ -2,10 +2,10 @@ package execution
 
 import (
 	"github.com/utagai/look/datum"
-	"github.com/utagai/look/query/liquid"
+	"github.com/utagai/look/query/breeze"
 )
 
-func executeFind(find *liquid.Find, stream datum.DatumStream) *FindStream {
+func executeFind(find *breeze.Find, stream datum.DatumStream) *FindStream {
 	return &FindStream{
 		Find:   find,
 		source: stream,
@@ -14,7 +14,7 @@ func executeFind(find *liquid.Find, stream datum.DatumStream) *FindStream {
 
 // FindStream is an implementation of datum.Stream for the find stage.
 type FindStream struct {
-	*liquid.Find
+	*breeze.Find
 	source datum.DatumStream
 }
 
