@@ -83,6 +83,7 @@ type Tokenizer struct {
 	peeked *peeked
 }
 
+// NewTokenizer returns a new Tokenizer.
 func NewTokenizer(input string) Tokenizer {
 	var s scanner.Scanner
 	s.Init(strings.NewReader(input))
@@ -113,6 +114,7 @@ func NewTokenizer(input string) Tokenizer {
 	}
 }
 
+// Next wraps scanner.Scanner#Next().
 func (t *Tokenizer) Next() (Token, bool) {
 	if t.peeked != nil {
 		token, more := t.peeked.token, t.peeked.more
@@ -125,6 +127,8 @@ func (t *Tokenizer) Next() (Token, bool) {
 	return tok, more
 }
 
+// Peek peeks at the next token to return, but does not advance the tokenizer
+// past it.
 func (t *Tokenizer) Peek() (Token, string, bool) {
 	t.peeked = &peeked{}
 	t.peeked.lastText = t.Text()
@@ -165,6 +169,7 @@ func (t *Tokenizer) next() (Token, bool) {
 	return Token(tok), true
 }
 
+// Text wraps scanner.Scanner#TokenText().
 func (t *Tokenizer) Text() string {
 	// Preserve this method's behavior of returning the current text, and not the
 	// peeked text.
@@ -172,4 +177,11 @@ func (t *Tokenizer) Text() string {
 		return t.peeked.lastText
 	}
 	return t.s.TokenText()
+}
+
+// Position returns the current position in the string.
+// This method technically returns the column position, which is equivalent
+// because the string being tokenized is expected to be a single line.
+func (t *Tokenizer) Position() int {
+	return t.s.Position.Column
 }

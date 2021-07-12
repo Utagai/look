@@ -4,14 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 )
 
-// Parses liquid queries.
+// Parser parses liquid queries.
 type Parser struct {
 	input     string
 	tokenizer Tokenizer
 }
 
+// NewParser creates a Parser.
 func NewParser(input string) *Parser {
 	return &Parser{
 		input:     input,
@@ -19,7 +21,64 @@ func NewParser(input string) *Parser {
 	}
 }
 
-func (p *Parser) Parse() ([]Stage, error) {
+// ParseError is an error encountered during parsing.
+type ParseError struct {
+	error
+	query    string
+	position int
+}
+
+func maybeWrapInParseError(t Tokenizer, query string, err error) *ParseError {
+	if err == nil {
+		return nil
+	}
+
+	return &ParseError{
+		error:    err,
+		query:    query,
+		position: t.Position(),
+	}
+}
+
+// ErrorDescription returns a human-readable, more helpful message for a parse
+// error.
+func (pe *ParseError) ErrorDescription() string {
+	err := pe.error
+	localErrMsg := err.Error()
+	for {
+		nextErr := errors.Unwrap(err)
+		if nextErr != nil {
+			err = nextErr
+			continue
+		} else {
+			// Otherwise, err was the innermost err.
+			localErrMsg = err.Error()
+			break
+		}
+	}
+
+	var sb strings.Builder
+	sb.WriteString(pe.query)
+	sb.WriteString("\n")
+	sb.WriteString(strings.Repeat(" ", pe.position-1))
+	sb.WriteString("^")
+	sb.WriteString("\n")
+	sb.WriteString(strings.Repeat(" ", pe.position-1))
+	sb.WriteString("| ")
+	sb.WriteString(localErrMsg)
+	sb.WriteString(" |")
+	sb.WriteString("\n")
+
+	return sb.String()
+}
+
+// Parse parses the query and returns stages for it.
+func (p *Parser) Parse() ([]Stage, *ParseError) {
+	stages, err := p.parse()
+	return stages, maybeWrapInParseError(p.tokenizer, p.input, err)
+}
+
+func (p *Parser) parse() ([]Stage, error) {
 	// A liquid query is a series of stages delimited by '|'. We keep parsing
 	// these stages until we get nothing back.
 	stages := []Stage{}

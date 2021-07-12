@@ -16,13 +16,16 @@ func NewLiquidQueryExecutor() *LiquidQueryExecutor {
 
 func (s *LiquidQueryExecutor) Find(q string, datums []datum.Datum) ([]datum.Datum, error) {
 	p := liquid.NewParser(q)
-	stages, err := p.Parse()
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrUnableToParseQuery, err)
+	stages, parseErr := p.Parse()
+	if parseErr != nil {
+		return nil, fmt.Errorf("%w:\n%v", ErrUnableToParseQuery, parseErr.ErrorDescription())
 	}
 
 	var stream datum.DatumStream = datum.NewDatumSliceStream(datums)
-	stream, err = execution.Execute(stream, stages)
+	stream, err := execution.Execute(stream, stages)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute: %w", err)
+	}
 
 	return datum.StreamToSlice(stream)
 }

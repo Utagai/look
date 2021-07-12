@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -167,7 +166,7 @@ func initializeGowid(d data.Data) {
 				log.Printf("incomplete query: %q", queryTextbox.Text())
 				queryTextboxHolder.SetSubWidget(framedQueryTextboxInvalid, app)
 				queryStatusTextboxHolder.SetSubWidget(framedQueryStatusTextboxInvalid, app)
-				queryStatusTextbox.SetText(fmt.Sprintf("failed to execute query:\n%v", err), app)
+				queryStatusTextbox.SetText(err.Error(), app)
 				return
 			} else if err != nil {
 				log.Fatalf("failed to construct the new data: %v", err)
