@@ -4,6 +4,7 @@ import (
 	"io"
 )
 
+// TODO: Rename this to Stream to avoid stutter.
 type DatumStream interface {
 	Next() (Datum, error)
 }
