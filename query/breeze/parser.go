@@ -28,7 +28,7 @@ type ParseError struct {
 	position int
 }
 
-func maybeWrapInParseError(t Tokenizer, query string, err error) *ParseError {
+func maybeWrapInParseError(t Tokenizer, query string, err error) error {
 	if err == nil {
 		return nil
 	}
@@ -76,7 +76,7 @@ func (pe *ParseError) ErrorDescription() string {
 }
 
 // Parse parses the query and returns stages for it.
-func (p *Parser) Parse() ([]Stage, *ParseError) {
+func (p *Parser) Parse() ([]Stage, error) {
 	stages, err := p.parse()
 	return stages, maybeWrapInParseError(p.tokenizer, p.input, err)
 }

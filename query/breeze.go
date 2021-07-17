@@ -16,13 +16,14 @@ func NewLiquidQueryExecutor() *LiquidQueryExecutor {
 
 func (s *LiquidQueryExecutor) Find(q string, datums []datum.Datum) ([]datum.Datum, error) {
 	p := breeze.NewParser(q)
-	stages, parseErr := p.Parse()
-	if parseErr != nil {
+	stages, err := p.Parse()
+	if err != nil {
+		parseErr := err.(*breeze.ParseError)
 		return nil, fmt.Errorf("%w:\n%v", ErrUnableToParseQuery, parseErr.ErrorDescription())
 	}
 
 	var stream datum.DatumStream = datum.NewDatumSliceStream(datums)
-	stream, err := execution.Execute(stream, stages)
+	stream, err = execution.Execute(stream, stages)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute: %w", err)
 	}
