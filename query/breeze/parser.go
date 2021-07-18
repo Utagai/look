@@ -112,8 +112,8 @@ func (p *Parser) parseStage() (Stage, error) {
 	}
 	// Determine the stage type. If not recognized, this is a parse error.
 	switch stageToken {
-	case TokenFind:
-		return p.parseFind()
+	case TokenFilter:
+		return p.parseFilter()
 	case TokenSort:
 		return p.parseSort()
 	default:
@@ -121,7 +121,7 @@ func (p *Parser) parseStage() (Stage, error) {
 	}
 }
 
-func (p *Parser) parseFind() (*Find, error) {
+func (p *Parser) parseFilter() (*Filter, error) {
 	checks := []*Check{}
 	for {
 		if token, _, _ := p.tokenizer.Peek(); token == TokenStageSeparator {
@@ -135,7 +135,7 @@ func (p *Parser) parseFind() (*Find, error) {
 		}
 		checks = append(checks, check)
 	}
-	return &Find{Checks: checks}, nil
+	return &Filter{Checks: checks}, nil
 }
 
 func (p *Parser) parseCheck() (*Check, error) {

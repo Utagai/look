@@ -16,9 +16,9 @@ func TestParser(t *testing.T) {
 
 	tcs := []testCase{
 		{
-			query: "find foo = 4.2 bar >7 car=\"hello\" | sort bar",
+			query: "filter foo = 4.2 bar >7 car=\"hello\" | sort bar",
 			stages: []breeze.Stage{
-				&breeze.Find{
+				&breeze.Filter{
 					Checks: []*breeze.Check{
 						{
 							Field: "foo",
@@ -53,9 +53,9 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			query: "find foo = 4.2",
+			query: "filter foo = 4.2",
 			stages: []breeze.Stage{
-				&breeze.Find{
+				&breeze.Filter{
 					Checks: []*breeze.Check{
 						{
 							Field: "foo",
@@ -70,9 +70,9 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			query: "find foo = 4.2 bar = 6.4",
+			query: "filter foo = 4.2 bar = 6.4",
 			stages: []breeze.Stage{
-				&breeze.Find{
+				&breeze.Filter{
 					Checks: []*breeze.Check{
 						{
 							Field: "foo",
@@ -122,13 +122,13 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			query: "sort foo | find foo = 4.2",
+			query: "sort foo | filter foo = 4.2",
 			stages: []breeze.Stage{
 				&breeze.Sort{
 					Descending: false,
 					Field:      "foo",
 				},
-				&breeze.Find{
+				&breeze.Filter{
 					Checks: []*breeze.Check{
 						{
 							Field: "foo",
@@ -143,13 +143,13 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			query: "sort foo asc | find foo = 4.2",
+			query: "sort foo asc | filter foo = 4.2",
 			stages: []breeze.Stage{
 				&breeze.Sort{
 					Descending: false,
 					Field:      "foo",
 				},
-				&breeze.Find{
+				&breeze.Filter{
 					Checks: []*breeze.Check{
 						{
 							Field: "foo",
@@ -164,9 +164,9 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			query: "find",
+			query: "filter",
 			stages: []breeze.Stage{
-				&breeze.Find{
+				&breeze.Filter{
 					Checks: []*breeze.Check{},
 				},
 			},
@@ -176,11 +176,11 @@ func TestParser(t *testing.T) {
 			stages: []breeze.Stage{},
 		},
 		{
-			query:  "find f",
+			query:  "filter f",
 			errMsg: "failed to parse: failed to parse check: failed to parse op: expected a binary operator, but reached end of query",
 		},
 		{
-			query:  "find foo = ",
+			query:  "filter foo = ",
 			errMsg: "failed to parse: failed to parse check: failed to parse constant value: expected a constant value, but reached end of query",
 		},
 		{

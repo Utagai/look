@@ -18,7 +18,7 @@ const (
 	// If we ever have issues with this, we can make everything off of iota and
 	// write a conversion function.
 	TokenStageSeparator Token = iota
-	TokenFind
+	TokenFilter
 	TokenSort
 	TokenContains
 	TokenEquals
@@ -37,8 +37,8 @@ func (t Token) String() string {
 	switch t {
 	case TokenStageSeparator:
 		return "StageSeparator"
-	case TokenFind:
-		return "Find"
+	case TokenFilter:
+		return "Filter"
 	case TokenSort:
 		return "Sort"
 	case TokenContains:
@@ -148,8 +148,8 @@ func (t *Tokenizer) next() (Token, bool) {
 		switch t.s.TokenText() {
 		// Intercept stage types as special tokens.
 		// TODO: This should be its own function.
-		case "find":
-			return TokenFind, true
+		case "filter":
+			return TokenFilter, true
 		case "sort":
 			return TokenSort, true
 		case "contains":

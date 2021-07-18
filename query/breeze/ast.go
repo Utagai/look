@@ -66,14 +66,14 @@ func (c *Check) String() string {
 	return fmt.Sprintf("%s %s %v", c.Field, c.Op, c.Value)
 }
 
-// Find is a stage that applies a series of filters to the data.
-type Find struct {
+// Filter is a stage that applies a series of filters to the data.
+type Filter struct {
 	Checks []*Check
 }
 
 // Name implements the Stage interface.
-func (f *Find) Name() string {
-	return "find"
+func (f *Filter) Name() string {
+	return "filter"
 }
 
 // Sort is a stage that sorts the data.

@@ -12,8 +12,8 @@ func Execute(stream datum.DatumStream, stages []breeze.Stage) (datum.DatumStream
 	for _, stage := range stages {
 		var newStream datum.DatumStream
 		switch ts := stage.(type) {
-		case *breeze.Find:
-			newStream = executeFind(ts, stream)
+		case *breeze.Filter:
+			newStream = executeFilter(ts, stream)
 		case *breeze.Sort:
 			newStream = executeSort(ts, stream)
 		default:

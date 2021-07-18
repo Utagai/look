@@ -5,21 +5,21 @@ import (
 	"github.com/utagai/look/query/breeze"
 )
 
-func executeFind(find *breeze.Find, stream datum.DatumStream) *FindStream {
-	return &FindStream{
-		Find:   find,
+func executeFilter(filter *breeze.Filter, stream datum.DatumStream) *FilterStream {
+	return &FilterStream{
+		Filter: filter,
 		source: stream,
 	}
 }
 
-// FindStream is an implementation of datum.Stream for the find stage.
-type FindStream struct {
-	*breeze.Find
+// FilterStream is an implementation of datum.Stream for the filter stage.
+type FilterStream struct {
+	*breeze.Filter
 	source datum.DatumStream
 }
 
 // Next implements the datum.DatumStream interface.
-func (fs *FindStream) Next() (datum.Datum, error) {
+func (fs *FilterStream) Next() (datum.Datum, error) {
 	// Keep iterating the stream until something passes the checks.
 outer:
 	for {
@@ -28,7 +28,7 @@ outer:
 			return nil, err
 		}
 
-		for _, check := range fs.Find.Checks {
+		for _, check := range fs.Filter.Checks {
 			// If we failed, move onto the next datum.
 			if !executeCheck(check, datum) {
 				continue outer
