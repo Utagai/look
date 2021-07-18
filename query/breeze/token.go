@@ -7,6 +7,7 @@ import (
 	"unicode"
 )
 
+// Token is a symbolic unit emitted by the tokenizer.
 type Token int
 
 // Various kinds of tokens in Liquid.
@@ -23,6 +24,8 @@ const (
 	TokenContains
 	TokenEquals
 	TokenGEQ
+	TokenExists
+	TokenExistsNot
 	TokenChar  = scanner.Char
 	TokenFloat = scanner.Float
 
@@ -65,6 +68,8 @@ func (t Token) String() string {
 }
 
 const (
+	// StageSeparatorString is the pipe character, which delimits the stages in a
+	// breeze query.
 	StageSeparatorString = "|"
 )
 
@@ -102,6 +107,8 @@ func NewTokenizer(input string) Tokenizer {
 		switch ch {
 		case '_': // Accept underscores in idents.
 			return true
+		case '!': // Accept ! in idents if they are at the beginning.
+			return i == 0
 		case '|': // Treat pipe as an identifier.
 			return true
 		}
@@ -140,13 +147,15 @@ func (t *Tokenizer) Peek() (Token, string, bool) {
 func (t *Tokenizer) next() (Token, bool) {
 	tok := t.s.Scan()
 	if tok == scanner.EOF {
+		// TODO: I think we can simplify this code by just returning TokenEOF, we
+		// don't need the boolean.
 		return 0, false
 	}
 
 	switch tok {
 	case scanner.Ident:
 		switch t.s.TokenText() {
-		// Intercept stage types as special tokens.
+		// Intercept keywords as special tokens.
 		// TODO: This should be its own function.
 		case "filter":
 			return TokenFilter, true
@@ -154,6 +163,10 @@ func (t *Tokenizer) next() (Token, bool) {
 			return TokenSort, true
 		case "contains":
 			return TokenContains, true
+		case "exists":
+			return TokenExists, true
+		case "!exists":
+			return TokenExistsNot, true
 		case StageSeparatorString:
 			return TokenStageSeparator, true
 		}

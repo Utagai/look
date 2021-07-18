@@ -43,6 +43,26 @@ func (c *Const) Interface() interface{} {
 	}
 }
 
+// UnaryOp enumerates the kinds of unary operations in breeze.
+type UnaryOp string
+
+const (
+	// UnaryOpExists is the field existence operator.
+	UnaryOpExists UnaryOp = "exists"
+	// UnaryOpExistsNot is the field non-existence operator.
+	UnaryOpExistsNot = "!exists"
+)
+
+// UnaryCheck is a filter condition for a filter that uses a unary operation.
+type UnaryCheck struct {
+	Field string
+	Op    UnaryOp
+}
+
+func (c *UnaryCheck) String() string {
+	return fmt.Sprintf("%s %s", c.Field, c.Op)
+}
+
 // BinaryOp enumerates the kinds of binary operations in breeze.
 type BinaryOp string
 
@@ -55,20 +75,21 @@ const (
 	BinaryOpContains = "contains"
 )
 
-// Check is a filter condition for find.
-type Check struct {
+// BinaryCheck is a filter condition for filter that uses a binary operation.
+type BinaryCheck struct {
 	Field string
 	Value *Const
 	Op    BinaryOp
 }
 
-func (c *Check) String() string {
+func (c *BinaryCheck) String() string {
 	return fmt.Sprintf("%s %s %v", c.Field, c.Op, c.Value)
 }
 
 // Filter is a stage that applies a series of filters to the data.
 type Filter struct {
-	Checks []*Check
+	UnaryChecks  []*UnaryCheck
+	BinaryChecks []*BinaryCheck
 }
 
 // Name implements the Stage interface.

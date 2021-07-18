@@ -19,7 +19,7 @@ func TestParser(t *testing.T) {
 			query: "filter foo = 4.2 bar >7 car=\"hello\" | sort bar",
 			stages: []breeze.Stage{
 				&breeze.Filter{
-					Checks: []*breeze.Check{
+					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
 							Value: &breeze.Const{
@@ -45,6 +45,7 @@ func TestParser(t *testing.T) {
 							Op: breeze.BinaryOpEquals,
 						},
 					},
+					UnaryChecks: []*breeze.UnaryCheck{},
 				},
 				&breeze.Sort{
 					Descending: false,
@@ -56,7 +57,7 @@ func TestParser(t *testing.T) {
 			query: "filter foo = 4.2",
 			stages: []breeze.Stage{
 				&breeze.Filter{
-					Checks: []*breeze.Check{
+					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
 							Value: &breeze.Const{
@@ -66,6 +67,7 @@ func TestParser(t *testing.T) {
 							Op: breeze.BinaryOpEquals,
 						},
 					},
+					UnaryChecks: []*breeze.UnaryCheck{},
 				},
 			},
 		},
@@ -73,7 +75,7 @@ func TestParser(t *testing.T) {
 			query: "filter foo| = 4.2",
 			stages: []breeze.Stage{
 				&breeze.Filter{
-					Checks: []*breeze.Check{
+					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo|",
 							Value: &breeze.Const{
@@ -83,6 +85,7 @@ func TestParser(t *testing.T) {
 							Op: breeze.BinaryOpEquals,
 						},
 					},
+					UnaryChecks: []*breeze.UnaryCheck{},
 				},
 			},
 		},
@@ -90,7 +93,7 @@ func TestParser(t *testing.T) {
 			query: "filter foo = 4.2 bar = 6.4",
 			stages: []breeze.Stage{
 				&breeze.Filter{
-					Checks: []*breeze.Check{
+					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
 							Value: &breeze.Const{
@@ -108,6 +111,7 @@ func TestParser(t *testing.T) {
 							Op: breeze.BinaryOpEquals,
 						},
 					},
+					UnaryChecks: []*breeze.UnaryCheck{},
 				},
 			},
 		},
@@ -146,7 +150,7 @@ func TestParser(t *testing.T) {
 					Field:      "foo",
 				},
 				&breeze.Filter{
-					Checks: []*breeze.Check{
+					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
 							Value: &breeze.Const{
@@ -156,6 +160,7 @@ func TestParser(t *testing.T) {
 							Op: breeze.BinaryOpEquals,
 						},
 					},
+					UnaryChecks: []*breeze.UnaryCheck{},
 				},
 			},
 		},
@@ -167,7 +172,7 @@ func TestParser(t *testing.T) {
 					Field:      "foo",
 				},
 				&breeze.Filter{
-					Checks: []*breeze.Check{
+					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
 							Value: &breeze.Const{
@@ -177,6 +182,7 @@ func TestParser(t *testing.T) {
 							Op: breeze.BinaryOpEquals,
 						},
 					},
+					UnaryChecks: []*breeze.UnaryCheck{},
 				},
 			},
 		},
@@ -184,7 +190,97 @@ func TestParser(t *testing.T) {
 			query: "filter",
 			stages: []breeze.Stage{
 				&breeze.Filter{
-					Checks: []*breeze.Check{},
+					BinaryChecks: []*breeze.BinaryCheck{},
+					UnaryChecks:  []*breeze.UnaryCheck{},
+				},
+			},
+		},
+		{
+			query: "filter foo exists",
+			stages: []breeze.Stage{
+				&breeze.Filter{
+					BinaryChecks: []*breeze.BinaryCheck{},
+					UnaryChecks: []*breeze.UnaryCheck{
+						{
+							Field: "foo",
+							Op:    breeze.UnaryOpExists,
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "filter foo !exists",
+			stages: []breeze.Stage{
+				&breeze.Filter{
+					BinaryChecks: []*breeze.BinaryCheck{},
+					UnaryChecks: []*breeze.UnaryCheck{
+						{
+							Field: "foo",
+							Op:    breeze.UnaryOpExistsNot,
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "filter foo exists bar = 4.2 baz !exists quux = 4.1",
+			stages: []breeze.Stage{
+				&breeze.Filter{
+					BinaryChecks: []*breeze.BinaryCheck{
+						{
+							Field: "bar",
+							Value: &breeze.Const{
+								Kind:        breeze.ConstKindNumber,
+								Stringified: "4.2",
+							},
+							Op: breeze.BinaryOpEquals,
+						},
+						{
+							Field: "quux",
+							Value: &breeze.Const{
+								Kind:        breeze.ConstKindNumber,
+								Stringified: "4.1",
+							},
+							Op: breeze.BinaryOpEquals,
+						},
+					},
+					UnaryChecks: []*breeze.UnaryCheck{
+						{
+							Field: "foo",
+							Op:    breeze.UnaryOpExists,
+						},
+						{
+							Field: "baz",
+							Op:    breeze.UnaryOpExistsNot,
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "filter foo = 4.2 foo = 4.1",
+			stages: []breeze.Stage{
+				&breeze.Filter{
+					BinaryChecks: []*breeze.BinaryCheck{
+						{
+							Field: "foo",
+							Value: &breeze.Const{
+								Kind:        breeze.ConstKindNumber,
+								Stringified: "4.2",
+							},
+							Op: breeze.BinaryOpEquals,
+						},
+						{
+							Field: "foo",
+							Value: &breeze.Const{
+								Kind:        breeze.ConstKindNumber,
+								Stringified: "4.1",
+							},
+							Op: breeze.BinaryOpEquals,
+						},
+					},
+					UnaryChecks: []*breeze.UnaryCheck{},
 				},
 			},
 		},
@@ -194,7 +290,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			query:  "filter f",
-			errMsg: "failed to parse: failed to parse check: failed to parse op: expected a binary operator, but reached end of query",
+			errMsg: "failed to parse: failed to parse check: failed to parse op: expected an operator, but reached end of query",
 		},
 		{
 			query:  "filter foo = ",
