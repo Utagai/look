@@ -23,8 +23,9 @@ const (
 	TokenContains
 	TokenEquals
 	TokenGEQ
-	TokenChar   = scanner.Char
-	TokenFloat  = scanner.Float
+	TokenChar  = scanner.Char
+	TokenFloat = scanner.Float
+
 	TokenIdent  = scanner.Ident
 	TokenInt    = scanner.Int
 	TokenString = scanner.String
