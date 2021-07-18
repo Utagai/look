@@ -243,12 +243,15 @@ func (p *Parser) parseSort() (*Sort, error) {
 }
 
 func (p *Parser) parseSortOrder() bool {
-	maybeSortOrder, sortOrderText, more := p.tokenizer.Peek()
-	if more && maybeSortOrder == TokenIdent {
+	maybeSortOrder, sortOrderText, _ := p.tokenizer.Peek()
+	if maybeSortOrder == TokenIdent {
 		switch sortOrderText {
 		case "asc":
+			// If we get either asc/desc, then we want to _consume_ the token.
+			p.tokenizer.Next()
 			return false
 		case "desc":
+			p.tokenizer.Next()
 			return true
 		}
 	}
