@@ -70,6 +70,23 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
+			query: "filter foo| = 4.2",
+			stages: []breeze.Stage{
+				&breeze.Filter{
+					Checks: []*breeze.Check{
+						{
+							Field: "foo|",
+							Value: &breeze.Const{
+								Kind:        breeze.ConstKindNumber,
+								Stringified: "4.2",
+							},
+							Op: breeze.BinaryOpEquals,
+						},
+					},
+				},
+			},
+		},
+		{
 			query: "filter foo = 4.2 bar = 6.4",
 			stages: []breeze.Stage{
 				&breeze.Filter{
