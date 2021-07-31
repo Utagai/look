@@ -8,6 +8,9 @@ import (
 )
 
 // Parser parses breeze queries.
+// TODO: It is weird that this parser can only run once. I think we should be
+// make this create actual parser instances or something that do expire, or
+// something.
 type Parser struct {
 	input     string
 	tokenizer Tokenizer
