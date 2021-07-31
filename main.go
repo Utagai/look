@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"flag"
 	"io/ioutil"
 	"log"
-	"os"
 
 	"github.com/gcla/gowid"
 	"github.com/gcla/gowid/examples"
@@ -19,29 +17,14 @@ import (
 	"github.com/gcla/gowid/widgets/styled"
 	"github.com/gcla/gowid/widgets/text"
 	"github.com/gcla/gowid/widgets/vpadding"
+	"github.com/utagai/look/config"
 	"github.com/utagai/look/data"
 	"github.com/utagai/look/datum"
 	"github.com/utagai/look/query"
 )
 
-type BackendType string
-
-const (
-	BackendTypeMemory  = "memory"
-	BackendTypeMongoDB = "mongodb"
-)
-
-type Config struct {
-	Source  *os.File
-	Backend struct {
-		Type    BackendType
-		Memory  bool
-		MongoDB string
-	}
-}
-
 func main() {
-	cfg := getConfig()
+	cfg := config.Get()
 	// TODO: This is dangerous if the source is large.
 	bytes, err := ioutil.ReadAll(cfg.Source)
 	if err != nil {
@@ -57,9 +40,9 @@ func main() {
 
 	var d data.Data
 	switch cfg.Backend.Type {
-	case BackendTypeMemory:
+	case config.BackendTypeMemory:
 		d = data.NewMemoryData(datums)
-	case BackendTypeMongoDB:
+	case config.BackendTypeMongoDB:
 		d, err = data.NewMongoDBData(cfg.Backend.MongoDB, "look", cfg.Source.Name(), datums)
 		if err != nil {
 			log.Fatalf("failed to create the MongoDB backend: %v", err)
@@ -69,43 +52,6 @@ func main() {
 	}
 
 	initializeGowid(d)
-}
-
-func getConfig() *Config {
-	sourcePtr := flag.String("source", "", "the source of data")
-	mongodbPtr := flag.String("mongodb", "", "specify the MongoDB connection string URI")
-
-	flag.Parse()
-
-	//// Validate.
-	if *sourcePtr == "" {
-		log.Fatalf("must specify a source of data")
-	}
-
-	//// Set onto Config.
-	var cfg Config
-
-	// Source
-	source := *sourcePtr
-	fi := os.Stdin
-	var err error
-	if source != "-" {
-		fi, err = os.Open(source)
-		if err != nil {
-			log.Fatalf("failed to open source (%q): %v", source, err)
-		}
-	}
-
-	cfg.Source = fi
-
-	// Backend type.
-	cfg.Backend.Type = BackendTypeMemory
-	if *mongodbPtr != "" {
-		cfg.Backend.Type = BackendTypeMongoDB
-		cfg.Backend.MongoDB = *mongodbPtr
-	}
-
-	return &cfg
 }
 
 func initializeGowid(d data.Data) {
