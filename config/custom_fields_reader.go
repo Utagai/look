@@ -63,8 +63,10 @@ func newCustomFieldsReader(src io.Reader, parseFields []ParseField) (io.Reader, 
 		for {
 			json, err := cfr.getNextJSONDocument()
 			if !firstLoop && len(json) != 0 {
-				// TODO: This is going to pay the cost of an entire copy.
-				json = "," + json
+				docChan <- jsonReadResult{
+					json: ",",
+					err:  nil,
+				}
 			}
 			// Even if JSON is empty string, it doesn't matter. Avoid the indentation.
 			docChan <- jsonReadResult{
