@@ -24,7 +24,10 @@ import (
 )
 
 func main() {
-	cfg := config.Get()
+	cfg, err := config.Get()
+	if err != nil {
+		log.Fatalf("failed to get a configuration: %v", err)
+	}
 	// TODO: This is dangerous if the source is large.
 	bytes, err := ioutil.ReadAll(cfg.Source)
 	if err != nil {

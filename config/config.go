@@ -2,6 +2,8 @@ package config
 
 import (
 	"flag"
+	"fmt"
+	"io"
 	"log"
 	"os"
 )
@@ -20,11 +22,20 @@ type Config struct {
 		Memory  bool
 		MongoDB string
 	}
+	CustomParseFields []ParseField
 }
 
-func Get() *Config {
+// CustomInputParseReader returns an io.Reader given a source reader that
+// transforms the given input into JSON based on user-defined custom parse
+// rules.
+func (cfg *Config) CustomInputParseReader(src io.Reader) (io.Reader, error) {
+	return newCustomFieldsReader(src, cfg.CustomParseFields)
+}
+
+func Get() (*Config, error) {
 	sourcePtr := flag.String("source", "", "the source of data")
 	mongodbPtr := flag.String("mongodb", "", "specify the MongoDB connection string URI")
+	customParsePtr := flag.Bool("custom-parse", false, "enables custom parsing of the input into JSON")
 
 	flag.Parse()
 
@@ -56,5 +67,18 @@ func Get() *Config {
 		cfg.Backend.MongoDB = *mongodbPtr
 	}
 
-	return &cfg
+	// Custom parsing
+	if *customParsePtr {
+		parseFields, err := GetCustomParseFields(flag.Args())
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse the custom parser regex options: %w", err)
+		}
+
+		cfg.CustomParseFields = parseFields
+	} else {
+		// Avoid having a nil in the struct if we can, because why not.
+		cfg.CustomParseFields = []ParseField{}
+	}
+
+	return &cfg, nil
 }
