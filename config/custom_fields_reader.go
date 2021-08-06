@@ -9,11 +9,11 @@ import (
 )
 
 type customFieldsReader struct {
-	parseFields   []ParseField
-	regex         *regexp.Regexp
-	docChan       chan jsonReadResult
-	leftoverBytes []byte
-	bufReader     *bufio.Reader
+	parseFields     []ParseField
+	fieldValueRegex *regexp.Regexp
+	jsonPieceChan   chan jsonPiece
+	leftoverBytes   []byte
+	bufReader       *bufio.Reader
 }
 
 func buildRegexFromParseFields(parseFields []ParseField) (*regexp.Regexp, error) {
@@ -25,9 +25,9 @@ func buildRegexFromParseFields(parseFields []ParseField) (*regexp.Regexp, error)
 	return regexp.Compile(regexpStr.String())
 }
 
-type jsonReadResult struct {
-	json string
-	err  error
+type jsonPiece struct {
+	piece string
+	err   error
 }
 
 func newCustomFieldsReader(src io.Reader, parseFields []ParseField) (io.Reader, error) {
@@ -44,56 +44,64 @@ func newCustomFieldsReader(src io.Reader, parseFields []ParseField) (io.Reader, 
 		// the user?
 		return nil, fmt.Errorf("failed to compile the combined regex: %w", err)
 	}
-	docChan := make(chan jsonReadResult, 100) // TODO: Should be a const?
+	jsonPieceChan := make(chan jsonPiece, 100) // TODO: Should be a const?
 	cfr := &customFieldsReader{
-		parseFields: parseFields,
-		regex:       regex,
-		bufReader:   bufReader,
-		docChan:     docChan,
+		parseFields:     parseFields,
+		fieldValueRegex: regex,
+		bufReader:       bufReader,
+		jsonPieceChan:   jsonPieceChan,
 	}
 
-	go func() {
-		// All JSON streams must start with the opening array bracket.
-		docChan <- jsonReadResult{
-			json: "[",
-			err:  nil,
-		}
-
-		firstLoop := true
-		for {
-			json, err := cfr.getNextJSONDocument()
-			if !firstLoop && len(json) != 0 {
-				docChan <- jsonReadResult{
-					json: ",",
-					err:  nil,
-				}
-			}
-			// Even if JSON is empty string, it doesn't matter. Avoid the indentation.
-			docChan <- jsonReadResult{
-				json: json,
-				err:  nil,
-			}
-			if err != nil {
-				break
-			}
-			firstLoop = false
-		}
-
-		// End of JSON, regardless of EOF or more substantial error:
-		docChan <- jsonReadResult{
-			json: "]",
-			err:  nil,
-		}
-
-		docChan <- jsonReadResult{
-			json: "",
-			err:  err,
-		}
-
-		close(docChan)
-	}()
+	go cfr.generateJSON()
 
 	return cfr, nil
+}
+
+func (r *customFieldsReader) generateJSON() {
+	// All JSON streams must start with the opening array bracket.
+	r.jsonPieceChan <- jsonPiece{
+		piece: "[",
+		err:   nil,
+	}
+
+	firstLoop := true
+	for {
+		json, err := r.getNextJSONDocument()
+		if !firstLoop && len(json) != 0 {
+			r.jsonPieceChan <- jsonPiece{
+				piece: ",",
+				err:   nil,
+			}
+		}
+		// Even if we got an error, it doesn't matter because JSON could be
+		// non-empty. Always be sure to include it.
+		r.jsonPieceChan <- jsonPiece{
+			piece: json,
+			err:   nil,
+		}
+		if err != nil {
+			// End of JSON, regardless of EOF or more substantial error, so we have a
+			// few things to do:
+			//   * Finish the JSON by closing the array with ']'.
+			//   * Return the actual error so the consumer can determine what it wants
+			//   to do with it.
+			//   * Close the channel, so we can signal that we are done.
+			//   * Return and clean up the goroutine.
+			r.jsonPieceChan <- jsonPiece{
+				piece: "]",
+				err:   nil,
+			}
+
+			r.jsonPieceChan <- jsonPiece{
+				piece: "",
+				err:   err,
+			}
+
+			close(r.jsonPieceChan)
+			return
+		}
+		firstLoop = false
+	}
 }
 
 func (r *customFieldsReader) mapToJSON(matchedTexts []string) string {
@@ -125,7 +133,7 @@ func (r *customFieldsReader) getNextJSONDocument() (string, error) {
 			return "", err
 		}
 
-		submatches := r.regex.FindStringSubmatch(line)
+		submatches := r.fieldValueRegex.FindStringSubmatch(line)
 		if len(submatches) <= 0 {
 			continue
 		}
@@ -149,7 +157,7 @@ func (r *customFieldsReader) Read(p []byte) (int, error) {
 	}
 
 	for {
-		jsonRes, ok := <-r.docChan
+		jsonRes, ok := <-r.jsonPieceChan
 		if !ok {
 			// If the channel is closed & exhausted, always return EOF:
 			return totalNumBytesCopied, io.EOF
@@ -158,7 +166,7 @@ func (r *customFieldsReader) Read(p []byte) (int, error) {
 			return totalNumBytesCopied, err
 		}
 
-		jsonBytes := []byte(jsonRes.json)
+		jsonBytes := []byte(jsonRes.piece)
 		numBytesCopied := copy(p[totalNumBytesCopied:], jsonBytes)
 		totalNumBytesCopied += numBytesCopied
 		r.leftoverBytes = jsonBytes[numBytesCopied:]
