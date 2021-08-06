@@ -13,38 +13,43 @@ import (
 )
 
 var testDataLines = []line{
-	{
-		Foo:     "bar",
-		Iter:    8,
-		Enabled: true,
-	},
-	{
-		Foo:     "baz",
-		Iter:    9,
-		Enabled: true,
-	},
-	{
-		Foo:     "qux",
-		Iter:    10,
-		Enabled: false,
-	},
-	{
-		Foo:     "bar",
-		Iter:    11,
-		Enabled: true,
-	},
+	newLine("bar", 8, true),
+	newLine("baz", 9, true),
+	newLine("qux", 10, false),
+	newLine("bar", 11, true),
 }
 
 type line struct {
-	Foo     string `json:"foo"`
-	Iter    int    `json:"iter"`
-	Enabled bool   `json:"enabled"`
+	Foo     *string `json:"foo"`
+	Iter    *int    `json:"iter"`
+	Enabled *bool   `json:"enabled"`
+}
+
+func newLine(foo string, iter int, enabled bool) line {
+	return line{
+		Foo:     &foo,
+		Iter:    &iter,
+		Enabled: &enabled,
+	}
+}
+
+func strPtr(s string) *string {
+	return &s
+}
+
+func boolPtr(b bool) *bool {
+	return &b
 }
 
 func newTestReader(t *testing.T, testData []line) io.Reader {
 	var r bytes.Buffer
 	for _, line := range testData {
-		r.WriteString(fmt.Sprintf("value of foo: %q on iteration %d and enabled: %t\n", line.Foo, line.Iter, line.Enabled))
+		// Just to catch programmer mistakes.
+		if line.Foo == nil || line.Iter == nil || line.Enabled == nil {
+			t.Fatalf("newTestReader should only be called with non-nil field values for each line")
+		}
+
+		r.WriteString(fmt.Sprintf("value of foo: %#v on iteration %v and enabled: %v\n", *line.Foo, *line.Iter, *line.Enabled))
 	}
 
 	return &r
@@ -108,5 +113,30 @@ func TestNothingMatches(t *testing.T) {
   bar
   baz
   `)
+
 	runTest(t, newCustomFieldsReader(t, bytes.NewBuffer(testData)), []line{})
+}
+
+// This test is effectively testing how we handle heterogeneous schemas -- for
+// example, if one line matches everything but another line only matches some of
+// the fields, and another matches none.
+func TestPartialMatches(t *testing.T) {
+	testData := []byte(`
+  value of foo: "bar" on iteration 8 and enabled: true
+  value of foo: "bar" on and enabled: true
+  value of foo: "baz" on iteration 9 and enabled: true
+  no match
+  value of foo: "qux" on iteration 10 and enabled: false
+  `)
+
+	runTest(t, newCustomFieldsReader(t, bytes.NewBuffer(testData)), []line{
+		newLine("bar", 8, true),
+		{
+			Foo:     strPtr("bar"),
+			Iter:    nil,
+			Enabled: boolPtr(true),
+		},
+		newLine("baz", 9, true),
+		newLine("bar", 11, true),
+	})
 }
