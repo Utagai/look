@@ -1,6 +1,4 @@
-package config
-
-// TODO: I don't think this needs to be an internal test.
+package config_test
 
 import (
 	"bytes"
@@ -9,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/utagai/look/config"
 )
 
 var testData = []byte(`
@@ -19,19 +18,19 @@ var testData = []byte(`
 `)
 
 func TestCustomFieldsReader(t *testing.T) {
-	r, err := newCustomFieldsReader(bytes.NewBuffer(testData), []ParseField{
+	r, err := config.NewCustomFieldsReader(bytes.NewBuffer(testData), []config.ParseField{
 		{
-			Type:      FieldTypeString,
+			Type:      config.FieldTypeString,
 			FieldName: "foo",
 			Regex:     `"\w+"`,
 		},
 		{
-			Type:      FieldTypeNumber,
+			Type:      config.FieldTypeNumber,
 			FieldName: "iter",
 			Regex:     `\d+`,
 		},
 		{
-			Type:      FieldTypeBool,
+			Type:      config.FieldTypeBool,
 			FieldName: "enabled",
 			Regex:     `true|false`,
 		},
@@ -53,19 +52,19 @@ func TestCustomFieldsReaderOnLargeInput(t *testing.T) {
 		largeTestData = append(largeTestData, testData...)
 	}
 
-	r, err := newCustomFieldsReader(bytes.NewBuffer(largeTestData), []ParseField{
+	r, err := config.NewCustomFieldsReader(bytes.NewBuffer(largeTestData), []config.ParseField{
 		{
-			Type:      FieldTypeString,
+			Type:      config.FieldTypeString,
 			FieldName: "foo",
 			Regex:     `"\w+"`,
 		},
 		{
-			Type:      FieldTypeNumber,
+			Type:      config.FieldTypeNumber,
 			FieldName: "iter",
 			Regex:     `\d+`,
 		},
 		{
-			Type:      FieldTypeBool,
+			Type:      config.FieldTypeBool,
 			FieldName: "enabled",
 			Regex:     `true|false`,
 		},
@@ -96,19 +95,19 @@ func TestNothingMatches(t *testing.T) {
   bar
   baz
   `)
-	r, err := newCustomFieldsReader(bytes.NewBuffer(testData), []ParseField{
+	r, err := config.NewCustomFieldsReader(bytes.NewBuffer(testData), []config.ParseField{
 		{
-			Type:      FieldTypeString,
+			Type:      config.FieldTypeString,
 			FieldName: "foo",
 			Regex:     `"\w+"`,
 		},
 		{
-			Type:      FieldTypeNumber,
+			Type:      config.FieldTypeNumber,
 			FieldName: "iter",
 			Regex:     `\d+`,
 		},
 		{
-			Type:      FieldTypeBool,
+			Type:      config.FieldTypeBool,
 			FieldName: "enabled",
 			Regex:     `true|false`,
 		},

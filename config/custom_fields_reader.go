@@ -30,7 +30,8 @@ type jsonPiece struct {
 	err   error
 }
 
-func newCustomFieldsReader(src io.Reader, parseFields []ParseField) (io.Reader, error) {
+// NewCustomFieldsReader creates a new CustomFieldsReader.
+func NewCustomFieldsReader(src io.Reader, parseFields []ParseField) (io.Reader, error) {
 	if len(parseFields) == 0 {
 		// If there are no custom fields, then just treat this as a no-op.
 		return src, nil

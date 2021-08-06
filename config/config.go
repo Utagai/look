@@ -29,7 +29,7 @@ type Config struct {
 // transforms the given input into JSON based on user-defined custom parse
 // rules.
 func (cfg *Config) CustomInputParseReader(src io.Reader) (io.Reader, error) {
-	return newCustomFieldsReader(src, cfg.CustomParseFields)
+	return NewCustomFieldsReader(src, cfg.CustomParseFields)
 }
 
 func Get() (*Config, error) {
