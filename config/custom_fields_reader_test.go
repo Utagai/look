@@ -50,8 +50,8 @@ func newTestReader(t *testing.T, testData []line) io.Reader {
 	return &r
 }
 
-func TestCustomFieldsReader(t *testing.T) {
-	r, err := config.NewCustomFieldsReader(newTestReader(t, testDataLines), []config.ParseField{
+func newCustomFieldsReader(t *testing.T, src io.Reader) io.Reader {
+	r, err := config.NewCustomFieldsReader(src, []config.ParseField{
 		{
 			Type:      config.FieldTypeString,
 			FieldName: "foo",
@@ -70,7 +70,11 @@ func TestCustomFieldsReader(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	actualJSON, err := ioutil.ReadAll(r)
+	return r
+}
+
+func runTest(t *testing.T, cfr io.Reader, expectedLines []line) {
+	actualJSON, err := ioutil.ReadAll(cfr)
 	if err != io.EOF {
 		require.NoError(t, err)
 	}
@@ -79,9 +83,13 @@ func TestCustomFieldsReader(t *testing.T) {
 	require.NoError(t, json.Unmarshal(actualJSON, &actualLines))
 
 	require.Equal(t,
-		testDataLines,
+		expectedLines,
 		actualLines,
 	)
+}
+
+func TestCustomFieldsReader(t *testing.T) {
+	runTest(t, newCustomFieldsReader(t, newTestReader(t, testDataLines)), testDataLines)
 }
 
 func TestCustomFieldsReaderOnLargeInput(t *testing.T) {
@@ -91,37 +99,7 @@ func TestCustomFieldsReaderOnLargeInput(t *testing.T) {
 		largeTestDataLines = append(largeTestDataLines, testDataLines...)
 	}
 
-	r, err := config.NewCustomFieldsReader(newTestReader(t, largeTestDataLines), []config.ParseField{
-		{
-			Type:      config.FieldTypeString,
-			FieldName: "foo",
-			Regex:     `"\w+"`,
-		},
-		{
-			Type:      config.FieldTypeNumber,
-			FieldName: "iter",
-			Regex:     `\d+`,
-		},
-		{
-			Type:      config.FieldTypeBool,
-			FieldName: "enabled",
-			Regex:     `true|false`,
-		},
-	})
-	require.NoError(t, err)
-
-	actualJSON, err := ioutil.ReadAll(r)
-	if err != io.EOF {
-		require.NoError(t, err)
-	}
-
-	actualLines := make([]line, len(testDataLines)*sizeIncreaseFactor)
-	require.NoError(t, json.Unmarshal(actualJSON, &actualLines))
-
-	require.Equal(t,
-		largeTestDataLines,
-		actualLines,
-	)
+	runTest(t, newCustomFieldsReader(t, newTestReader(t, largeTestDataLines)), largeTestDataLines)
 }
 
 func TestNothingMatches(t *testing.T) {
@@ -130,35 +108,5 @@ func TestNothingMatches(t *testing.T) {
   bar
   baz
   `)
-	r, err := config.NewCustomFieldsReader(bytes.NewBuffer(testData), []config.ParseField{
-		{
-			Type:      config.FieldTypeString,
-			FieldName: "foo",
-			Regex:     `"\w+"`,
-		},
-		{
-			Type:      config.FieldTypeNumber,
-			FieldName: "iter",
-			Regex:     `\d+`,
-		},
-		{
-			Type:      config.FieldTypeBool,
-			FieldName: "enabled",
-			Regex:     `true|false`,
-		},
-	})
-	require.NoError(t, err)
-
-	actualJSON, err := ioutil.ReadAll(r)
-	if err != io.EOF {
-		require.NoError(t, err)
-	}
-
-	actualLines := []line{}
-	require.NoError(t, json.Unmarshal(actualJSON, &actualLines))
-
-	require.Equal(t,
-		[]line{},
-		actualLines,
-	)
+	runTest(t, newCustomFieldsReader(t, bytes.NewBuffer(testData)), []line{})
 }
