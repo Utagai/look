@@ -2,23 +2,56 @@ package config_test
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/utagai/look/config"
 )
 
-var testData = []byte(`
-  value of foo: "bar" on iteration 8 and enabled: true
-  value of foo: "baz" on iteration 9 and enabled: true
-  value of foo: "qux" on iteration 10 and enabled: false
-  value of foo: "bar" on iteration 11 and enabled: true
-`)
+var testDataLines = []line{
+	{
+		Foo:     "bar",
+		Iter:    8,
+		Enabled: true,
+	},
+	{
+		Foo:     "baz",
+		Iter:    9,
+		Enabled: true,
+	},
+	{
+		Foo:     "qux",
+		Iter:    10,
+		Enabled: false,
+	},
+	{
+		Foo:     "bar",
+		Iter:    11,
+		Enabled: true,
+	},
+}
+
+type line struct {
+	Foo     string `json:"foo"`
+	Iter    int    `json:"iter"`
+	Enabled bool   `json:"enabled"`
+}
+
+func newTestReader(t *testing.T, testData []line) io.Reader {
+	var r bytes.Buffer
+	for _, line := range testData {
+		r.WriteString(fmt.Sprintf("value of foo: %q on iteration %d and enabled: %t\n", line.Foo, line.Iter, line.Enabled))
+	}
+
+	return &r
+}
 
 func TestCustomFieldsReader(t *testing.T) {
-	r, err := config.NewCustomFieldsReader(bytes.NewBuffer(testData), []config.ParseField{
+	r, err := config.NewCustomFieldsReader(newTestReader(t, testDataLines), []config.ParseField{
 		{
 			Type:      config.FieldTypeString,
 			FieldName: "foo",
@@ -35,24 +68,30 @@ func TestCustomFieldsReader(t *testing.T) {
 			Regex:     `true|false`,
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	actualJSON, err := ioutil.ReadAll(r)
 	if err != io.EOF {
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 
-	assert.Equal(t, `[{"foo": "bar","iter": 8,"enabled": true},{"foo": "baz","iter": 9,"enabled": true},{"foo": "qux","iter": 10,"enabled": false},{"foo": "bar","iter": 11,"enabled": true}]`, string(actualJSON))
+	actualLines := make([]line, len(testDataLines))
+	require.NoError(t, json.Unmarshal(actualJSON, &actualLines))
+
+	require.Equal(t,
+		testDataLines,
+		actualLines,
+	)
 }
 
 func TestCustomFieldsReaderOnLargeInput(t *testing.T) {
 	sizeIncreaseFactor := 100
-	largeTestData := make([]byte, 0, len(testData)*sizeIncreaseFactor)
+	largeTestDataLines := make([]line, 0, len(testDataLines)*sizeIncreaseFactor)
 	for i := 0; i < sizeIncreaseFactor; i++ {
-		largeTestData = append(largeTestData, testData...)
+		largeTestDataLines = append(largeTestDataLines, testDataLines...)
 	}
 
-	r, err := config.NewCustomFieldsReader(bytes.NewBuffer(largeTestData), []config.ParseField{
+	r, err := config.NewCustomFieldsReader(newTestReader(t, largeTestDataLines), []config.ParseField{
 		{
 			Type:      config.FieldTypeString,
 			FieldName: "foo",
@@ -69,24 +108,20 @@ func TestCustomFieldsReaderOnLargeInput(t *testing.T) {
 			Regex:     `true|false`,
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	actualJSON, err := ioutil.ReadAll(r)
 	if err != io.EOF {
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 
-	expectedJSON := []byte(`{"foo": "bar","iter": 8,"enabled": true},{"foo": "baz","iter": 9,"enabled": true},{"foo": "qux","iter": 10,"enabled": false},{"foo": "bar","iter": 11,"enabled": true}`)
-	largeExpectedJSON := make([]byte, 0, len(expectedJSON)*sizeIncreaseFactor)
-	largeExpectedJSON = append(largeExpectedJSON, '[')
-	for i := 0; i < sizeIncreaseFactor; i++ {
-		largeExpectedJSON = append(largeExpectedJSON, expectedJSON...)
-		if i < sizeIncreaseFactor-1 {
-			largeExpectedJSON = append(largeExpectedJSON, ',')
-		}
-	}
-	largeExpectedJSON = append(largeExpectedJSON, ']')
-	assert.Equal(t, string(largeExpectedJSON), string(actualJSON))
+	actualLines := make([]line, len(testDataLines)*sizeIncreaseFactor)
+	require.NoError(t, json.Unmarshal(actualJSON, &actualLines))
+
+	require.Equal(t,
+		largeTestDataLines,
+		actualLines,
+	)
 }
 
 func TestNothingMatches(t *testing.T) {
@@ -112,12 +147,18 @@ func TestNothingMatches(t *testing.T) {
 			Regex:     `true|false`,
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	actualJSON, err := ioutil.ReadAll(r)
 	if err != io.EOF {
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 
-	assert.Equal(t, actualJSON, []byte("[]"))
+	actualLines := []line{}
+	require.NoError(t, json.Unmarshal(actualJSON, &actualLines))
+
+	require.Equal(t,
+		[]line{},
+		actualLines,
+	)
 }
