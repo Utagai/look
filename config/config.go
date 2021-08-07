@@ -22,14 +22,14 @@ type Config struct {
 		Memory  bool
 		MongoDB string
 	}
-	CustomParseFields []ParseField
+	CustomFields *CustomFields
 }
 
 // CustomInputParseReader returns an io.Reader given a source reader that
 // transforms the given input into JSON based on user-defined custom parse
 // rules.
 func (cfg *Config) CustomInputParseReader(src io.Reader) (io.Reader, error) {
-	return NewCustomFieldsReader(src, cfg.CustomParseFields)
+	return NewCustomFieldsReader(src, cfg.CustomFields)
 }
 
 func Get() (*Config, error) {
@@ -69,15 +69,15 @@ func Get() (*Config, error) {
 
 	// Custom parsing
 	if *customParsePtr {
-		parseFields, err := GetCustomParseFields(flag.Args())
+		parseFields, err := GetCustomFields(flag.Args())
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse the custom parser regex options: %w", err)
 		}
 
-		cfg.CustomParseFields = parseFields
+		cfg.CustomFields = parseFields
 	} else {
 		// Avoid having a nil in the struct if we can, because why not.
-		cfg.CustomParseFields = []ParseField{}
+		cfg.CustomFields = nil
 	}
 
 	return &cfg, nil

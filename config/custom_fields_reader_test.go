@@ -56,7 +56,7 @@ func newTestReader(t *testing.T, testData []line) io.Reader {
 }
 
 func newCustomFieldsReader(t *testing.T, src io.Reader) io.Reader {
-	r, err := config.NewCustomFieldsReader(src, []config.ParseField{
+	customFields, err := config.NewCustomFields([]config.ParseField{
 		{
 			Type:      config.FieldTypeString,
 			FieldName: "foo",
@@ -73,6 +73,8 @@ func newCustomFieldsReader(t *testing.T, src io.Reader) io.Reader {
 			Regex:     `true|false`,
 		},
 	})
+	require.NoError(t, err)
+	r, err := config.NewCustomFieldsReader(src, customFields)
 	require.NoError(t, err)
 
 	return r

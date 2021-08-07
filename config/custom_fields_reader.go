@@ -9,11 +9,10 @@ import (
 )
 
 type customFieldsReader struct {
-	parseFields     []ParseField
-	fieldValueRegex *regexp.Regexp
-	jsonPieceChan   chan jsonPiece
-	leftoverBytes   []byte
-	bufReader       *bufio.Reader
+	customFields  *CustomFields
+	jsonPieceChan chan jsonPiece
+	leftoverBytes []byte
+	bufReader     *bufio.Reader
 }
 
 func buildRegexFromParseFields(parseFields []ParseField) (*regexp.Regexp, error) {
@@ -31,26 +30,19 @@ type jsonPiece struct {
 }
 
 // NewCustomFieldsReader creates a new CustomFieldsReader.
-func NewCustomFieldsReader(src io.Reader, parseFields []ParseField) (io.Reader, error) {
-	if len(parseFields) == 0 {
+func NewCustomFieldsReader(src io.Reader, customFields *CustomFields) (io.Reader, error) {
+	if customFields == nil {
 		// If there are no custom fields, then just treat this as a no-op.
 		return src, nil
 	}
 
 	bufReader := bufio.NewReader(src)
 
-	regex, err := buildRegexFromParseFields(parseFields)
-	if err != nil {
-		// TODO: Should we be compiling each of the individual regexes supplied by
-		// the user?
-		return nil, fmt.Errorf("failed to compile the combined regex: %w", err)
-	}
 	jsonPieceChan := make(chan jsonPiece, 100) // TODO: Should be a const?
 	cfr := &customFieldsReader{
-		parseFields:     parseFields,
-		fieldValueRegex: regex,
-		bufReader:       bufReader,
-		jsonPieceChan:   jsonPieceChan,
+		customFields:  customFields,
+		bufReader:     bufReader,
+		jsonPieceChan: jsonPieceChan,
 	}
 
 	go cfr.generateJSON()
@@ -77,7 +69,7 @@ func (r *customFieldsReader) generateJSON() {
 		// Even if we got an error, it doesn't matter because JSON could be
 		// non-empty. Always be sure to include it.
 		r.jsonPieceChan <- jsonPiece{
-			piece: json,
+			piece: string(json),
 			err:   nil,
 		}
 		if err != nil {
@@ -105,42 +97,21 @@ func (r *customFieldsReader) generateJSON() {
 	}
 }
 
-func (r *customFieldsReader) mapToJSON(matchedTexts []string) string {
-	// The parse fields are ordered by their appearance in the regex, so the
-	// submatches are 1:1.
-	var jsonString strings.Builder
-	jsonString.WriteString("{")
-	for i := range matchedTexts {
-		matchedText := matchedTexts[i]
-		parseField := r.parseFields[i]
-
-		jsonString.WriteString(fmt.Sprintf("%q: %s", parseField.FieldName, matchedText))
-
-		if i != len(matchedTexts)-1 {
-			jsonString.WriteString(",")
-		}
-	}
-
-	jsonString.WriteString("}")
-
-	return jsonString.String()
-}
-
-func (r *customFieldsReader) getNextJSONDocument() (string, error) {
-	var json string
+func (r *customFieldsReader) getNextJSONDocument() ([]byte, error) {
 	for {
 		line, err := r.bufReader.ReadString('\n')
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
-		submatches := r.fieldValueRegex.FindStringSubmatch(line)
-		if len(submatches) <= 0 {
-			continue
-		}
 		// The first submatch is going to be the entirety of the regex, but we don't
 		// care about that. We care about the groups:
-		json = r.mapToJSON(submatches[1:])
+		json, err := r.customFields.ToJSON(line)
+		if err == ErrNoMatch {
+			continue
+		} else if err != nil {
+			return nil, err
+		}
 
 		return json, nil
 	}

@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -61,6 +62,15 @@ type ParseField struct {
 	Regex     string
 }
 
+func GetCustomFields(args []string) (*CustomFields, error) {
+	parseFields, err := GetCustomParseFields(args)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the custom parse fields: %w", err)
+	}
+
+	return NewCustomFields(parseFields)
+}
+
 func GetCustomParseFields(args []string) ([]ParseField, error) {
 	seenFields := make(map[string]struct{}, len(args))
 	parseFields := make([]ParseField, len(args))
@@ -114,6 +124,12 @@ func parseParseField(arg string) (ParseField, error) {
 			return ParseField{}, err
 		}
 		regex = defaultRegexForType(typ)
+	}
+
+	// TODO: I think we should store regexp.Regexp in ParseField instead.
+	_, err = regexp.Compile(regex)
+	if err != nil {
+		return ParseField{}, fmt.Errorf("invalid regex: %w", err)
 	}
 
 	return ParseField{
