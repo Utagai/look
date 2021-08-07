@@ -8,13 +8,18 @@ import (
 	"os"
 )
 
+// BackendType is the type of backend to use. The type of backend represents not
+// only where the queried data resides, but also the method through which it can
+// be queried.
 type BackendType string
 
+// The various backend types.
 const (
 	BackendTypeMemory  = "memory"
 	BackendTypeMongoDB = "mongodb"
 )
 
+// Config represents the configuration for look.
 type Config struct {
 	Source  *os.File
 	Backend struct {
@@ -28,10 +33,13 @@ type Config struct {
 // CustomInputParseReader returns an io.Reader given a source reader that
 // transforms the given input into JSON based on user-defined custom parse
 // rules.
+// TODO: Should remove this function. It's weird to be on the Config struct,
+// which should be strictly data.
 func (cfg *Config) CustomInputParseReader(src io.Reader) (io.Reader, error) {
 	return NewCustomFieldsReader(src, cfg.CustomFields)
 }
 
+// Get returns the config for the current look process.
 func Get() (*Config, error) {
 	sourcePtr := flag.String("source", "", "the source of data")
 	mongodbPtr := flag.String("mongodb", "", "specify the MongoDB connection string URI")
@@ -67,7 +75,10 @@ func Get() (*Config, error) {
 		cfg.Backend.MongoDB = *mongodbPtr
 	}
 
-	// Custom parsing
+	// Custom fields.
+	// TODO: I think this means the user has to do -custom=true, when we'd ideally
+	// have them either omit it for false, or just do -custom for true. Should
+	// verify this.
 	if *customParsePtr {
 		parseFields, err := GetCustomFields(flag.Args())
 		if err != nil {
@@ -76,7 +87,6 @@ func Get() (*Config, error) {
 
 		cfg.CustomFields = parseFields
 	} else {
-		// Avoid having a nil in the struct if we can, because why not.
 		cfg.CustomFields = nil
 	}
 

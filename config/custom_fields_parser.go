@@ -56,24 +56,20 @@ func defaultRegexForType(typ FieldType) string {
 	}
 }
 
-type ParseField struct {
+// Field represents a JSON field to parse from the input lines.
+type Field struct {
 	Type      FieldType
 	FieldName string
 	Regex     string
 }
 
+// GetCustomFields returns a CustomFields for the given arguments.
+// TODO: OK, so I think what we actually want here is these functions (and all
+// other custom_fields_* things to be moved to its own package. The tests can be
+// internal and we can only expose the reader or something.)
 func GetCustomFields(args []string) (*CustomFields, error) {
-	parseFields, err := GetCustomParseFields(args)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get the custom parse fields: %w", err)
-	}
-
-	return NewCustomFields(parseFields)
-}
-
-func GetCustomParseFields(args []string) ([]ParseField, error) {
 	seenFields := make(map[string]struct{}, len(args))
-	parseFields := make([]ParseField, len(args))
+	parseFields := make([]Field, len(args))
 
 	for i, arg := range args {
 		parseField, err := parseParseField(arg)
@@ -89,7 +85,7 @@ func GetCustomParseFields(args []string) ([]ParseField, error) {
 		parseFields[i] = parseField
 	}
 
-	return parseFields, nil
+	return NewCustomFields(parseFields)
 }
 
 const (
@@ -97,11 +93,11 @@ const (
 	regexSeparator = "="
 )
 
-func parseParseField(arg string) (ParseField, error) {
+func parseParseField(arg string) (Field, error) {
 	colonPos := strings.LastIndex(arg, typeSeparator)
 	if colonPos == -1 {
 		// In this case, the colon is missing, and this is an invalid parse field.
-		return ParseField{}, errors.New("parse fields are of the format <fieldname>:<type>[=<regex>]")
+		return Field{}, errors.New("parse fields are of the format <fieldname>:<type>[=<regex>]")
 	}
 	fieldName, typeAndMaybeRegex := arg[:colonPos], arg[colonPos+len(typeSeparator):]
 
@@ -114,14 +110,14 @@ func parseParseField(arg string) (ParseField, error) {
 		typeStr, regex = typeAndMaybeRegex[:equalsPos], typeAndMaybeRegex[equalsPos+len(regexSeparator):]
 		typ, err = toFieldType(typeStr)
 		if err != nil {
-			return ParseField{}, err
+			return Field{}, err
 		}
 	} else {
 		// In this case, there is no regex so the user wants to default to the regex
 		// for the type.
 		typ, err = toFieldType(typeAndMaybeRegex)
 		if err != nil {
-			return ParseField{}, err
+			return Field{}, err
 		}
 		regex = defaultRegexForType(typ)
 	}
@@ -129,10 +125,10 @@ func parseParseField(arg string) (ParseField, error) {
 	// TODO: I think we should store regexp.Regexp in ParseField instead.
 	_, err = regexp.Compile(regex)
 	if err != nil {
-		return ParseField{}, fmt.Errorf("invalid regex: %w", err)
+		return Field{}, fmt.Errorf("invalid regex: %w", err)
 	}
 
-	return ParseField{
+	return Field{
 		Type:      typ,
 		FieldName: fieldName,
 		Regex:     regex,

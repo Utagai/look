@@ -56,7 +56,7 @@ func newTestReader(t *testing.T, testData []line) io.Reader {
 }
 
 func newCustomFieldsReader(t *testing.T, src io.Reader) io.Reader {
-	customFields, err := config.NewCustomFields([]config.ParseField{
+	customFields, err := config.NewCustomFields([]config.Field{
 		{
 			Type:      config.FieldTypeString,
 			FieldName: "foo",

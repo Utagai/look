@@ -10,7 +10,7 @@ import (
 
 type testCase struct {
 	args                []string
-	expectedParseFields []config.ParseField
+	expectedParseFields []config.Field
 	expectedErr         error
 }
 
@@ -19,7 +19,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 	for _, tc := range []testCase{
 		{
 			args: []string{`foo:number=LOL`},
-			expectedParseFields: []config.ParseField{
+			expectedParseFields: []config.Field{
 				{
 					Type:      config.FieldTypeNumber,
 					Regex:     `LOL`,
@@ -29,7 +29,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 		},
 		{
 			args: []string{`foo:bool=hello!`},
-			expectedParseFields: []config.ParseField{
+			expectedParseFields: []config.Field{
 				{
 					Type:      config.FieldTypeBool,
 					Regex:     `hello!`,
@@ -39,7 +39,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 		},
 		{
 			args: []string{`foo:string=whatever`},
-			expectedParseFields: []config.ParseField{
+			expectedParseFields: []config.Field{
 				{
 					Type:      config.FieldTypeString,
 					Regex:     `whatever`,
@@ -49,7 +49,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 		},
 		{
 			args: []string{`foo:number`},
-			expectedParseFields: []config.ParseField{
+			expectedParseFields: []config.Field{
 				{
 					Type:      config.FieldTypeNumber,
 					Regex:     `\d+`,
@@ -59,7 +59,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 		},
 		{
 			args: []string{`foo:bool`},
-			expectedParseFields: []config.ParseField{
+			expectedParseFields: []config.Field{
 				{
 					Type:      config.FieldTypeBool,
 					Regex:     `true|false`,
@@ -69,7 +69,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 		},
 		{
 			args: []string{`foo:string`},
-			expectedParseFields: []config.ParseField{
+			expectedParseFields: []config.Field{
 				{
 					Type:      config.FieldTypeString,
 					Regex:     `"\w+"`,
@@ -79,7 +79,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 		},
 		{
 			args: []string{`bar:string`},
-			expectedParseFields: []config.ParseField{
+			expectedParseFields: []config.Field{
 				{
 					Type:      config.FieldTypeString,
 					Regex:     `"\w+"`,
@@ -97,7 +97,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 		},
 		{
 			args: []string{`foo:string`, `bar:number`, `baz:bool`},
-			expectedParseFields: []config.ParseField{
+			expectedParseFields: []config.Field{
 				{
 					Type:      config.FieldTypeString,
 					Regex:     `"\w+"`,
@@ -121,7 +121,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 		},
 		{
 			args: []string{`foo:string`, `bar:number=\d\d\d`, `baz:bool`},
-			expectedParseFields: []config.ParseField{
+			expectedParseFields: []config.Field{
 				{
 					Type:      config.FieldTypeString,
 					Regex:     `"\w+"`,
@@ -145,10 +145,11 @@ func TestGetCustomParseArgs(t *testing.T) {
 }
 
 func testGetCustomParseArgs(t *testing.T, tc testCase) {
-	parseFields, err := config.GetCustomParseFields(tc.args)
+	customFields, err := config.GetCustomFields(tc.args)
 	if tc.expectedErr != nil {
 		assert.EqualError(t, err, tc.expectedErr.Error())
 	} else {
+		parseFields := customFields.ParseFields
 		if err != nil {
 			t.Fatalf("did not expect an error, but got %v", err)
 		}

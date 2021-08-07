@@ -2,10 +2,7 @@ package config
 
 import (
 	"bufio"
-	"fmt"
 	"io"
-	"regexp"
-	"strings"
 )
 
 type customFieldsReader struct {
@@ -15,21 +12,13 @@ type customFieldsReader struct {
 	bufReader     *bufio.Reader
 }
 
-func buildRegexFromParseFields(parseFields []ParseField) (*regexp.Regexp, error) {
-	var regexpStr strings.Builder
-	for _, parseField := range parseFields {
-		regexpStr.WriteString(fmt.Sprintf(".*?(%s)", parseField.Regex))
-	}
-
-	return regexp.Compile(regexpStr.String())
-}
-
 type jsonPiece struct {
 	piece string
 	err   error
 }
 
 // NewCustomFieldsReader creates a new CustomFieldsReader.
+// TODO: We should return *customFieldsReader.
 func NewCustomFieldsReader(src io.Reader, customFields *CustomFields) (io.Reader, error) {
 	if customFields == nil {
 		// If there are no custom fields, then just treat this as a no-op.
@@ -38,6 +27,8 @@ func NewCustomFieldsReader(src io.Reader, customFields *CustomFields) (io.Reader
 
 	bufReader := bufio.NewReader(src)
 
+	// NOTE: Using a channel may not be the fastest option. For now though, it
+	// keeps the code simpler and cleaner.
 	jsonPieceChan := make(chan jsonPiece, 100) // TODO: Should be a const?
 	cfr := &customFieldsReader{
 		customFields:  customFields,
@@ -60,40 +51,23 @@ func (r *customFieldsReader) generateJSON() {
 	firstLoop := true
 	for {
 		json, err := r.getNextJSONDocument()
-		if !firstLoop && len(json) != 0 {
+		if err != nil {
+			r.finalizeJSON(err)
+			return
+		}
+
+		if !firstLoop {
 			r.jsonPieceChan <- jsonPiece{
 				piece: ",",
 				err:   nil,
 			}
 		}
-		// Even if we got an error, it doesn't matter because JSON could be
-		// non-empty. Always be sure to include it.
+		firstLoop = false
+
 		r.jsonPieceChan <- jsonPiece{
 			piece: string(json),
 			err:   nil,
 		}
-		if err != nil {
-			// End of JSON, regardless of EOF or more substantial error, so we have a
-			// few things to do:
-			//   * Finish the JSON by closing the array with ']'.
-			//   * Return the actual error so the consumer can determine what it wants
-			//   to do with it.
-			//   * Close the channel, so we can signal that we are done.
-			//   * Return and clean up the goroutine.
-			r.jsonPieceChan <- jsonPiece{
-				piece: "]",
-				err:   nil,
-			}
-
-			r.jsonPieceChan <- jsonPiece{
-				piece: "",
-				err:   err,
-			}
-
-			close(r.jsonPieceChan)
-			return
-		}
-		firstLoop = false
 	}
 }
 
@@ -104,11 +78,9 @@ func (r *customFieldsReader) getNextJSONDocument() ([]byte, error) {
 			return nil, err
 		}
 
-		// The first submatch is going to be the entirety of the regex, but we don't
-		// care about that. We care about the groups:
 		json, err := r.customFields.ToJSON(line)
 		if err == ErrNoMatch {
-			continue
+			continue // If this line doesn't match, don't error, just continue to the next line.
 		} else if err != nil {
 			return nil, err
 		}
@@ -117,7 +89,29 @@ func (r *customFieldsReader) getNextJSONDocument() ([]byte, error) {
 	}
 }
 
+func (r *customFieldsReader) finalizeJSON(err error) {
+	// End of JSON, regardless of EOF or more substantial error, so we have a
+	// few things to do:
+	//   * Finish the JSON by closing the array with ']'.
+	//   * Return the actual error so the consumer can determine what it wants
+	//   to do with it.
+	//   * Close the channel, so we can signal that we are done.
+	//   * Return and clean up the goroutine.
+	r.jsonPieceChan <- jsonPiece{
+		piece: "]",
+		err:   nil,
+	}
+
+	r.jsonPieceChan <- jsonPiece{
+		piece: "",
+		err:   err,
+	}
+
+	close(r.jsonPieceChan)
+}
+
 func (r *customFieldsReader) Read(p []byte) (int, error) {
+	// TODO: Can we write this simpler by using bytes.Buffer?
 	totalNumBytesCopied := 0
 	if len(r.leftoverBytes) > 0 {
 		numBytesCopied := copy(p, r.leftoverBytes)

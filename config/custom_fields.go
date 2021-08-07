@@ -9,15 +9,19 @@ import (
 	"strings"
 )
 
+// ErrNoMatch is an error returned when a given line produces no match from
+// which to generate its JSON representation.
 var ErrNoMatch = errors.New("no match for line")
 
+// CustomFields represents the custom fields defined by the user.
 // TODO: Does this need to be exported?
 type CustomFields struct {
-	ParseFields []ParseField
+	ParseFields []Field
 	TotalRegex  *regexp.Regexp
 }
 
-func NewCustomFields(parseFields []ParseField) (*CustomFields, error) {
+// NewCustomFields is a constructor for CustomFields.
+func NewCustomFields(parseFields []Field) (*CustomFields, error) {
 	var totalRegexStr strings.Builder
 	// Leading extra characters.
 	totalRegexStr.WriteString(".*?")
@@ -25,7 +29,7 @@ func NewCustomFields(parseFields []ParseField) (*CustomFields, error) {
 		totalRegexStr.WriteString(fmt.Sprintf("(%s)", pf.Regex))
 		totalRegexStr.WriteString(".*?")
 	}
-	// TODO: Should not panic.
+
 	totalRegex, err := regexp.Compile(totalRegexStr.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile the complete regex: %w", err)
@@ -37,6 +41,10 @@ func NewCustomFields(parseFields []ParseField) (*CustomFields, error) {
 	}, nil
 }
 
+// ToJSON converts the given line into a slice of bytes representing its
+// converted JSON representation.
+// The returned JSON may not be 'complete', in that it may not have a field for
+// each specified custom field.
 func (cf *CustomFields) ToJSON(line string) ([]byte, error) {
 	matches := cf.TotalRegex.FindStringSubmatch(line)
 	if len(matches) == 0 {
