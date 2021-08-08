@@ -20,13 +20,13 @@ var errNoMatchForField = errors.New("no match for current field")
 
 // Fields represents the custom fields defined by the user.
 type Fields struct {
-	ParseFields []Field
+	CustomFields []Field
 }
 
 // NewFields is a constructor for Fields.
-func NewFields(parseFields []Field) (*Fields, error) {
+func NewFields(customFields []Field) (*Fields, error) {
 	return &Fields{
-		ParseFields: parseFields,
+		CustomFields: customFields,
 	}, nil
 }
 
@@ -35,11 +35,11 @@ func NewFields(parseFields []Field) (*Fields, error) {
 // The returned JSON may not be 'complete', in that it may not have a field for
 // each specified custom field.
 func (cf *Fields) ToJSON(line string) ([]byte, error) {
-	jsonMap := make(map[string]interface{}, len(cf.ParseFields))
+	jsonMap := make(map[string]interface{}, len(cf.CustomFields))
 	var err error
 	remainingLine := line
 	atLeastOneNonNullValue := false
-	for _, f := range cf.ParseFields {
+	for _, f := range cf.CustomFields {
 		remainingLine, err = cf.addToMap(jsonMap, f, remainingLine)
 		if err != nil && err != errNoMatchForField {
 			return nil, err // Fatal.

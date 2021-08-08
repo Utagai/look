@@ -66,23 +66,23 @@ type Field struct {
 // ParseFields returns a Fields for the given arguments.
 func ParseFields(args []string) (*Fields, error) {
 	seenFields := make(map[string]struct{}, len(args))
-	parseFields := make([]Field, len(args))
+	fields := make([]Field, len(args))
 
 	for i, arg := range args {
-		parseField, err := parseParseField(arg)
+		field, err := parseField(arg)
 		if err != nil {
 			return nil, err
 		}
 
-		if _, ok := seenFields[parseField.FieldName]; ok {
-			return nil, fmt.Errorf("duplicate field: %q", parseField.FieldName)
+		if _, ok := seenFields[field.FieldName]; ok {
+			return nil, fmt.Errorf("duplicate field: %q", field.FieldName)
 		}
-		seenFields[parseField.FieldName] = struct{}{}
+		seenFields[field.FieldName] = struct{}{}
 
-		parseFields[i] = parseField
+		fields[i] = field
 	}
 
-	return NewFields(parseFields)
+	return NewFields(fields)
 }
 
 const (
@@ -90,8 +90,8 @@ const (
 	regexSeparator = "="
 )
 
-func parseParseField(arg string) (Field, error) {
-	colonPos := strings.LastIndex(arg, typeSeparator)
+func parseField(arg string) (Field, error) {
+	colonPos := strings.Index(arg, typeSeparator)
 	if colonPos == -1 {
 		// In this case, the colon is missing, and this is an invalid parse field.
 		return Field{}, errors.New("parse fields are of the format <fieldname>:<type>[=<regex>]")
