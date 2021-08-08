@@ -13,10 +13,16 @@ type FieldType string
 const (
 	// FieldTypeString corresponds to JSON strings.
 	FieldTypeString = "string"
+	// FieldTypeStringRegex is the default regex for matching JSON strings.
+	FieldTypeStringRegex = `"(\w+)"`
 	// FieldTypeNumber corresponds to JSON numbers (integers/floats).
 	FieldTypeNumber = "number"
+	// FieldTypeNumberRegex is the default regex for matching numeric values.
+	FieldTypeNumberRegex = `([-+]?\d*\.?\d+)`
 	// FieldTypeBool corresponds to JSON booleans.
 	FieldTypeBool = "bool"
+	// FieldTypeBoolRegex is the default regex for matching boolean values.
+	FieldTypeBoolRegex = `(true|false)`
 )
 
 var fieldTypes = []FieldType{
@@ -40,17 +46,16 @@ func toFieldType(typStr string) (FieldType, error) {
 	default:
 		return "", newUnrecognizedFieldTypeErr(typStr)
 	}
-
 }
 
 func defaultRegexForType(typ FieldType) string {
 	switch typ {
 	case FieldTypeString:
-		return `"(\w+)"`
+		return FieldTypeStringRegex
 	case FieldTypeNumber:
-		return `([-+]?\d*\.?\d+)`
+		return FieldTypeNumberRegex
 	case FieldTypeBool:
-		return `(true|false)`
+		return FieldTypeBoolRegex
 	default:
 		panic(newUnrecognizedFieldTypeErr(string(typ)))
 	}
