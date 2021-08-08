@@ -26,28 +26,21 @@ const (
 // When differing const kinds are compared, they are casted to allow comparison.
 // The type hierarchy is string <- number <- bool.
 func Compare(a, b interface{}) Comparison {
-	if cmp := compareInterfaceToInterface(a, b); cmp != nil {
-		return *cmp
-	}
-	return Equal
+	return compareInterfaceToInterface(a, b)
 }
 
-// TODO: We don't need to return *Comparison, I think we may be better off panicking.
-func compareInterfaceToInterface(a, b interface{}) *Comparison {
-	if maybeNumber := convertPotentialNumber(a); maybeNumber != nil {
-		return compareNumberToInterface(*maybeNumber, b)
-	} else if maybeStr := convertPotentialString(a); maybeStr != nil {
-		return compareStringToInterface(*maybeStr, b)
+func compareInterfaceToInterface(a, b interface{}) Comparison {
+	if num, ok := convertPotentialNumber(a); ok {
+		return compareNumberToInterface(num, b)
+	} else if str, ok := convertPotentialString(a); ok {
+		return compareStringToInterface(str, b)
 	} else if bool, ok := convertPotentialBool(a); ok {
 		return compareBoolToInterface(bool, b)
-		// TODO: We should probably make everything be consistent and return
-		// (<T>, bool)... Once we do that, we also likely won't need a bunch of
-		// helpers cause we're just doing checked type assertions at that point.
 	} else if null, ok := convertPotentialNull(a); ok {
 		return compareNullToInterface(null, b)
 	}
 
-	return nil
+	panic(fmt.Sprintf("failed to cast to known type (was %T)", a))
 }
 
 /*
@@ -55,58 +48,49 @@ func compareInterfaceToInterface(a, b interface{}) *Comparison {
    Comparisons to interface.
    ===========
 */
-func compareNumberToInterface(a float64, b interface{}) *Comparison {
-	var cmp Comparison
-	if maybeNumber := convertPotentialNumber(b); maybeNumber != nil {
-		cmp = compareNumbers(a, *maybeNumber)
-	} else if maybeStr := convertPotentialString(b); maybeStr != nil {
-		cmp = compareNumberAndString(a, *maybeStr)
+func compareNumberToInterface(a float64, b interface{}) Comparison {
+	if num, ok := convertPotentialNumber(b); ok {
+		return compareNumbers(a, num)
+	} else if str, ok := convertPotentialString(b); ok {
+		return compareNumberAndString(a, str)
 	} else if bool, ok := convertPotentialBool(b); ok {
-		cmp = compareNumberAndBool(a, bool)
+		return compareNumberAndBool(a, bool)
 	} else if null, ok := convertPotentialNull(b); ok {
-		cmp = *compareInterfaceToNull(a, null)
-	} else {
-		return nil
+		return compareInterfaceToNull(a, null)
 	}
 
-	return &cmp
+	panic(fmt.Sprintf("failed to cast to known type (was %T)", b))
 }
 
-func compareStringToInterface(a string, b interface{}) *Comparison {
-	var cmp Comparison
-	if maybeNumber := convertPotentialNumber(b); maybeNumber != nil {
-		cmp = compareStringAndNumber(a, *maybeNumber)
-	} else if maybeStr := convertPotentialString(b); maybeStr != nil {
-		cmp = compareStrings(a, *maybeStr)
+func compareStringToInterface(a string, b interface{}) Comparison {
+	if num, ok := convertPotentialNumber(b); ok {
+		return compareStringAndNumber(a, num)
+	} else if str, ok := convertPotentialString(b); ok {
+		return compareStrings(a, str)
 	} else if bool, ok := convertPotentialBool(b); ok {
-		cmp = compareStringAndBool(a, bool)
+		return compareStringAndBool(a, bool)
 	} else if null, ok := convertPotentialNull(b); ok {
-		cmp = *compareInterfaceToNull(a, null)
-	} else {
-		return nil
+		return compareInterfaceToNull(a, null)
 	}
 
-	return &cmp
+	panic(fmt.Sprintf("failed to cast to known type (was %T)", b))
 }
 
-func compareBoolToInterface(a bool, b interface{}) *Comparison {
-	var cmp Comparison
+func compareBoolToInterface(a bool, b interface{}) Comparison {
 	if bool, ok := convertPotentialBool(b); ok {
-		cmp = compareBools(a, bool)
-	} else if maybeStr := convertPotentialString(b); maybeStr != nil {
-		cmp = compareBoolAndString(a, *maybeStr)
-	} else if maybeNumber := convertPotentialNumber(b); maybeNumber != nil {
-		cmp = compareBoolAndNumber(a, *maybeNumber)
+		return compareBools(a, bool)
+	} else if str, ok := convertPotentialString(b); ok {
+		return compareBoolAndString(a, str)
+	} else if num, ok := convertPotentialNumber(b); ok {
+		return compareBoolAndNumber(a, num)
 	} else if null, ok := convertPotentialNull(b); ok {
-		cmp = *compareInterfaceToNull(a, null)
-	} else {
-		return nil
+		return compareInterfaceToNull(a, null)
 	}
 
-	return &cmp
+	panic(fmt.Sprintf("failed to cast to known type (was %T)", b))
 }
 
-func compareNullToInterface(a interface{}, b interface{}) *Comparison {
+func compareNullToInterface(a interface{}, b interface{}) Comparison {
 	// Nulls are simple. They are only ever equal to b if b is itself null,
 	// otherwise, they are always lower in ordering.
 	_, ok := convertPotentialNull(b)
@@ -115,13 +99,13 @@ func compareNullToInterface(a interface{}, b interface{}) *Comparison {
 		cmp = Equal
 	}
 
-	return &cmp
+	return cmp
 }
 
-func compareInterfaceToNull(a interface{}, b interface{}) *Comparison {
+func compareInterfaceToNull(a interface{}, b interface{}) Comparison {
 	cmp := compareNullToInterface(b, a)
-	if *cmp == Lesser {
-		*cmp = Greater
+	if cmp == Lesser {
+		cmp = Greater
 	}
 
 	return cmp
@@ -132,7 +116,7 @@ func compareInterfaceToNull(a interface{}, b interface{}) *Comparison {
    Conversions.
    ===========
 */
-func convertPotentialNumber(a interface{}) *float64 {
+func convertPotentialNumber(a interface{}) (float64, bool) {
 	// If integer, convert to float64 and compare.
 	var af64 float64
 	switch ta := a.(type) {
@@ -157,18 +141,18 @@ func convertPotentialNumber(a interface{}) *float64 {
 	case float64:
 		af64 = ta
 	default:
-		return nil
+		return 0, false
 	}
 
-	return &af64
+	return af64, true
 }
 
-func convertPotentialString(a interface{}) *string {
+func convertPotentialString(a interface{}) (string, bool) {
 	if s, ok := a.(string); ok {
-		return &s
+		return s, true
 	}
 
-	return nil
+	return "", false
 }
 
 func convertPotentialBool(a interface{}) (bool, bool) {
