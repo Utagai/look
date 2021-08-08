@@ -53,7 +53,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 			expectedParseFields: []custom.Field{
 				{
 					Type:      custom.FieldTypeNumber,
-					Regex:     regexp.MustCompile(`(\d+)`),
+					Regex:     regexp.MustCompile(`([-+]?\d*\.?\d+)`),
 					FieldName: "foo",
 				},
 			},
@@ -106,7 +106,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 				},
 				{
 					Type:      custom.FieldTypeNumber,
-					Regex:     regexp.MustCompile(`(\d+)`),
+					Regex:     regexp.MustCompile(`([-+]?\d*\.?\d+)`),
 					FieldName: "bar",
 				},
 				{
@@ -154,7 +154,7 @@ func testGetCustomParseArgs(t *testing.T, tc testCase) {
 	if tc.expectedErr != nil {
 		assert.EqualError(t, err, tc.expectedErr.Error())
 	} else {
-		parseFields := customFields.ParseFields
+		parseFields := customFields.CustomFields
 		if err != nil {
 			t.Fatalf("did not expect an error, but got %v", err)
 		}

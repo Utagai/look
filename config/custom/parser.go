@@ -48,7 +48,7 @@ func defaultRegexForType(typ FieldType) string {
 	case FieldTypeString:
 		return `"(\w+)"`
 	case FieldTypeNumber:
-		return `(\d+)`
+		return `([-+]?\d*\.?\d+)`
 	case FieldTypeBool:
 		return `(true|false)`
 	default:

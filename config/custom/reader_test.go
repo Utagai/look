@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,19 +18,19 @@ const (
 )
 
 var testDataLines = []line{
-	newLine("bar", 8, true),
+	newLine("bar", 8.2, true),
 	newLine("baz", 9, true),
-	newLine("qux", 10, false),
+	newLine("qux", -10.1, false),
 	newLine("bar", 11, true),
 }
 
 type line struct {
-	Foo     *string `json:"foo"`
-	Iter    *int    `json:"iter"`
-	Enabled *bool   `json:"enabled"`
+	Foo     *string  `json:"foo"`
+	Iter    *float64 `json:"iter"`
+	Enabled *bool    `json:"enabled"`
 }
 
-func newLine(foo string, iter int, enabled bool) line {
+func newLine(foo string, iter float64, enabled bool) line {
 	return line{
 		Foo:     &foo,
 		Iter:    &iter,
@@ -61,10 +60,8 @@ func newTestReader(t *testing.T, testData []line) io.Reader {
 	return &r
 }
 
-func newCustomFieldsReaderWithFields(t *testing.T, src io.Reader, fields []custom.Field) io.Reader {
-	customFields, err := custom.NewFields(fields)
-	require.NoError(t, err)
-	r, err := custom.NewFieldsReader(src, customFields, TestMaxBufSizeBytes)
+func newCustomFieldsReaderWithFields(t *testing.T, src io.Reader, fields *custom.Fields) io.Reader {
+	r, err := custom.NewFieldsReader(src, fields, TestMaxBufSizeBytes)
 	require.NoError(t, err)
 
 	return r
@@ -72,23 +69,9 @@ func newCustomFieldsReaderWithFields(t *testing.T, src io.Reader, fields []custo
 }
 
 func newCustomFieldsReader(t *testing.T, src io.Reader) io.Reader {
-	return newCustomFieldsReaderWithFields(t, src, []custom.Field{
-		{
-			Type:      custom.FieldTypeString,
-			FieldName: "foo",
-			Regex:     regexp.MustCompile(`"(\w+)"`),
-		},
-		{
-			Type:      custom.FieldTypeNumber,
-			FieldName: "iter",
-			Regex:     regexp.MustCompile(`(\d+)`),
-		},
-		{
-			Type:      custom.FieldTypeBool,
-			FieldName: "enabled",
-			Regex:     regexp.MustCompile(`(true|false)`),
-		},
-	})
+	fields, err := custom.ParseFields([]string{"foo:string", "iter:number", "enabled:bool"})
+	require.NoError(t, err)
+	return newCustomFieldsReaderWithFields(t, src, fields)
 }
 
 func runTest(t *testing.T, cfr io.Reader, expectedLines []line) {
@@ -142,23 +125,7 @@ func TestPartialMatches(t *testing.T) {
   value of foo: "qux" on iteration 10 and enabled: false
   `)
 
-	cfr := newCustomFieldsReaderWithFields(t, bytes.NewBuffer(testData), []custom.Field{
-		{
-			Type:      custom.FieldTypeString,
-			FieldName: "foo",
-			Regex:     regexp.MustCompile(`"(\w+)"`),
-		},
-		{
-			Type:      custom.FieldTypeNumber,
-			FieldName: "iter",
-			Regex:     regexp.MustCompile(`(\d+)`),
-		},
-		{
-			Type:      custom.FieldTypeBool,
-			FieldName: "enabled",
-			Regex:     regexp.MustCompile(`(true|false)`),
-		},
-	})
+	cfr := newCustomFieldsReader(t, bytes.NewBuffer(testData))
 
 	runTest(t, cfr, []line{
 		newLine("bar", 8, true),
@@ -179,7 +146,9 @@ func TestOnEmptyInput(t *testing.T) {
 }
 
 func TestWithNoCustomFields(t *testing.T) {
-	cfr := newCustomFieldsReaderWithFields(t, newTestReader(t, testDataLines), []custom.Field{})
+	fields, err := custom.ParseFields([]string{})
+	require.NoError(t, err)
+	cfr := newCustomFieldsReaderWithFields(t, newTestReader(t, testDataLines), fields)
 
 	runTest(t, cfr, []line{})
 }
