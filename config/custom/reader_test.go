@@ -152,3 +152,15 @@ func TestWithNoCustomFields(t *testing.T) {
 
 	runTest(t, cfr, []line{})
 }
+
+func TestWithNonDefaultFields(t *testing.T) {
+	fields, err := custom.ParseFields([]string{
+		`foo:string=foo: "(\w+)"`,
+		`iter:number`,
+		`enabled:bool`,
+	})
+	require.NoError(t, err)
+	cfr := newCustomFieldsReaderWithFields(t, newTestReader(t, testDataLines), fields)
+
+	runTest(t, cfr, testDataLines)
+}
