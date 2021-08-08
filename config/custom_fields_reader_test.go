@@ -55,8 +55,18 @@ func newTestReader(t *testing.T, testData []line) io.Reader {
 	return &r
 }
 
+func newCustomFieldsReaderWithFields(t *testing.T, src io.Reader, fields []config.Field) io.Reader {
+	customFields, err := config.NewCustomFields(fields)
+	require.NoError(t, err)
+	r, err := config.NewCustomFieldsReader(src, customFields)
+	require.NoError(t, err)
+
+	return r
+
+}
+
 func newCustomFieldsReader(t *testing.T, src io.Reader) io.Reader {
-	customFields, err := config.NewCustomFields([]config.Field{
+	return newCustomFieldsReaderWithFields(t, src, []config.Field{
 		{
 			Type:      config.FieldTypeString,
 			FieldName: "foo",
@@ -73,11 +83,6 @@ func newCustomFieldsReader(t *testing.T, src io.Reader) io.Reader {
 			Regex:     `true|false`,
 		},
 	})
-	require.NoError(t, err)
-	r, err := config.NewCustomFieldsReader(src, customFields)
-	require.NoError(t, err)
-
-	return r
 }
 
 func runTest(t *testing.T, cfr io.Reader, expectedLines []line) {
@@ -131,7 +136,25 @@ func TestPartialMatches(t *testing.T) {
   value of foo: "qux" on iteration 10 and enabled: false
   `)
 
-	runTest(t, newCustomFieldsReader(t, bytes.NewBuffer(testData)), []line{
+	cfr := newCustomFieldsReaderWithFields(t, bytes.NewBuffer(testData), []config.Field{
+		{
+			Type:      config.FieldTypeString,
+			FieldName: "foo",
+			Regex:     `"\w+"`,
+		},
+		{
+			Type:      config.FieldTypeNumber,
+			FieldName: "iter",
+			Regex:     `(?:\d+)?`,
+		},
+		{
+			Type:      config.FieldTypeBool,
+			FieldName: "enabled",
+			Regex:     `true|false`,
+		},
+	})
+
+	runTest(t, cfr, []line{
 		newLine("bar", 8, true),
 		{
 			Foo:     strPtr("bar"),

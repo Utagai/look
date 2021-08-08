@@ -57,6 +57,14 @@ func (cf *CustomFields) ToJSON(line string) ([]byte, error) {
 	jsonMap := make(map[string]interface{}, len(cf.ParseFields))
 	for i, pf := range cf.ParseFields {
 		match := matches[i]
+		if len(match) == 0 {
+			// An empty string match implies either the regex matches the empty
+			// string. This is by definition an optional regex, so set this to null
+			// and move on.
+			jsonMap[pf.FieldName] = nil
+			continue
+		}
+
 		var value interface{}
 		switch pf.Type {
 		case FieldTypeBool:
