@@ -134,7 +134,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        "foo",
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        "bar",
@@ -219,7 +219,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        "bar",
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        "2",
@@ -304,7 +304,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        "2",
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        "3",
@@ -389,7 +389,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        "3",
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        2,
@@ -474,7 +474,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        2,
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        3,
@@ -559,7 +559,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        3,
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        3.14,
@@ -644,7 +644,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        3.14,
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        6.28,
@@ -729,7 +729,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        6.28,
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        "3.14",
@@ -814,7 +814,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        "3.14",
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        "6.28",
@@ -899,7 +899,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        "6.28",
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        true,
@@ -984,7 +984,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        true,
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        false,
@@ -1069,7 +1069,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        false,
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        0,
@@ -1154,7 +1154,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        0,
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        1,
@@ -1239,7 +1239,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        1,
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        "0",
@@ -1324,7 +1324,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        "0",
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        "1",
@@ -1409,7 +1409,7 @@ func TestComparison(t *testing.T) {
 		{
 			a:        "1",
 			b:        nil,
-			expected: execution.Equal,
+			expected: execution.Greater,
 		},
 		{
 			a:        nil,
