@@ -26,6 +26,9 @@ const (
 	TokenGEQ
 	TokenExists
 	TokenExistsNot
+	TokenFalse
+	TokenTrue
+	TokenNull
 	TokenChar  = scanner.Char
 	TokenFloat = scanner.Float
 
@@ -50,6 +53,16 @@ func (t Token) String() string {
 		return "Equals"
 	case TokenGEQ:
 		return "GEQ"
+	case TokenExists:
+		return "Exists"
+	case TokenExistsNot:
+		return "Not Exists"
+	case TokenFalse:
+		return "False"
+	case TokenTrue:
+		return "True"
+	case TokenNull:
+		return "Null"
 	case TokenChar:
 		return "Char"
 	case TokenFloat:
@@ -169,6 +182,12 @@ func (t *Tokenizer) next() (Token, bool) {
 			return TokenExistsNot, true
 		case StageSeparatorString:
 			return TokenStageSeparator, true
+		case "false":
+			return TokenFalse, true
+		case "true":
+			return TokenTrue, true
+		case "null":
+			return TokenNull, true
 		}
 	default:
 		switch t.s.TokenText() {

@@ -1,16 +1,22 @@
 package execution_test
 
 import (
+	"flag"
 	"fmt"
 	"testing"
 
 	"github.com/utagai/look/query/breeze/execution"
 )
 
+var shouldGen = flag.Bool("generate", false, "Whether we should re-generate the comparison tests")
+
 // Not a real test, but some code I used to generate all of the comparison
 // tests.
 func TestGenerateGoTestCases(t *testing.T) {
-	t.Skip()
+	if !*shouldGen {
+		t.SkipNow()
+	}
+
 	values := []interface{}{
 		"foo", "bar",
 
@@ -23,6 +29,8 @@ func TestGenerateGoTestCases(t *testing.T) {
 		true, false,
 		0, 1,
 		"0", "1",
+
+		nil,
 	}
 
 	tcs := make([]testCase, 0, len(values)*len(values))
@@ -49,6 +57,22 @@ func TestGenerateGoTestCases(t *testing.T) {
 			panic(fmt.Sprintf("unrecognized comparison result: %q", tc.expected))
 		}
 
-		fmt.Printf("\n{\n\ta: %#v,\n\tb: %#v,\n\texpected: %s,\n},", tc.a, tc.b, expectedLabel)
+		// Writing to stderr makes things a bit easier since we can just redirect
+		// only stderr and quickly get _just_ the Golang we want to generate.
+		fmt.Printf(
+			"\n{\n\ta: %s,\n\tb: %s,\n\texpected: %s,\n},",
+			toGoStr(tc.a), toGoStr(tc.b), expectedLabel,
+		)
 	}
+}
+
+// toGoStr takes some value and returns a valid, compilable Go string
+// representation of it.
+func toGoStr(x interface{}) string {
+	// Unfortunately, `nil` requires special handling. %#v does the wrong thing.
+	if x == nil {
+		return "nil"
+	}
+
+	return fmt.Sprintf("%#v", x)
 }

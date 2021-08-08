@@ -9,11 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/utagai/look/data"
 	"github.com/utagai/look/datum"
+	"github.com/utagai/look/query"
 )
 
 const (
 	numTestDatums  = 100
-	testMongoDBURI = "mongodb://localhost:27017"
+	testMongoDBURI = "mongodb://localhost:27018"
 )
 
 var getTestDatum = func(i int) datum.Datum {
@@ -40,16 +41,19 @@ var testDatums = func() []datum.Datum {
 // can't create a slice of these constructors unless we make them both return
 // the same type (the shared interface), so here we are.
 func newMemoryData(_ *testing.T) data.Data {
-	return data.NewMemoryData(testDatums)
+	// TODO: We should also be testing liquid here.
+	return data.NewMemoryData(testDatums, query.NewSubstringQueryExecutor())
 }
 
-// spinUpMongo spins up a mongod on the default host/port (localhost:27017) and
+// spinUpMongo spins up a mongod on the default host/port (localhost:27018) and
 // returns a clean-up function for terminating it at the end of usage.
 // It assumes:
 //	* `mongod` is in PATH.
 //  * the existence of a config file under ./testdata/mongodb/config.yaml.
-//  * 27017 on localhost is available.
+//  * 27018 on localhost is available.
 func spinUpMongo(t *testing.T) func() {
+	// NOTE: This stuff breaks if `mongod` is already running on the system on the
+	// same port.
 	cmd := exec.Command("mongod", "-f", "./testdata/mongodb/config.yaml")
 	// The config file is written from the perspective of the project root directory:
 	cmd.Dir = "../"

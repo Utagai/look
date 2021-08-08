@@ -1,6 +1,8 @@
 package execution
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // This module implements comparison logic for untyped values which are the
 // kinds of inputs that pass through the language implementation.
@@ -30,13 +32,19 @@ func Compare(a, b interface{}) Comparison {
 	return Equal
 }
 
+// TODO: We don't need to return *Comparison, I think we may be better off panicking.
 func compareInterfaceToInterface(a, b interface{}) *Comparison {
 	if maybeNumber := convertPotentialNumber(a); maybeNumber != nil {
 		return compareNumberToInterface(*maybeNumber, b)
 	} else if maybeStr := convertPotentialString(a); maybeStr != nil {
 		return compareStringToInterface(*maybeStr, b)
-	} else if maybeBool := convertPotentialBool(a); maybeBool != nil {
-		return compareBoolToInterface(*maybeBool, b)
+	} else if bool, ok := convertPotentialBool(a); ok {
+		return compareBoolToInterface(bool, b)
+		// TODO: We should probably make everything be consistent and return
+		// (<T>, bool)... Once we do that, we also likely won't need a bunch of
+		// helpers cause we're just doing checked type assertions at that point.
+	} else if null, ok := convertPotentialNull(a); ok {
+		return compareNullToInterface(null, b)
 	}
 
 	return nil
@@ -53,8 +61,10 @@ func compareNumberToInterface(a float64, b interface{}) *Comparison {
 		cmp = compareNumbers(a, *maybeNumber)
 	} else if maybeStr := convertPotentialString(b); maybeStr != nil {
 		cmp = compareNumberAndString(a, *maybeStr)
-	} else if maybeBool := convertPotentialBool(b); maybeBool != nil {
-		cmp = compareNumberAndBool(a, *maybeBool)
+	} else if bool, ok := convertPotentialBool(b); ok {
+		cmp = compareNumberAndBool(a, bool)
+	} else if null, ok := convertPotentialNull(b); ok {
+		cmp = *compareInterfaceToNull(a, null)
 	} else {
 		return nil
 	}
@@ -68,8 +78,10 @@ func compareStringToInterface(a string, b interface{}) *Comparison {
 		cmp = compareStringAndNumber(a, *maybeNumber)
 	} else if maybeStr := convertPotentialString(b); maybeStr != nil {
 		cmp = compareStrings(a, *maybeStr)
-	} else if maybeBool := convertPotentialBool(b); maybeBool != nil {
-		cmp = compareStringAndBool(a, *maybeBool)
+	} else if bool, ok := convertPotentialBool(b); ok {
+		cmp = compareStringAndBool(a, bool)
+	} else if null, ok := convertPotentialNull(b); ok {
+		cmp = *compareInterfaceToNull(a, null)
 	} else {
 		return nil
 	}
@@ -79,17 +91,40 @@ func compareStringToInterface(a string, b interface{}) *Comparison {
 
 func compareBoolToInterface(a bool, b interface{}) *Comparison {
 	var cmp Comparison
-	if maybeBool := convertPotentialBool(b); maybeBool != nil {
-		cmp = compareBools(a, *maybeBool)
+	if bool, ok := convertPotentialBool(b); ok {
+		cmp = compareBools(a, bool)
 	} else if maybeStr := convertPotentialString(b); maybeStr != nil {
 		cmp = compareBoolAndString(a, *maybeStr)
 	} else if maybeNumber := convertPotentialNumber(b); maybeNumber != nil {
 		cmp = compareBoolAndNumber(a, *maybeNumber)
+	} else if null, ok := convertPotentialNull(b); ok {
+		cmp = *compareInterfaceToNull(a, null)
 	} else {
 		return nil
 	}
 
 	return &cmp
+}
+
+func compareNullToInterface(a interface{}, b interface{}) *Comparison {
+	// Nulls are simple. They are only ever equal to b if b is itself null,
+	// otherwise, they are always lower in ordering.
+	_, ok := convertPotentialNull(b)
+	var cmp Comparison = Lesser
+	if ok {
+		cmp = Equal
+	}
+
+	return &cmp
+}
+
+func compareInterfaceToNull(a interface{}, b interface{}) *Comparison {
+	cmp := compareNullToInterface(b, a)
+	if *cmp == Lesser {
+		*cmp = Greater
+	}
+
+	return cmp
 }
 
 /*
@@ -136,12 +171,20 @@ func convertPotentialString(a interface{}) *string {
 	return nil
 }
 
-func convertPotentialBool(a interface{}) *bool {
+func convertPotentialBool(a interface{}) (bool, bool) {
 	if b, ok := a.(bool); ok {
-		return &b
+		return b, true
 	}
 
-	return nil
+	return false, false
+}
+
+func convertPotentialNull(a interface{}) (interface{}, bool) {
+	if a == nil {
+		return a, true
+	}
+
+	return nil, false
 }
 
 /*

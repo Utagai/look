@@ -15,6 +15,8 @@ const (
 	ConstKindNumber ConstKind = "number"
 	// ConstKindBool represents a bool constant.
 	ConstKindBool ConstKind = "bool"
+	// ConstKindNull represents the special null constant value.
+	ConstKindNull ConstKind = "null"
 )
 
 // Const is a constant.
@@ -38,6 +40,8 @@ func (c *Const) Interface() interface{} {
 		return f64
 	case ConstKindBool:
 		return c.Stringified == "true"
+	case ConstKindNull:
+		return nil
 	default:
 		panic(fmt.Sprintf("unexpected const kind: %q", c.Kind))
 	}

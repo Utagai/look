@@ -16,7 +16,7 @@ func TestParser(t *testing.T) {
 
 	tcs := []testCase{
 		{
-			query: "filter foo = 4.2 bar >7 car=\"hello\" | sort bar",
+			query: "filter foo = 4.2 bar >7 car=\"hello\" dar=null | sort bar",
 			stages: []breeze.Stage{
 				&breeze.Filter{
 					BinaryChecks: []*breeze.BinaryCheck{
@@ -41,6 +41,14 @@ func TestParser(t *testing.T) {
 							Value: &breeze.Const{
 								Kind:        breeze.ConstKindString,
 								Stringified: "hello",
+							},
+							Op: breeze.BinaryOpEquals,
+						},
+						{
+							Field: "dar",
+							Value: &breeze.Const{
+								Kind:        breeze.ConstKindNull,
+								Stringified: "null",
 							},
 							Op: breeze.BinaryOpEquals,
 						},

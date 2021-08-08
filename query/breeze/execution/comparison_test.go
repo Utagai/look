@@ -132,6 +132,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Greater,
 		},
 		{
+			a:        "foo",
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        "bar",
 			b:        "foo",
 			expected: execution.Lesser,
@@ -212,6 +217,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Greater,
 		},
 		{
+			a:        "bar",
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        "2",
 			b:        "foo",
 			expected: execution.Lesser,
@@ -292,6 +302,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Greater,
 		},
 		{
+			a:        "2",
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        "3",
 			b:        "foo",
 			expected: execution.Lesser,
@@ -372,6 +387,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Greater,
 		},
 		{
+			a:        "3",
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        2,
 			b:        "foo",
 			expected: execution.Lesser,
@@ -452,6 +472,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Greater,
 		},
 		{
+			a:        2,
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        3,
 			b:        "foo",
 			expected: execution.Lesser,
@@ -532,6 +557,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Greater,
 		},
 		{
+			a:        3,
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        3.14,
 			b:        "foo",
 			expected: execution.Lesser,
@@ -612,6 +642,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Greater,
 		},
 		{
+			a:        3.14,
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        6.28,
 			b:        "foo",
 			expected: execution.Lesser,
@@ -692,6 +727,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Greater,
 		},
 		{
+			a:        6.28,
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        "3.14",
 			b:        "foo",
 			expected: execution.Lesser,
@@ -772,6 +812,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Greater,
 		},
 		{
+			a:        "3.14",
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        "6.28",
 			b:        "foo",
 			expected: execution.Lesser,
@@ -852,6 +897,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Greater,
 		},
 		{
+			a:        "6.28",
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        true,
 			b:        "foo",
 			expected: execution.Lesser,
@@ -932,6 +982,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Equal,
 		},
 		{
+			a:        true,
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        false,
 			b:        "foo",
 			expected: execution.Lesser,
@@ -1012,6 +1067,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Lesser,
 		},
 		{
+			a:        false,
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        0,
 			b:        "foo",
 			expected: execution.Lesser,
@@ -1092,6 +1152,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Lesser,
 		},
 		{
+			a:        0,
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        1,
 			b:        "foo",
 			expected: execution.Lesser,
@@ -1172,6 +1237,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Equal,
 		},
 		{
+			a:        1,
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        "0",
 			b:        "foo",
 			expected: execution.Lesser,
@@ -1252,6 +1322,11 @@ func TestComparison(t *testing.T) {
 			expected: execution.Lesser,
 		},
 		{
+			a:        "0",
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
 			a:        "1",
 			b:        "foo",
 			expected: execution.Lesser,
@@ -1329,6 +1404,96 @@ func TestComparison(t *testing.T) {
 		{
 			a:        "1",
 			b:        "1",
+			expected: execution.Equal,
+		},
+		{
+			a:        "1",
+			b:        nil,
+			expected: execution.Equal,
+		},
+		{
+			a:        nil,
+			b:        "foo",
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        "bar",
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        "2",
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        "3",
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        2,
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        3,
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        3.14,
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        6.28,
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        "3.14",
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        "6.28",
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        true,
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        false,
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        0,
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        1,
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        "0",
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        "1",
+			expected: execution.Lesser,
+		},
+		{
+			a:        nil,
+			b:        nil,
 			expected: execution.Equal,
 		},
 	}

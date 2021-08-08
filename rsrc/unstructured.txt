@@ -1,0 +1,5 @@
+value of foo: "bar" on iteration 8 and enabled: true
+value of foo: "bar" on and enabled: true
+value of foo: "baz" on iteration 9 and enabled: true
+no match
+value of foo: "qux" on iteration 10 and enabled: false

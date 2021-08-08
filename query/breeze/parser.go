@@ -8,6 +8,9 @@ import (
 )
 
 // Parser parses breeze queries.
+// TODO: It is weird that this parser can only run once. I think we should be
+// make this create actual parser instances or something that do expire, or
+// something.
 type Parser struct {
 	input     string
 	tokenizer Tokenizer
@@ -254,6 +257,16 @@ func (p *Parser) parseConstValue() (*Const, error) {
 		return &Const{
 			Kind:        ConstKindString,
 			Stringified: textWithoutQuotes,
+		}, nil
+	case TokenFalse, TokenTrue:
+		return &Const{
+			Kind:        ConstKindBool,
+			Stringified: p.tokenizer.Text(),
+		}, nil
+	case TokenNull:
+		return &Const{
+			Kind:        ConstKindNull,
+			Stringified: p.tokenizer.Text(),
 		}, nil
 	case TokenIdent:
 		// Treat this as a string.

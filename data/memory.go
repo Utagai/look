@@ -16,10 +16,10 @@ type MemoryData struct {
 
 var _ Data = (*MemoryData)(nil)
 
-func NewMemoryData(data []datum.Datum) *MemoryData {
+func NewMemoryData(data []datum.Datum, executor query.Executor) *MemoryData {
 	return &MemoryData{
 		data:     data,
-		executor: query.NewLiquidQueryExecutor(),
+		executor: executor,
 	}
 }
 
@@ -28,7 +28,7 @@ func (md *MemoryData) Find(_ context.Context, q string) (Data, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute %q: %w", q, err)
 	}
-	return NewMemoryData(datums), nil
+	return NewMemoryData(datums, md.executor), nil
 }
 
 func (md *MemoryData) At(_ context.Context, index int) (datum.Datum, error) {
