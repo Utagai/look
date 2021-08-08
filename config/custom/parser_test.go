@@ -53,7 +53,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 			expectedParseFields: []custom.Field{
 				{
 					Type:      custom.FieldTypeNumber,
-					Regex:     regexp.MustCompile(`\d+`),
+					Regex:     regexp.MustCompile(`(\d+)`),
 					FieldName: "foo",
 				},
 			},
@@ -63,7 +63,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 			expectedParseFields: []custom.Field{
 				{
 					Type:      custom.FieldTypeBool,
-					Regex:     regexp.MustCompile(`true|false`),
+					Regex:     regexp.MustCompile(`(true|false)`),
 					FieldName: "foo",
 				},
 			},
@@ -73,7 +73,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 			expectedParseFields: []custom.Field{
 				{
 					Type:      custom.FieldTypeString,
-					Regex:     regexp.MustCompile(`"\w+"`),
+					Regex:     regexp.MustCompile(`"(\w+)"`),
 					FieldName: "foo",
 				},
 			},
@@ -83,7 +83,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 			expectedParseFields: []custom.Field{
 				{
 					Type:      custom.FieldTypeString,
-					Regex:     regexp.MustCompile(`"\w+"`),
+					Regex:     regexp.MustCompile(`"(\w+)"`),
 					FieldName: "bar",
 				},
 			},
@@ -101,17 +101,17 @@ func TestGetCustomParseArgs(t *testing.T) {
 			expectedParseFields: []custom.Field{
 				{
 					Type:      custom.FieldTypeString,
-					Regex:     regexp.MustCompile(`"\w+"`),
+					Regex:     regexp.MustCompile(`"(\w+)"`),
 					FieldName: "foo",
 				},
 				{
 					Type:      custom.FieldTypeNumber,
-					Regex:     regexp.MustCompile(`\d+`),
+					Regex:     regexp.MustCompile(`(\d+)`),
 					FieldName: "bar",
 				},
 				{
 					Type:      custom.FieldTypeBool,
-					Regex:     regexp.MustCompile(`true|false`),
+					Regex:     regexp.MustCompile(`(true|false)`),
 					FieldName: "baz",
 				},
 			},
@@ -125,7 +125,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 			expectedParseFields: []custom.Field{
 				{
 					Type:      custom.FieldTypeString,
-					Regex:     regexp.MustCompile(`"\w+"`),
+					Regex:     regexp.MustCompile(`"(\w+)"`),
 					FieldName: "foo",
 				},
 				{
@@ -135,7 +135,7 @@ func TestGetCustomParseArgs(t *testing.T) {
 				},
 				{
 					Type:      custom.FieldTypeBool,
-					Regex:     regexp.MustCompile(`true|false`),
+					Regex:     regexp.MustCompile(`(true|false)`),
 					FieldName: "baz",
 				},
 			},
