@@ -128,7 +128,7 @@ func (p *Parser) parseFilter() (*Filter, error) {
 	uChecks := []*UnaryCheck{}
 	bChecks := []*BinaryCheck{}
 	for {
-		if token, _, _ := p.tokenizer.Peek(); token == TokenStageSeparator {
+		if token, _, _ := p.tokenizer.Peek(); token == TokenStageSeparator || token == TokenEOF {
 			break // No more checks to parse.
 		}
 		// TODO: I think our code might actually be a lot cleaner if we went with a single

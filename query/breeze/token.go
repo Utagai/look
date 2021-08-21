@@ -169,7 +169,7 @@ func (t *Tokenizer) next() (Token, bool) {
 	if tok == scanner.EOF {
 		// TODO: I think we can simplify this code by just returning TokenEOF, we
 		// don't need the boolean.
-		return 0, false
+		return TokenEOF, false
 	}
 
 	switch tok {
