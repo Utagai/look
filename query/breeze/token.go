@@ -148,9 +148,9 @@ func (t *Tokenizer) Next() (Token, bool) {
 		return token, more
 	}
 
-	tok, more := t.next()
+	tok := t.next()
 
-	return tok, more
+	return tok, tok != TokenEOF
 }
 
 // Peek peeks at the next token to return, but does not advance the tokenizer
@@ -159,17 +159,16 @@ func (t *Tokenizer) Peek() (Token, string, bool) {
 	if t.peeked == nil {
 		t.peeked = &peeked{}
 		t.peeked.lastText = t.Text()
-		t.peeked.token, t.peeked.more = t.next()
+		t.peeked.token = t.next()
+		t.peeked.more = t.peeked.token != TokenEOF
 	}
 	return t.peeked.token, t.s.TokenText(), t.peeked.more
 }
 
-func (t *Tokenizer) next() (Token, bool) {
+func (t *Tokenizer) next() Token {
 	tok := t.s.Scan()
 	if tok == scanner.EOF {
-		// TODO: I think we can simplify this code by just returning TokenEOF, we
-		// don't need the boolean.
-		return TokenEOF, false
+		return TokenEOF
 	}
 
 	switch tok {
@@ -178,35 +177,35 @@ func (t *Tokenizer) next() (Token, bool) {
 		// Intercept keywords as special tokens.
 		// TODO: This should be its own function.
 		case "filter":
-			return TokenFilter, true
+			return TokenFilter
 		case "sort":
-			return TokenSort, true
+			return TokenSort
 		case "contains":
-			return TokenContains, true
+			return TokenContains
 		case "exists":
-			return TokenExists, true
+			return TokenExists
 		case "!exists":
-			return TokenExistsNot, true
+			return TokenExistsNot
 		case StageSeparatorString:
-			return TokenStageSeparator, true
+			return TokenStageSeparator
 		case "false":
-			return TokenFalse, true
+			return TokenFalse
 		case "true":
-			return TokenTrue, true
+			return TokenTrue
 		case "null":
-			return TokenNull, true
+			return TokenNull
 		}
 	default:
 		switch t.s.TokenText() {
 		// Intercept binary operators.
 		case "=":
-			return TokenEquals, true
+			return TokenEquals
 		case ">":
-			return TokenGEQ, true
+			return TokenGEQ
 		}
 	}
 
-	return Token(tok), true
+	return Token(tok)
 }
 
 // Text wraps scanner.Scanner#TokenText().
