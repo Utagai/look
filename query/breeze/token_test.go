@@ -198,7 +198,9 @@ func TestTokenizerPosition(t *testing.T) {
 func TestTokenStringerIsExhaustive(t *testing.T) {
 	for i := 0; i < expectedNumBreezeTokenTypes; i++ {
 		// This will panic and the test will fail if we have removed a token.
-		_ = breeze.Token(i).String()
+		require.NotPanics(t, func() {
+			_ = breeze.Token(i).String()
+		})
 	}
 
 	require.Panics(t, func() {
