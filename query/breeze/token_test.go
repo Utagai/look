@@ -50,7 +50,7 @@ func TestTokenizerRecognizesCustomTokens(t *testing.T) {
 
 	i := 0
 	for tok := tokenizer.Next(); tok != breeze.TokenEOF; tok = tokenizer.Next() {
-		require.Equal(t, i, int(tok))
+		require.Equal(t, i, int(tok), "note: this test may fail when tokens are removed/added")
 		i++
 	}
 }
@@ -200,7 +200,7 @@ func TestTokenStringerIsExhaustive(t *testing.T) {
 		// This will panic and the test will fail if we have removed a token.
 		require.NotPanics(t, func() {
 			_ = breeze.Token(i).String()
-		})
+		}, "note: this test may fail when tokens are removed/added")
 	}
 
 	require.Panics(t, func() {
