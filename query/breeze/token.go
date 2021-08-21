@@ -135,7 +135,12 @@ func NewTokenizer(input string) Tokenizer {
 	}
 }
 
-// Next wraps scanner.Scanner#Next().
+// Next wraps scanner.Scanner#Next(). Returns the next token, as well as a
+// boolean flag indicating if there are any more subsequent tokens. This
+// function will never return a valid token (non-EOF) and simultaneously return
+// false for the boolean flag. Therefore, iteration over this function can take
+// the form:
+//    for tok, ok := tokenizer.Next(); ok; tok, ok = tokenizer.Next() { ... }
 func (t *Tokenizer) Next() (Token, bool) {
 	if t.peeked != nil {
 		token, more := t.peeked.token, t.peeked.more
