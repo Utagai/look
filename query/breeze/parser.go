@@ -97,8 +97,8 @@ func (p *Parser) parse() ([]Stage, error) {
 		}
 		stages = append(stages, stage)
 		// Now chomp the stage separator and repeat.
-		token, more := p.tokenizer.Next()
-		if !more {
+		token := p.tokenizer.Next()
+		if token == TokenEOF {
 			break // No more stages to parse.
 		}
 		if token != TokenStageSeparator {
@@ -109,8 +109,8 @@ func (p *Parser) parse() ([]Stage, error) {
 }
 
 func (p *Parser) parseStage() (Stage, error) {
-	stageToken, more := p.tokenizer.Next()
-	if !more {
+	stageToken := p.tokenizer.Next()
+	if stageToken == TokenEOF {
 		return nil, io.EOF
 	}
 	// Determine the stage type. If not recognized, this is a parse error.
@@ -128,7 +128,7 @@ func (p *Parser) parseFilter() (*Filter, error) {
 	uChecks := []*UnaryCheck{}
 	bChecks := []*BinaryCheck{}
 	for {
-		if token, _, _ := p.tokenizer.Peek(); token == TokenStageSeparator || token == TokenEOF {
+		if token, _ := p.tokenizer.Peek(); token == TokenStageSeparator || token == TokenEOF {
 			break // No more checks to parse.
 		}
 		// TODO: I think our code might actually be a lot cleaner if we went with a single
@@ -183,8 +183,8 @@ func (p *Parser) parseCheck() (*UnaryCheck, *BinaryCheck, error) {
 }
 
 func (p *Parser) parseField() (string, error) {
-	token, more := p.tokenizer.Next()
-	if !more {
+	token := p.tokenizer.Next()
+	if token == TokenEOF {
 		return "", errors.New("expected a field, but reached end of query")
 	}
 
@@ -195,8 +195,8 @@ func (p *Parser) parseField() (string, error) {
 }
 
 func (p *Parser) parseOp() (UnaryOp, BinaryOp, error) {
-	token, more := p.tokenizer.Next()
-	if !more {
+	token := p.tokenizer.Next()
+	if token == TokenEOF {
 		return "", "", errors.New("expected an operator, but reached end of query")
 	}
 
@@ -237,8 +237,8 @@ func isQuotedString(text string) bool {
 }
 
 func (p *Parser) parseConstValue() (*Const, error) {
-	token, more := p.tokenizer.Next()
-	if !more {
+	token := p.tokenizer.Next()
+	if token == TokenEOF {
 		return nil, errors.New("expected a constant value, but reached end of query")
 	}
 
@@ -294,7 +294,7 @@ func (p *Parser) parseSort() (*Sort, error) {
 }
 
 func (p *Parser) parseSortOrder() bool {
-	maybeSortOrder, sortOrderText, _ := p.tokenizer.Peek()
+	maybeSortOrder, sortOrderText := p.tokenizer.Peek()
 	if maybeSortOrder == TokenIdent {
 		switch sortOrderText {
 		case "asc":

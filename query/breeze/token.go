@@ -38,7 +38,6 @@ const (
 	TokenEOF    Token = scanner.EOF
 )
 
-// TODO: Should test this for exhaustiveness...
 func (t Token) String() string {
 	switch t {
 	case TokenStageSeparator:
@@ -88,7 +87,6 @@ const (
 
 type peeked struct {
 	token    Token
-	more     bool
 	lastText string
 }
 
@@ -137,32 +135,29 @@ func NewTokenizer(input string) Tokenizer {
 
 // Next wraps scanner.Scanner#Next(). Returns the next token, as well as a
 // boolean flag indicating if there are any more subsequent tokens. This
-// function will never return a valid token (non-EOF) and simultaneously return
-// false for the boolean flag. Therefore, iteration over this function can take
-// the form:
-//    for tok, ok := tokenizer.Next(); ok; tok, ok = tokenizer.Next() { ... }
-func (t *Tokenizer) Next() (Token, bool) {
+// function will return TokenEOF when it has exhausted all tokens in the input:
+//    for tok := tokenizer.Next(); tok != breeze.TokenEOF; tok = tokenizer.Next() { ... }
+func (t *Tokenizer) Next() Token {
 	if t.peeked != nil {
-		token, more := t.peeked.token, t.peeked.more
+		token := t.peeked.token
 		t.peeked = nil
-		return token, more
+		return token
 	}
 
 	tok := t.next()
 
-	return tok, tok != TokenEOF
+	return tok
 }
 
 // Peek peeks at the next token to return, but does not advance the tokenizer
 // past it.
-func (t *Tokenizer) Peek() (Token, string, bool) {
+func (t *Tokenizer) Peek() (Token, string) {
 	if t.peeked == nil {
 		t.peeked = &peeked{}
 		t.peeked.lastText = t.Text()
 		t.peeked.token = t.next()
-		t.peeked.more = t.peeked.token != TokenEOF
 	}
-	return t.peeked.token, t.s.TokenText(), t.peeked.more
+	return t.peeked.token, t.s.TokenText()
 }
 
 func (t *Tokenizer) next() Token {

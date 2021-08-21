@@ -49,7 +49,7 @@ func TestTokenizerRecognizesCustomTokens(t *testing.T) {
 	tokenizer := breeze.NewTokenizer(allTokensStr)
 
 	i := 0
-	for tok, ok := tokenizer.Next(); ok; tok, ok = tokenizer.Next() {
+	for tok := tokenizer.Next(); tok != breeze.TokenEOF; tok = tokenizer.Next() {
 		require.Equal(t, i, int(tok))
 		i++
 	}
@@ -70,8 +70,8 @@ func TestTokenizerRecognizesScannerTokens(t *testing.T) {
 	tokenizer := breeze.NewTokenizer(input)
 	actualTokens := make([]breeze.Token, 0, len(expectedTokens))
 	for i := 0; i < len(expectedTokens); i++ {
-		tok, ok := tokenizer.Next()
-		if !ok {
+		tok := tokenizer.Next()
+		if tok == breeze.TokenEOF {
 			t.Fatal("expected there to be more tokens, but there was none")
 		}
 		actualTokens = append(actualTokens, tok)
@@ -83,8 +83,7 @@ func TestTokenizerRecognizesScannerTokens(t *testing.T) {
 func TestTokenizerText(t *testing.T) {
 	input := "hello = world"
 	tokenizer := breeze.NewTokenizer(input)
-	tok, ok := tokenizer.Next()
-	require.True(t, ok)
+	tok := tokenizer.Next()
 	require.Equal(t, breeze.TokenIdent, tok)
 	require.Equal(t, "hello", tokenizer.Text())
 }
@@ -93,58 +92,49 @@ func TestTokenizerPeek(t *testing.T) {
 	input := "hello 9.8 321"
 	tokenizer := breeze.NewTokenizer(input)
 	t.Run("peek at start of string is correct", func(t *testing.T) {
-		tok, tokText, ok := tokenizer.Peek()
-		require.True(t, ok)
+		tok, tokText := tokenizer.Peek()
 		require.Equal(t, breeze.TokenIdent, tok)
 		require.Equal(t, "hello", tokText)
 	})
 
 	t.Run("next after peek is correct", func(t *testing.T) {
-		tok, ok := tokenizer.Next()
-		require.True(t, ok)
+		tok := tokenizer.Next()
 		require.Equal(t, breeze.TokenIdent, tok)
 	})
 
 	t.Run("peeking once more after next is correct", func(t *testing.T) {
-		tok, tokText, ok := tokenizer.Peek()
-		require.True(t, ok)
+		tok, tokText := tokenizer.Peek()
 		require.Equal(t, breeze.TokenFloat, tok)
 		require.Equal(t, "9.8", tokText)
 	})
 
 	t.Run("peeking is idempotent", func(t *testing.T) {
-		tok, tokText, ok := tokenizer.Peek()
-		require.True(t, ok)
+		tok, tokText := tokenizer.Peek()
 		require.Equal(t, breeze.TokenFloat, tok)
 		require.Equal(t, "9.8", tokText)
-		tok, tokText, ok = tokenizer.Peek()
-		require.True(t, ok)
+		tok, tokText = tokenizer.Peek()
 		require.Equal(t, breeze.TokenFloat, tok)
 		require.Equal(t, "9.8", tokText)
 	})
 
 	t.Run("after idempotent peeks a next is still correct", func(t *testing.T) {
-		tok, ok := tokenizer.Next()
-		require.True(t, ok)
+		tok := tokenizer.Next()
 		require.Equal(t, breeze.TokenFloat, tok)
 	})
 
 	t.Run("peeking at last token is correct", func(t *testing.T) {
-		tok, tokText, ok := tokenizer.Peek()
-		require.True(t, ok)
+		tok, tokText := tokenizer.Peek()
 		require.Equal(t, breeze.TokenInt, tok)
 		require.Equal(t, "321", tokText)
 	})
 
 	// Advance to the end of the string:
-	tok, ok := tokenizer.Next()
-	require.True(t, ok)
+	tok := tokenizer.Next()
 	require.Equal(t, breeze.TokenInt, tok)
 
 	// Peek after EOF is still EOF:
 	t.Run("peeking after end of string is reached gives EOF returns", func(t *testing.T) {
-		tok, tokText, ok := tokenizer.Peek()
-		require.False(t, ok)
+		tok, tokText := tokenizer.Peek()
 		require.Equal(t, breeze.TokenEOF.String(), tok.String())
 		require.Equal(t, "", tokText)
 	})
@@ -157,14 +147,11 @@ func TestTokenizerGivesFalseAndEOFAtEnd(t *testing.T) {
 	input := "hello 9.8"
 	tokenizer := breeze.NewTokenizer(input)
 
-	tok, ok := tokenizer.Next()
-	require.True(t, ok)
+	tok := tokenizer.Next()
 	require.Equal(t, tok, breeze.TokenIdent)
-	tok, ok = tokenizer.Next()
-	require.True(t, ok)
+	tok = tokenizer.Next()
 	require.Equal(t, tok, breeze.TokenFloat)
-	tok, ok = tokenizer.Next()
-	require.False(t, ok)
+	tok = tokenizer.Next()
 	require.Equal(t, tok, breeze.TokenEOF)
 }
 
@@ -176,8 +163,7 @@ func TestTokenizerPosition(t *testing.T) {
 		require.Equal(t, 0, tokenizer.Position())
 	})
 
-	tok, ok := tokenizer.Next()
-	require.True(t, ok)
+	tok := tokenizer.Next()
 	require.Equal(t, tok, breeze.TokenIdent)
 
 	t.Run("tokenizer position after single tokenize is correct", func(t *testing.T) {
@@ -187,10 +173,10 @@ func TestTokenizerPosition(t *testing.T) {
 	})
 
 	// Get to second token ('9.8').
-	tok, ok = tokenizer.Next()
+	tok = tokenizer.Next()
 
 	// Get to end
-	tok, ok = tokenizer.Next()
+	tok = tokenizer.Next()
 
 	t.Run("tokenizer position after EOF is correct", func(t *testing.T) {
 		// NOTE: Position() follows the semantics of the scanner package's
