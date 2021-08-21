@@ -156,9 +156,11 @@ func (t *Tokenizer) Next() (Token, bool) {
 // Peek peeks at the next token to return, but does not advance the tokenizer
 // past it.
 func (t *Tokenizer) Peek() (Token, string, bool) {
-	t.peeked = &peeked{}
-	t.peeked.lastText = t.Text()
-	t.peeked.token, t.peeked.more = t.next()
+	if t.peeked == nil {
+		t.peeked = &peeked{}
+		t.peeked.lastText = t.Text()
+		t.peeked.token, t.peeked.more = t.next()
+	}
 	return t.peeked.token, t.s.TokenText(), t.peeked.more
 }
 
