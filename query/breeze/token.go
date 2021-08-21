@@ -29,13 +29,13 @@ const (
 	TokenFalse
 	TokenTrue
 	TokenNull
-	TokenChar  = scanner.Char
-	TokenFloat = scanner.Float
+	TokenChar  Token = scanner.Char
+	TokenFloat Token = scanner.Float
 
-	TokenIdent  = scanner.Ident
-	TokenInt    = scanner.Int
-	TokenString = scanner.String
-	TokenEOF    = scanner.EOF
+	TokenIdent  Token = scanner.Ident
+	TokenInt    Token = scanner.Int
+	TokenString Token = scanner.String
+	TokenEOF    Token = scanner.EOF
 )
 
 // TODO: Should test this for exhaustiveness...
