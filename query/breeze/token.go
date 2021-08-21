@@ -168,28 +168,7 @@ func (t *Tokenizer) next() Token {
 
 	switch tok {
 	case scanner.Ident:
-		switch t.s.TokenText() {
-		// Intercept keywords as special tokens.
-		// TODO: This should be its own function.
-		case "filter":
-			return TokenFilter
-		case "sort":
-			return TokenSort
-		case "contains":
-			return TokenContains
-		case "exists":
-			return TokenExists
-		case "!exists":
-			return TokenExistsNot
-		case StageSeparatorString:
-			return TokenStageSeparator
-		case "false":
-			return TokenFalse
-		case "true":
-			return TokenTrue
-		case "null":
-			return TokenNull
-		}
+		return t.convertIdentToken(tok)
 	default:
 		switch t.s.TokenText() {
 		// Intercept binary operators.
@@ -201,6 +180,35 @@ func (t *Tokenizer) next() Token {
 	}
 
 	return Token(tok)
+}
+
+// Converts a token from the scanner into a breeze-specific Token type, if
+// possible.
+func (t *Tokenizer) convertIdentToken(tok rune) Token {
+	switch t.s.TokenText() {
+	// Intercept keywords as special tokens.
+	// TODO: This should be its own function.
+	case "filter":
+		return TokenFilter
+	case "sort":
+		return TokenSort
+	case "contains":
+		return TokenContains
+	case "exists":
+		return TokenExists
+	case "!exists":
+		return TokenExistsNot
+	case StageSeparatorString:
+		return TokenStageSeparator
+	case "false":
+		return TokenFalse
+	case "true":
+		return TokenTrue
+	case "null":
+		return TokenNull
+	default:
+		return Token(tok)
+	}
 }
 
 // Text wraps scanner.Scanner#TokenText().
