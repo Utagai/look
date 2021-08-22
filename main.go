@@ -135,7 +135,7 @@ func initializeGowid(d data.Data) {
 			}
 			queryTextboxHolder.SetSubWidget(framedQueryTextboxValid, app)
 			queryStatusTextboxHolder.SetSubWidget(framedQueryStatusTextboxValid, app)
-			queryStatusTextbox.SetText("Done", app)
+			queryStatusTextbox.SetText("Done.", app)
 			lb.SetWalker(data.NewDataWalker(newData), app)
 		},
 	})
