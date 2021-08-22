@@ -16,6 +16,8 @@ func Execute(stream datum.DatumStream, stages []breeze.Stage) (datum.DatumStream
 			newStream = executeFilter(ts, stream)
 		case *breeze.Sort:
 			newStream = executeSort(ts, stream)
+		case *breeze.Group:
+			newStream = executeGroup(ts, stream)
 		default:
 			return nil, fmt.Errorf("unrecognized query stage: %q", stage.Name())
 		}

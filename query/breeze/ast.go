@@ -116,3 +116,29 @@ func (s *Sort) Name() string {
 type Stage interface {
 	Name() string
 }
+
+// Group is a stage that performs grouping of data and aggregates computations
+// over them.
+type Group struct {
+	AggFunc AggregateFunc
+	Field   string
+}
+
+// Name implements the Stage interface.
+func (g *Group) Name() string {
+	return "group"
+}
+
+// AggregateFunc is an aggregate function.
+type AggregateFunc string
+
+// The various kinds of aggregate functions in breeze.
+const (
+	AggFuncSum    AggregateFunc = "sum"
+	AggFuncAvg    AggregateFunc = "avg"
+	AggFuncCount  AggregateFunc = "count"
+	AggFuncMin    AggregateFunc = "min"
+	AggFuncMax    AggregateFunc = "max"
+	AggFuncMode   AggregateFunc = "mode"
+	AggFuncStdDev AggregateFunc = "stddev"
+)

@@ -18,20 +18,34 @@ const (
 	// tokens.
 	// If we ever have issues with this, we can make everything off of iota and
 	// write a conversion function.
+
+	// TODO: OK, so this is technically wrong. In particular, we should not be
+	// making tokens for every 'keyword' in the language here. We should only be
+	// identifying idents here, and the parser level that has more context can
+	// decide how to interpret the ident, namely for the sake of determining if a
+	// given ident is a field name or an actual keyword.
+
+	// Stages:
 	TokenStageSeparator Token = iota
 	TokenFilter
 	TokenSort
-	TokenContains
+	TokenGroup
+
+	// Binary operators:
 	TokenEquals
 	TokenGEQ
+	TokenContains
 	TokenExists
 	TokenExistsNot
+
+	// Keyword consts:
 	TokenFalse
 	TokenTrue
 	TokenNull
-	TokenChar  Token = scanner.Char
-	TokenFloat Token = scanner.Float
 
+	// Scanner package token types:
+	TokenChar   Token = scanner.Char
+	TokenFloat  Token = scanner.Float
 	TokenIdent  Token = scanner.Ident
 	TokenInt    Token = scanner.Int
 	TokenString Token = scanner.String
@@ -46,6 +60,8 @@ func (t Token) String() string {
 		return "Filter"
 	case TokenSort:
 		return "Sort"
+	case TokenGroup:
+		return "Group"
 	case TokenContains:
 		return "Contains"
 	case TokenEquals:
@@ -186,20 +202,20 @@ func (t *Tokenizer) next() Token {
 // possible.
 func (t *Tokenizer) convertIdentToken(tok rune) Token {
 	switch t.s.TokenText() {
-	// Intercept keywords as special tokens.
-	// TODO: This should be its own function.
+	case StageSeparatorString:
+		return TokenStageSeparator
 	case "filter":
 		return TokenFilter
 	case "sort":
 		return TokenSort
+	case "group":
+		return TokenGroup
 	case "contains":
 		return TokenContains
 	case "exists":
 		return TokenExists
 	case "!exists":
 		return TokenExistsNot
-	case StageSeparatorString:
-		return TokenStageSeparator
 	case "false":
 		return TokenFalse
 	case "true":

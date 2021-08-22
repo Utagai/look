@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 )
 
@@ -119,6 +120,8 @@ func (p *Parser) parseStage() (Stage, error) {
 		return p.parseFilter()
 	case TokenSort:
 		return p.parseSort()
+	case TokenGroup:
+		return p.parseGroup()
 	default:
 		return nil, fmt.Errorf("unrecognized stage: %q", p.tokenizer.Text())
 	}
@@ -150,6 +153,39 @@ func (p *Parser) parseFilter() (*Filter, error) {
 		}
 	}
 	return &Filter{UnaryChecks: uChecks, BinaryChecks: bChecks}, nil
+}
+
+func (p *Parser) parseSort() (*Sort, error) {
+	field, err := p.parseField()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse field: %w", err)
+	}
+
+	descending := p.parseSortOrder()
+
+	return &Sort{
+		Field:      field,
+		Descending: descending,
+	}, nil
+}
+
+func (p *Parser) parseGroup() (*Group, error) {
+	aggFunc, err := p.parseAggFunc()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse aggregate function: %w", err)
+	}
+
+	field, err := p.parseField()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse field: %w", err)
+	}
+
+	log.Println("PARSED FIELD: ", field)
+
+	return &Group{
+		AggFunc: *aggFunc,
+		Field:   field,
+	}, nil
 }
 
 func (p *Parser) parseCheck() (*UnaryCheck, *BinaryCheck, error) {
@@ -188,10 +224,19 @@ func (p *Parser) parseField() (string, error) {
 		return "", errors.New("expected a field, but reached end of query")
 	}
 
-	if token == TokenIdent {
+	// TODO: When we fix the fact that we probably shouldn't have token types for
+	// each keyword, we can revert this back to TokenIdent, I think.
+	if token == TokenIdent || token == TokenString {
 		return p.tokenizer.Text(), nil
 	}
-	return "", fmt.Errorf("expected a field identifier, but got %q", p.tokenizer.Text())
+
+	// TODO: We should make this error more obvious in its meaning. What we are
+	// really trying to say is that we expected a field, but we got some other
+	// kind of identifier here.
+	// In general, I think many of our errors of of this kind ("expected X, but
+	// got %q"). I think what we really wanna do is something along the lines of
+	// "expected X, but got %q (%T)" (but without exposing internal types).
+	return "", fmt.Errorf("expected a field identifier, but got %q (%s)", p.tokenizer.Text(), token.String())
 }
 
 func (p *Parser) parseOp() (UnaryOp, BinaryOp, error) {
@@ -279,20 +324,6 @@ func (p *Parser) parseConstValue() (*Const, error) {
 	}
 }
 
-func (p *Parser) parseSort() (*Sort, error) {
-	field, err := p.parseField()
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse field: %w", err)
-	}
-
-	descending := p.parseSortOrder()
-
-	return &Sort{
-		Field:      field,
-		Descending: descending,
-	}, nil
-}
-
 func (p *Parser) parseSortOrder() bool {
 	maybeSortOrder, sortOrderText := p.tokenizer.Peek()
 	if maybeSortOrder == TokenIdent {
@@ -309,4 +340,34 @@ func (p *Parser) parseSortOrder() bool {
 
 	// If it isn't a sort keyword, then take the default behavior of ascending.
 	return false
+}
+
+func (p *Parser) parseAggFunc() (*AggregateFunc, error) {
+	tok := p.tokenizer.Next()
+	aggFuncText := p.tokenizer.Text()
+	if tok == TokenIdent {
+		var aggFunc AggregateFunc
+		switch aggFuncText {
+		case "sum":
+			aggFunc = AggFuncSum
+		case "avg":
+			aggFunc = AggFuncAvg
+		case "count":
+			aggFunc = AggFuncCount
+		case "min":
+			aggFunc = AggFuncMin
+		case "max":
+			aggFunc = AggFuncMax
+		case "mode":
+			aggFunc = AggFuncMode
+		case "stddev":
+			aggFunc = AggFuncStdDev
+		default:
+			return nil, fmt.Errorf("unrecognized aggregate function: %q", aggFuncText)
+		}
+
+		return &aggFunc, nil
+	}
+
+	return nil, fmt.Errorf("expected an aggregate func, but found %q", aggFuncText)
 }

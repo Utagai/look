@@ -23,13 +23,13 @@ type SortStream struct {
 	sortedSource datum.DatumStream
 }
 
+// Next implements the DatumStream interface.
 func (ss *SortStream) Next() (datum.Datum, error) {
 	if ss.sortedDatums == nil {
 		if err := ss.sortStream(); err != nil {
 			return nil, fmt.Errorf("failed to sort data: %w", err)
 		}
 	}
-	// TODO: Sort this...
 	return ss.sortedSource.Next()
 }
 
@@ -47,6 +47,7 @@ func (ss *SortStream) sortStream() error {
 	return nil
 }
 
+// TODO: This maybe should not be done in memory.
 type sortableDatums struct {
 	datums    []datum.Datum
 	fieldName string
