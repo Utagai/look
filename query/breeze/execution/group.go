@@ -41,7 +41,7 @@ func (ss *GroupStream) groupSource() error {
 	case breeze.AggFuncAvg:
 		agg = &avg{}
 	case breeze.AggFuncCount:
-		agg = &sum{}
+		agg = &count{}
 	case breeze.AggFuncMin:
 		agg = &sum{}
 	case breeze.AggFuncMax:
@@ -133,4 +133,16 @@ func (a *avg) aggregate() interface{} {
 	default:
 		panic("TODO")
 	}
+}
+
+type count struct {
+	numValues uint
+}
+
+func (c *count) ingest(_ interface{}) {
+	c.numValues++
+}
+
+func (c *count) aggregate() interface{} {
+	return c.numValues
 }
