@@ -25,8 +25,8 @@ const (
 // Pointers to const types are not const.
 // When differing const kinds are compared, they are casted to allow comparison.
 // The type hierarchy is string <- number <- bool.
-func Compare(a, b interface{}) Comparison {
-	return compareInterfaceToInterface(a, b)
+func Compare(x, to interface{}) Comparison {
+	return compareInterfaceToInterface(x, to)
 }
 
 func compareInterfaceToInterface(a, b interface{}) Comparison {

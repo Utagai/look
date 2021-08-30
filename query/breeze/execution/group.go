@@ -43,9 +43,9 @@ func (ss *GroupStream) groupSource() error {
 	case breeze.AggFuncCount:
 		agg = &count{}
 	case breeze.AggFuncMin:
-		agg = &sum{}
+		agg = &min{}
 	case breeze.AggFuncMax:
-		agg = &sum{}
+		agg = &max{}
 	case breeze.AggFuncMode:
 		agg = &sum{}
 	case breeze.AggFuncStdDev:
@@ -145,4 +145,37 @@ func (c *count) ingest(_ interface{}) {
 
 func (c *count) aggregate() interface{} {
 	return c.numValues
+}
+
+// min and max can be implemented with the same general type, but since the
+// amount of code duplication reduction will be small, we choose to duplicate
+// it with simpler code.
+type min struct {
+	minimumVal interface{}
+}
+
+func (m *min) ingest(v interface{}) {
+	switch Compare(m.minimumVal, v) {
+	case Lesser:
+		m.minimumVal = v
+	}
+}
+
+func (m *min) aggregate() interface{} {
+	return m.minimumVal
+}
+
+type max struct {
+	maximumVal interface{}
+}
+
+func (m *max) ingest(v interface{}) {
+	switch Compare(m.maximumVal, v) {
+	case Greater:
+		m.maximumVal = v
+	}
+}
+
+func (m *max) aggregate() interface{} {
+	return m.maximumVal
 }
