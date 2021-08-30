@@ -39,7 +39,7 @@ func (ss *GroupStream) groupSource() error {
 	case breeze.AggFuncSum:
 		agg = &sum{}
 	case breeze.AggFuncAvg:
-		agg = &sum{}
+		agg = &avg{}
 	case breeze.AggFuncCount:
 		agg = &sum{}
 	case breeze.AggFuncMin:
@@ -101,4 +101,36 @@ func (s *sum) aggregate() interface{} {
 		return s.numberTotal
 	}
 	return s.boolTotal
+}
+
+type avg struct {
+	total     sum
+	numValues int
+}
+
+func (a *avg) ingest(value interface{}) {
+	var ingestibleValue float64 = 0
+	switch ta := value.(type) {
+	case bool:
+		ingestibleValue = 0
+		if ta {
+			ingestibleValue = 1
+		}
+	case float64:
+		ingestibleValue = ta
+	default:
+		ingestibleValue = 0
+	}
+	a.total.ingest(ingestibleValue)
+	a.numValues++
+}
+
+func (a *avg) aggregate() interface{} {
+	totalSum := a.total.aggregate()
+	switch tsum := totalSum.(type) {
+	case float64:
+		return tsum / float64(a.numValues)
+	default:
+		panic("TODO")
+	}
 }
