@@ -94,3 +94,14 @@ func TestTableMissingBehavior(t *testing.T) {
 	require.Equal(t, ok, true)
 	require.Equal(t, nil, v)
 }
+
+func TestTableHas(t *testing.T) {
+	tbl := newTable()
+
+	tbl.Set("foo", 42)
+	tbl.Set(nil, 42)
+
+	require.Equal(t, true, tbl.Has("foo"))
+	require.Equal(t, true, tbl.Has(nil))
+	require.Equal(t, false, tbl.Has("bar"))
+}

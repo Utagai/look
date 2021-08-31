@@ -77,3 +77,8 @@ func (t *table) Set(key interface{}, value interface{}) {
 		panic(fmt.Sprintf("bad type given to map: %T", typedKey))
 	}
 }
+
+func (t *table) Has(key interface{}) bool {
+	_, ok := t.GetOK(key)
+	return ok
+}
