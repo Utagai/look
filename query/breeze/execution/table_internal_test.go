@@ -23,7 +23,8 @@ type testcase struct {
 	entries []testEntry
 }
 
-func TestTable(t *testing.T) {
+// This may be a bit more generally written than necessary...
+func TestTableBasicGetAndSet(t *testing.T) {
 	tcs := []testcase{
 		{
 			"string key get",
