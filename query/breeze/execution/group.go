@@ -47,7 +47,7 @@ func (ss *GroupStream) groupSource() error {
 	case breeze.AggFuncMax:
 		agg = &max{}
 	case breeze.AggFuncMode:
-		agg = &sum{}
+		agg = &mode{}
 	case breeze.AggFuncStdDev:
 		agg = &sum{}
 	default:
@@ -186,4 +186,43 @@ func (m *max) ingest(v interface{}) {
 
 func (m *max) aggregate() interface{} {
 	return m.maximumVal
+}
+
+type mode struct {
+	valueCounts *table
+}
+
+func (m *mode) ingest(v interface{}) {
+	if m.valueCounts == nil {
+		m.valueCounts = newTable()
+	}
+
+	untypedCnt, ok := m.valueCounts.GetOK(v)
+	if ok {
+		cnt := untypedCnt.(uint)
+		m.valueCounts.Set(v, cnt+1)
+	} else {
+		m.valueCounts.Set(v, uint(1))
+	}
+}
+
+func (m *mode) aggregate() interface{} {
+	if m.valueCounts == nil {
+		m.valueCounts = newTable()
+	}
+
+	keys := m.valueCounts.Keys()
+
+	maxCount := -1
+	var maxCountKey interface{} = nil
+	for _, key := range keys {
+		untypedCnt := m.valueCounts.Get(key)
+		cnt := int(untypedCnt.(uint))
+		if cnt > maxCount {
+			maxCount = cnt
+			maxCountKey = key
+		}
+	}
+
+	return maxCountKey
 }
