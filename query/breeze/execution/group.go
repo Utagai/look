@@ -158,7 +158,12 @@ type min struct {
 }
 
 func (m *min) ingest(v interface{}) {
-	switch Compare(m.minimumVal, v) {
+	if m.minimumVal == nil {
+		m.minimumVal = v
+		return
+	}
+
+	switch Compare(v, m.minimumVal) {
 	case Lesser:
 		m.minimumVal = v
 	}
@@ -173,7 +178,7 @@ type max struct {
 }
 
 func (m *max) ingest(v interface{}) {
-	switch Compare(m.maximumVal, v) {
+	switch Compare(v, m.maximumVal) {
 	case Greater:
 		m.maximumVal = v
 	}
