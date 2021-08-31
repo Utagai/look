@@ -72,3 +72,10 @@ func TestTableBasicGetAndSet(t *testing.T) {
 		})
 	}
 }
+
+func TestTableOverwriteKey(t *testing.T) {
+	tbl := newTable()
+	tbl.Set("foo", 0)
+	tbl.Set("foo", 1)
+	require.Equal(t, 1, tbl.Get("foo"))
+}
