@@ -82,3 +82,29 @@ func (t *table) Has(key interface{}) bool {
 	_, ok := t.GetOK(key)
 	return ok
 }
+
+func (t *table) Keys() []interface{} {
+	numKeys := len(t.stringMap) + len(t.numberMap) + len(t.boolMap)
+	if t.nullKeyExists {
+		numKeys++
+	}
+	keys := make([]interface{}, 0, numKeys)
+
+	for k := range t.stringMap {
+		keys = append(keys, k)
+	}
+
+	for k := range t.numberMap {
+		keys = append(keys, k)
+	}
+
+	for k := range t.boolMap {
+		keys = append(keys, k)
+	}
+
+	if t.nullKeyExists {
+		keys = append(keys, nil)
+	}
+
+	return keys
+}

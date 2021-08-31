@@ -105,3 +105,23 @@ func TestTableHas(t *testing.T) {
 	require.Equal(t, true, tbl.Has(nil))
 	require.Equal(t, false, tbl.Has("bar"))
 }
+
+func TestTableKeys(t *testing.T) {
+	tbl := newTable()
+
+	tbl.Set("foo", 42)
+	tbl.Set(nil, 42)
+	tbl.Set(42.0, 42)
+
+	// Note that the table returns strings first, then numbers, then bools, then
+	// nil. However, within each type, the order depends on Go's map order. This
+	// is a bit odd, but whatever. We aren't trying to test the ordering here
+	// anyways cause its not important.
+	require.Equal(t, []interface{}{"foo", 42.0, nil}, tbl.Keys())
+}
+
+func TestTableEmptyNoKeys(t *testing.T) {
+	tbl := newTable()
+
+	require.Equal(t, []interface{}{}, tbl.Keys())
+}
