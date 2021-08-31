@@ -79,3 +79,18 @@ func TestTableOverwriteKey(t *testing.T) {
 	tbl.Set("foo", 1)
 	require.Equal(t, 1, tbl.Get("foo"))
 }
+
+func TestTableMissingBehavior(t *testing.T) {
+	tbl := newTable()
+
+	// Test that a missing value gives ok = false and v = nil.
+	v, ok := tbl.GetOK("DNE")
+	require.Equal(t, ok, false)
+	require.Equal(t, nil, v)
+	tbl.Set("bar", nil)
+
+	// Test that a true nil value gives ok = true.
+	v, ok = tbl.GetOK("bar")
+	require.Equal(t, ok, true)
+	require.Equal(t, nil, v)
+}
