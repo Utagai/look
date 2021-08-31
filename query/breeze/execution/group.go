@@ -129,6 +129,9 @@ func (a *avg) aggregate() interface{} {
 	totalSum := a.total.aggregate()
 	switch tsum := totalSum.(type) {
 	case float64:
+		if a.numValues == 0 {
+			return 0
+		}
 		return tsum / float64(a.numValues)
 	default:
 		panic("TODO")
