@@ -49,7 +49,7 @@ func (ss *GroupStream) groupSource() error {
 	case breeze.AggFuncMode:
 		agg = &mode{}
 	case breeze.AggFuncStdDev:
-		agg = &sum{}
+		agg = &stddev{}
 	default:
 		panic(fmt.Sprintf("unrecognized aggregate function: %q", ss.AggFunc))
 	}

@@ -1,7 +1,9 @@
 package execution
 
+import "math"
+
 type aggregator interface {
-	ingest(value interface{})
+	ingest(v interface{})
 	aggregate() interface{}
 }
 
@@ -17,10 +19,10 @@ type sum struct {
 }
 
 // TODO: This can overflow, and so can some other agg functions.
-func (s *sum) ingest(value interface{}) {
-	if floatValue, ok := convertPotentialNumber(value); ok {
+func (s *sum) ingest(v interface{}) {
+	if floatValue, ok := convertPotentialNumber(v); ok {
 		s.numberTotal += floatValue
-	} else if boolValue, ok := convertPotentialBool(value); ok {
+	} else if boolValue, ok := convertPotentialBool(v); ok {
 		s.boolTotal = s.boolTotal || boolValue
 	}
 	// Otherwise, do nothing.
@@ -38,9 +40,9 @@ type avg struct {
 	numValues int
 }
 
-func (a *avg) ingest(value interface{}) {
+func (a *avg) ingest(v interface{}) {
 	var ingestibleValue float64 = 0
-	switch ta := value.(type) {
+	switch ta := v.(type) {
 	case bool:
 		ingestibleValue = 0
 		if ta {
@@ -155,4 +157,34 @@ func (m *mode) aggregate() interface{} {
 	}
 
 	return maxCountKey
+}
+
+// stddev is implemented via Welford's Algorithm for streamed variance.
+type stddev struct {
+	count uint
+	mean  float64
+	m2    float64
+}
+
+func (s *stddev) ingest(v interface{}) {
+	floatVal, ok := v.(float64)
+	if !ok {
+		// If this is not a float value, then we actually want it to _not_ affect
+		// the variance. Setting it to 0 or something similar would mean non-floats
+		// would affect the variance, which would be incorrect. So, we skip it.
+		return
+	}
+	s.count++
+	delta := floatVal - s.mean
+	s.mean += delta / float64(s.count)
+	delta2 := floatVal - s.mean
+	s.m2 += delta * delta2
+}
+
+func (s *stddev) aggregate() interface{} {
+	if s.count < 2 {
+		return "NaN"
+	}
+
+	return math.Sqrt(s.m2 / float64(s.count))
 }
