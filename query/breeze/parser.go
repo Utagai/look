@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 )
 
@@ -170,22 +169,42 @@ func (p *Parser) parseSort() (*Sort, error) {
 }
 
 func (p *Parser) parseGroup() (*Group, error) {
+	var groupByFieldPtr *string
+	if p.parseBy() {
+		groupByField, err := p.parseField()
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse the group-by field: %w", err)
+		}
+
+		groupByFieldPtr = &groupByField
+	}
+
 	aggFunc, err := p.parseAggFunc()
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse aggregate function: %w", err)
 	}
 
-	field, err := p.parseField()
+	aggregateField, err := p.parseField()
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse field: %w", err)
 	}
 
-	log.Println("PARSED FIELD: ", field)
-
 	return &Group{
-		AggFunc: *aggFunc,
-		Field:   field,
+		AggFunc:        *aggFunc,
+		GroupByField:   groupByFieldPtr,
+		AggregateField: aggregateField,
 	}, nil
+}
+
+func (p *Parser) parseBy() bool {
+	_, tokStr := p.tokenizer.Peek()
+
+	if tokStr == "by" {
+		_ = p.tokenizer.Next()
+		return true
+	}
+
+	return false
 }
 
 func (p *Parser) parseCheck() (*UnaryCheck, *BinaryCheck, error) {

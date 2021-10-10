@@ -120,8 +120,9 @@ type Stage interface {
 // Group is a stage that performs grouping of data and aggregates computations
 // over them.
 type Group struct {
-	AggFunc AggregateFunc
-	Field   string
+	AggFunc        AggregateFunc
+	GroupByField   *string
+	AggregateField string
 }
 
 // Name implements the Stage interface.

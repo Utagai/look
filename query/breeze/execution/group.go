@@ -34,28 +34,89 @@ func (ss *GroupStream) Next() (datum.Datum, error) {
 }
 
 func (ss *GroupStream) groupSource() error {
-	var agg aggregator
+	sourcesToAggregate := ss.splitSource()
+
+	aggregateResults := make([]datum.Datum, len(sourcesToAggregate))
+	for i, source := range sourcesToAggregate {
+		aggregateResults[i] = ss.aggregateStream(source)
+	}
+
+	ss.groupedSource = datum.NewDatumSliceStream(aggregateResults)
+
+	return nil
+}
+
+func (ss *GroupStream) splitSource() []datum.DatumStream {
+	if ss.GroupByField == nil {
+		// If there isn't a group by condition then we are simply aggregating over
+		// the entire input, so return just the original input:
+		return []datum.DatumStream{ss.source}
+	}
+
+	// Otherwise, we need to split apart the input stream by the group by field
+	// and create N separate streams, each of which should then be independently
+	// aggregated over (we do not do the aggregation here).
+	table := newTable()
+	for sourceDatum, err := ss.source.Next(); err == nil; sourceDatum, err = ss.source.Next() {
+		groupByFieldValue, ok := sourceDatum[*ss.GroupByField]
+		if !ok {
+			// If the field doesn't exist, ignore the document.
+			continue
+		}
+
+		aggregateFieldValue, ok := sourceDatum[ss.AggregateField]
+		if !ok {
+			// If the aggregate field value for this doesn't exist, we should
+			// similarly also ignore it.
+			continue
+		}
+
+		if vals, ok := table.GetOK(groupByFieldValue); ok {
+			table.Set(
+				groupByFieldValue,
+				append(vals.([]datum.Datum), datum.Datum{ss.AggregateField: aggregateFieldValue}),
+			)
+		} else {
+			table.Set(groupByFieldValue, []datum.Datum{{ss.AggregateField: aggregateFieldValue}})
+		}
+	}
+
+	groupByFieldValues := table.Keys()
+	splitSources := make([]datum.DatumStream, len(groupByFieldValues))
+	for i, groupByFieldValue := range groupByFieldValues {
+		aggregateFieldValues := table.Get(groupByFieldValue)
+		splitSources[i] = datum.NewDatumSliceStream(aggregateFieldValues.([]datum.Datum))
+	}
+
+	return splitSources
+}
+
+func (ss *GroupStream) getAggregator() aggregator {
 	switch ss.AggFunc {
 	case breeze.AggFuncSum:
-		agg = &sum{}
+		return &sum{}
 	case breeze.AggFuncAvg:
-		agg = &avg{}
+		return &avg{}
 	case breeze.AggFuncCount:
-		agg = &count{}
+		return &count{}
 	case breeze.AggFuncMin:
-		agg = &min{}
+		return &min{}
 	case breeze.AggFuncMax:
-		agg = &max{}
+		return &max{}
 	case breeze.AggFuncMode:
-		agg = &mode{}
+		return &mode{}
 	case breeze.AggFuncStdDev:
-		agg = &stddev{}
+		return &stddev{}
 	default:
 		panic(fmt.Sprintf("unrecognized aggregate function: %q", ss.AggFunc))
 	}
+}
 
-	for datum, err := ss.source.Next(); err != io.EOF; datum, err = ss.source.Next() {
-		fieldValue, ok := datum[ss.Field]
+func (ss *GroupStream) aggregateStream(input datum.DatumStream) datum.Datum {
+	agg := ss.getAggregator()
+
+	for datum, err := input.Next(); err != io.EOF; datum, err = input.Next() {
+		fieldValue, ok := datum[ss.AggregateField]
 		if !ok {
 			// If the field doesn't exist, ignore the document.
 			continue
@@ -63,9 +124,7 @@ func (ss *GroupStream) groupSource() error {
 		agg.ingest(fieldValue)
 	}
 
-	ss.groupedSource = datum.NewUnaryStream(datum.Datum{
-		ss.Field: agg.aggregate(),
-	})
-
-	return nil
+	return datum.Datum{
+		ss.AggregateField: agg.aggregate(),
+	}
 }
