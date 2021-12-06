@@ -293,6 +293,33 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
+			query: "map foo = 4.2 bar = \"jelly\"",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: breeze.ValueOrExpr{
+								Value: &breeze.Const{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "4.2",
+								},
+							},
+						},
+						{
+							Field: "bar",
+							Assignment: breeze.ValueOrExpr{
+								Value: &breeze.Const{
+									Kind:        breeze.ConstKindString,
+									Stringified: "jelly",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			query:  "",
 			stages: []breeze.Stage{},
 		},

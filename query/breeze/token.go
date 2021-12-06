@@ -30,6 +30,7 @@ const (
 	TokenFilter
 	TokenSort
 	TokenGroup
+	TokenMap
 
 	// Binary operators:
 	TokenEquals
@@ -62,6 +63,8 @@ func (t Token) String() string {
 		return "Sort"
 	case TokenGroup:
 		return "Group"
+	case TokenMap:
+		return "Map"
 	case TokenContains:
 		return "Contains"
 	case TokenEquals:
@@ -210,6 +213,8 @@ func (t *Tokenizer) convertIdentToken(tok rune) Token {
 		return TokenSort
 	case "group":
 		return TokenGroup
+	case "map":
+		return TokenMap
 	case "contains":
 		return TokenContains
 	case "exists":

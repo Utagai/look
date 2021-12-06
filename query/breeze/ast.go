@@ -25,6 +25,16 @@ type Const struct {
 	Stringified string
 }
 
+// GetKind implements the Value interface.
+func (c *Const) GetKind() ValueKind {
+	return ValueKindConst
+}
+
+// GetStringRepr implements the Value interface.
+func (c *Const) GetStringRepr() string {
+	return c.Stringified
+}
+
 func (c *Const) String() string {
 	return c.Stringified
 }
@@ -45,6 +55,44 @@ func (c *Const) Interface() interface{} {
 	default:
 		panic(fmt.Sprintf("unexpected const kind: %q", c.Kind))
 	}
+}
+
+// FieldRef is a reference to a field of a datum.
+type FieldRef struct {
+	Field string
+}
+
+// GetKind implements the Value interface.
+func (f *FieldRef) GetKind() ValueKind {
+	return ValueKindFieldRef
+}
+
+// GetStringRepr implements the Value interface.
+func (f *FieldRef) GetStringRepr() string {
+	return f.Field
+}
+
+// ValueKind enumerates the kinds of values in breeze expressions.
+// TODO: Move this and Value to the top, above const and fieldref.
+type ValueKind string
+
+const (
+	// ValueKindConst represents a breeze Const.
+	ValueKindConst = "const"
+	// ValueKindFieldRef represents a reference to a field.
+	ValueKindFieldRef = "fieldref"
+	// ValueKindFunc represents a evaluatable function.
+	ValueKindFunc = "func"
+)
+
+// Value is simply a value in breeze. It could be a constant, field reference, or
+// function.
+type Value interface {
+	// TODO: Now that Value can have a type, ConstKind should probably be renamed
+	// and become more general (e.g. one kind should probably be variable, another
+	// func, etc.).
+	GetKind() ValueKind
+	GetStringRepr() string
 }
 
 // UnaryOp enumerates the kinds of unary operations in breeze.
@@ -119,6 +167,7 @@ type Stage interface {
 
 // Group is a stage that performs grouping of data and aggregates computations
 // over them.
+// TODO: Rename to reduce, or is reduce the wrong word?
 type Group struct {
 	AggFunc        AggregateFunc
 	GroupByField   *string
@@ -143,3 +192,36 @@ const (
 	AggFuncMode   AggregateFunc = "mode"
 	AggFuncStdDev AggregateFunc = "stddev"
 )
+
+// Map is a stage that performs transformations on a per-field basis.
+type Map struct {
+	Assignments []FieldAssignment
+}
+
+// Name implements the Stage interface.
+func (m *Map) Name() string {
+	return "map"
+}
+
+// FieldAssignment is a remapping of a field, found in maps.
+type FieldAssignment struct {
+	Field string
+	// TODO: We should possibly be able to handle non-binary exprs.
+	Assignment ValueOrExpr
+}
+
+// ValueOrExpr is an intermediate union type for describing what could be a
+// straight value, or a full expression.
+// TODO: Is it possible that this is excessive? Can we just have Expr and it
+// having a null op + rightexpr -> value?
+type ValueOrExpr struct {
+	Value Value
+	Expr  Expr
+}
+
+// Expr is a breeze expression. This is commonly used in filters & maps.
+type Expr struct {
+	LeftExpr  *ValueOrExpr
+	Op        string
+	RightExpr *ValueOrExpr
+}

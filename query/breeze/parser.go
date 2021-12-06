@@ -121,6 +121,8 @@ func (p *Parser) parseStage() (Stage, error) {
 		return p.parseSort()
 	case TokenGroup:
 		return p.parseGroup()
+	case TokenMap:
+		return p.parseMap()
 	default:
 		return nil, fmt.Errorf("unrecognized stage: %q", p.tokenizer.Text())
 	}
@@ -196,6 +198,27 @@ func (p *Parser) parseGroup() (*Group, error) {
 	}, nil
 }
 
+func (p *Parser) parseMap() (*Map, error) {
+	assignments := []FieldAssignment{}
+	for {
+		if token, _ := p.tokenizer.Peek(); token == TokenStageSeparator || token == TokenEOF {
+			break // No more checks to parse.
+		}
+
+		// TODO: I think our code might actually be a lot cleaner if we went with a single
+		// Check type that covers both the unary & binary case.
+		assignment, err := p.parseAssignment()
+		if err == io.EOF {
+			break // No more checks to parse.
+		} else if err != nil {
+			return nil, fmt.Errorf("failed to parse check: %w", err)
+		}
+
+		assignments = append(assignments, *assignment)
+	}
+	return &Map{Assignments: assignments}, nil
+}
+
 func (p *Parser) parseBy() bool {
 	_, tokStr := p.tokenizer.Peek()
 
@@ -232,8 +255,36 @@ func (p *Parser) parseCheck() (*UnaryCheck, *BinaryCheck, error) {
 
 	return nil, &BinaryCheck{
 		Field: field,
-		Value: value,
+		Value: value.(*Const), // TODO: We probably can and should get rid of this cast.
 		Op:    bOp,
+	}, nil
+}
+
+func (p *Parser) parseAssignment() (*FieldAssignment, error) {
+	field, err := p.parseField()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse field: %w", err)
+	}
+
+	token := p.tokenizer.Next()
+	if token == TokenEOF {
+		return nil, errors.New("expected an equals (=), but reached end of query")
+	}
+	err = p.parseEquals(token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse op: %w", err)
+	}
+
+	value, err := p.parseConstValue()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse constant value: %w", err)
+	}
+
+	return &FieldAssignment{
+		Field: field,
+		Assignment: ValueOrExpr{
+			Value: value,
+		},
 	}, nil
 }
 
@@ -292,6 +343,14 @@ func (p *Parser) parseBinaryOp(token Token) (BinaryOp, error) {
 	}
 }
 
+func (p *Parser) parseEquals(token Token) error {
+	if token == TokenEquals {
+		return nil
+	}
+
+	return fmt.Errorf("expected to find an equals (=), but found %v", token)
+}
+
 func isQuotedString(text string) bool {
 	if len(text) < 2 {
 		return false
@@ -300,7 +359,7 @@ func isQuotedString(text string) bool {
 	return text[0] == '"' && text[len(text)-1] == '"'
 }
 
-func (p *Parser) parseConstValue() (*Const, error) {
+func (p *Parser) parseConstValue() (Value, error) {
 	token := p.tokenizer.Next()
 	if token == TokenEOF {
 		return nil, errors.New("expected a constant value, but reached end of query")

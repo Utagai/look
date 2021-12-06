@@ -11,7 +11,7 @@ import (
 // This is the expected number of 'custom' Breeze tokens (aka, tokens that are
 // not mapped to the ones found in the scanner package).
 // Note that this should always match the length of the below map.
-const expectedNumBreezeTokenTypes = 12
+const expectedNumBreezeTokenTypes = 13
 
 // This should always have a number of elements equal to the constant above.
 var tokenToExampleStr = map[breeze.Token]string{
@@ -19,6 +19,7 @@ var tokenToExampleStr = map[breeze.Token]string{
 	breeze.TokenFilter:         "filter",
 	breeze.TokenSort:           "sort",
 	breeze.TokenGroup:          "group",
+	breeze.TokenMap:            "map",
 	breeze.TokenContains:       "contains",
 	breeze.TokenEquals:         "=",
 	breeze.TokenGEQ:            ">",
