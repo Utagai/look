@@ -57,7 +57,38 @@ func evaluateValue(value breeze.Value, datum datum.Datum) breeze.Const {
 }
 
 func evaluateFieldRef(fieldRef *breeze.FieldRef, datum datum.Datum) breeze.Const {
-	panic("TODO")
+	return goValueToConst(datum[fieldRef.Field])
+}
+
+func goValueToConst(val interface{}) breeze.Const {
+	if val == nil {
+		return breeze.Const{
+			Kind:        breeze.ConstKindNull,
+			Stringified: "null",
+		}
+	}
+
+	switch tval := val.(type) {
+	case uint, uint8, uint16, uint32, uint64:
+	case int, int8, int16, int32, int64:
+	case float32, float64:
+		return breeze.Const{
+			Kind:        breeze.ConstKindNumber,
+			Stringified: fmt.Sprintf("%v", tval),
+		}
+	case string:
+		return breeze.Const{
+			Kind:        breeze.ConstKindString,
+			Stringified: tval,
+		}
+	case bool:
+		return breeze.Const{
+			Kind:        breeze.ConstKindBool,
+			Stringified: fmt.Sprintf("%t", tval),
+		}
+	}
+
+	panic(fmt.Sprintf("unrecognized base type: %T", val))
 }
 
 func evaluateExpr(expr breeze.Expr, datum datum.Datum) breeze.Const {

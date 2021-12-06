@@ -141,6 +141,8 @@ func NewTokenizer(input string) Tokenizer {
 			return i == 0
 		case '|': // Treat pipe as an identifier.
 			return true
+		case '.': // If we see a '.' and it is the first position of the token, treat it as ident.
+			return i == 0
 		}
 
 		// Digits are OK, but only if they are after the first character.
@@ -233,6 +235,7 @@ func (t *Tokenizer) convertIdentToken(tok rune) Token {
 }
 
 // Text wraps scanner.Scanner#TokenText().
+// In other words, returns the current/last-returned token.
 func (t *Tokenizer) Text() string {
 	// Preserve this method's behavior of returning the current text, and not the
 	// peeked text.

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 )
 
@@ -248,14 +249,14 @@ func (p *Parser) parseCheck() (*UnaryCheck, *BinaryCheck, error) {
 		}, nil, nil
 	}
 
-	value, err := p.parseConstValue()
+	value, err := p.parseConstValue(p.tokenizer.Next(), true)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse constant value: %w", err)
 	}
 
 	return nil, &BinaryCheck{
 		Field: field,
-		Value: value.(*Const), // TODO: We probably can and should get rid of this cast.
+		Value: value,
 		Op:    bOp,
 	}, nil
 }
@@ -275,10 +276,14 @@ func (p *Parser) parseAssignment() (*FieldAssignment, error) {
 		return nil, fmt.Errorf("failed to parse op: %w", err)
 	}
 
-	value, err := p.parseConstValue()
+	log.Println("just parsed: ", p.tokenizer.Text())
+
+	value, err := p.parseValue()
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse constant value: %w", err)
 	}
+
+	log.Println("parsed value: ", value)
 
 	return &FieldAssignment{
 		Field: field,
@@ -359,8 +364,37 @@ func isQuotedString(text string) bool {
 	return text[0] == '"' && text[len(text)-1] == '"'
 }
 
-func (p *Parser) parseConstValue() (Value, error) {
+// TODO: This function (and likely others) have similar constructs that are
+// representable by parser combinators AND and OR. Making a generic function
+// that can handle this could be possible, even without generics in Go. Possibly
+// it would look ugly, so maybe we can keep this comment here until Go has
+// generics.
+func (p *Parser) parseValue() (Value, error) {
 	token := p.tokenizer.Next()
+	if token == TokenEOF {
+		return nil, errors.New("expected a value, but reached end of query")
+	}
+
+	// We do not want idents to be treated as consts, otherwise field references
+	// and functions would be considered consts which is not desirable here.
+	constValue, err := p.parseConstValue(token, false)
+	if err == nil {
+		return constValue, nil
+	}
+
+	fieldRefValue, err := p.parseFieldRef(token)
+	if err == nil {
+		return fieldRefValue, nil
+	}
+
+	log.Println("got err from parse const value: ", err)
+
+	// TODO: Should we perhaps flesh this out with each error from attempts at
+	// parsing const/fieldref/function?
+	return nil, errors.New("failed to parse a value; expected a constant value, field reference or function")
+}
+
+func (p *Parser) parseConstValue(token Token, identIsString bool) (*Const, error) {
 	if token == TokenEOF {
 		return nil, errors.New("expected a constant value, but reached end of query")
 	}
@@ -392,14 +426,33 @@ func (p *Parser) parseConstValue() (Value, error) {
 			Stringified: p.tokenizer.Text(),
 		}, nil
 	case TokenIdent:
-		// Treat this as a string.
-		return &Const{
-			Kind:        ConstKindString,
-			Stringified: p.tokenizer.Text(),
-		}, nil
+		// Treat this as a string if we are told to, otherwise, error:
+		if identIsString {
+			return &Const{
+				Kind:        ConstKindString,
+				Stringified: p.tokenizer.Text(),
+			}, nil
+		}
+
+		return nil, fmt.Errorf("expected a constant value, but got %q (strings should be quoted in this context)", p.tokenizer.Text())
 	default:
 		return nil, fmt.Errorf("expected a constant value, but got: %q", p.tokenizer.Text())
 	}
+}
+
+func (p *Parser) parseFieldRef(token Token) (*FieldRef, error) {
+	fieldRefText := p.tokenizer.Text()
+	if token != TokenIdent {
+		return nil, fmt.Errorf("expected an identifier, but got %q", fieldRefText)
+	}
+
+	if !strings.HasPrefix(fieldRefText, ".") {
+		return nil, fmt.Errorf("field references must start with '.'")
+	}
+
+	return &FieldRef{
+		Field: strings.TrimPrefix(fieldRefText, "."),
+	}, nil
 }
 
 func (p *Parser) parseSortOrder() bool {

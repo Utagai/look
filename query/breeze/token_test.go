@@ -157,6 +157,19 @@ func TestTokenizerGivesFalseAndEOFAtEnd(t *testing.T) {
 	require.Equal(t, tok, breeze.TokenEOF)
 }
 
+func TestTokenizerWithDotPrefixedTokens(t *testing.T) {
+	input := "hello .foo"
+	tokenizer := breeze.NewTokenizer(input)
+
+	tok := tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenIdent)
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenIdent)
+	// We should check that the . is included here. This could be important for
+	// the parser layer to distinguish the ident.
+	require.Equal(t, tokenizer.Text(), ".foo")
+}
+
 func TestTokenizerPosition(t *testing.T) {
 	input := "hello 9.8"
 	tokenizer := breeze.NewTokenizer(input)

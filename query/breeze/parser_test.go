@@ -292,8 +292,10 @@ func TestParser(t *testing.T) {
 				},
 			},
 		},
+		// TODO: These tests below are for maps. We should take some time at some
+		// point to further flesh these out e.g. with more cases, combinations, etc.
 		{
-			query: "map foo = 4.2 bar = \"jelly\"",
+			query: "map foo = 4.2 bar = \".jelly\"",
 			stages: []breeze.Stage{
 				&breeze.Map{
 					Assignments: []breeze.FieldAssignment{
@@ -311,7 +313,7 @@ func TestParser(t *testing.T) {
 							Assignment: breeze.ValueOrExpr{
 								Value: &breeze.Const{
 									Kind:        breeze.ConstKindString,
-									Stringified: "jelly",
+									Stringified: ".jelly",
 								},
 							},
 						},
@@ -319,6 +321,11 @@ func TestParser(t *testing.T) {
 				},
 			},
 		},
+		{
+			query:  "map foo = 4.2 bar = ishouldhaveadotatbeginning",
+			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse a value; expected a constant value, field reference or function",
+		},
+		// TODO: END OF MAP TESTS
 		{
 			query:  "",
 			stages: []breeze.Stage{},
