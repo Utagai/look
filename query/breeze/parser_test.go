@@ -295,7 +295,7 @@ func TestParser(t *testing.T) {
 		// TODO: These tests below are for maps. We should take some time at some
 		// point to further flesh these out e.g. with more cases, combinations, etc.
 		{
-			query: "map foo = 4.2 bar = \".jelly\"",
+			query: "map foo = 4.2",
 			stages: []breeze.Stage{
 				&breeze.Map{
 					Assignments: []breeze.FieldAssignment{
@@ -308,18 +308,101 @@ func TestParser(t *testing.T) {
 								},
 							},
 						},
+					},
+				},
+			},
+		},
+		{
+			query: "map foo = .jelly",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
 						{
-							Field: "bar",
+							Field: "foo",
 							Assignment: breeze.ValueOrExpr{
-								Value: &breeze.Const{
-									Kind:        breeze.ConstKindString,
-									Stringified: ".jelly",
+								Value: &breeze.FieldRef{
+									Field: "jelly",
 								},
 							},
 						},
 					},
 				},
 			},
+		},
+		{
+			query: "map foo = pow(2, 3)",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: breeze.ValueOrExpr{
+								Value: &breeze.Function{
+									Name: "pow",
+									Args: []breeze.Value{
+										&breeze.Const{
+											Kind:        breeze.ConstKindNumber,
+											Stringified: "2",
+										},
+										&breeze.Const{
+											Kind:        breeze.ConstKindNumber,
+											Stringified: "3",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "map foo = pow(.bar, pow(3, \"2\"))", // Invalid function call, but not at parse time.
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: breeze.ValueOrExpr{
+								Value: &breeze.Function{
+									Name: "pow",
+									Args: []breeze.Value{
+										&breeze.FieldRef{
+											Field: "bar",
+										},
+										&breeze.Function{
+											Name: "pow",
+											Args: []breeze.Value{
+												&breeze.Const{
+													Kind:        breeze.ConstKindNumber,
+													Stringified: "3",
+												},
+												&breeze.Const{
+													Kind:        breeze.ConstKindString,
+													Stringified: "2",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		// TODO: Yea, we obviously need to be better about the error message here.
+		{
+			query:  "map foo = 4.2 bar = jelly()",
+			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse a value; expected a constant value, field reference or function",
+		},
+		{
+			query:  "map foo = 4.2 bar = pow()",
+			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse a value; expected a constant value, field reference or function",
+		},
+		{
+			query:  "map foo = 4.2 bar = pow(",
+			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse a value; expected a constant value, field reference or function",
 		},
 		{
 			query:  "map foo = 4.2 bar = ishouldhaveadotatbeginning",

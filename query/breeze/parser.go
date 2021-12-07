@@ -18,6 +18,7 @@ type Parser struct {
 }
 
 // NewParser creates a Parser.
+// TODO: This should take in a map of function -> validators.
 func NewParser(input string) *Parser {
 	return &Parser{
 		input:     input,
@@ -387,7 +388,10 @@ func (p *Parser) parseValue() (Value, error) {
 		return fieldRefValue, nil
 	}
 
-	log.Println("got err from parse const value: ", err)
+	functionValue, err := p.parseFunction(token)
+	if err == nil {
+		return functionValue, nil
+	}
 
 	// TODO: Should we perhaps flesh this out with each error from attempts at
 	// parsing const/fieldref/function?
@@ -452,6 +456,54 @@ func (p *Parser) parseFieldRef(token Token) (*FieldRef, error) {
 
 	return &FieldRef{
 		Field: strings.TrimPrefix(fieldRefText, "."),
+	}, nil
+}
+
+func (p *Parser) parseFunction(token Token) (*Function, error) {
+	funcName := p.tokenizer.Text()
+	if token != TokenIdent {
+		return nil, fmt.Errorf("expected an identifier, but got %q", funcName)
+	}
+
+	funcValidator, found := LookupFuncValidator(funcName)
+	if !found {
+		return nil, fmt.Errorf("unrecognized function: %q", funcName)
+	}
+
+	if p.tokenizer.Next() != TokenLParen {
+		return nil, fmt.Errorf("expected an opening parenthesis for a function start, but got %q", p.tokenizer.Text())
+	}
+
+	// Loop for collecting function arguments. Keeps going until it hits RParen.
+	// Expects a comma between each argument.
+	args := []Value{}
+	for {
+		val, err := p.parseValue()
+		if err != nil {
+			break
+		}
+
+		args = append(args, val)
+
+		nextToken := p.tokenizer.Next()
+		if nextToken == TokenRParen {
+			// Function is done, stop.
+			break
+		} else if nextToken == TokenComma {
+			// Possibly more coming, continue.
+			continue
+		} else {
+			return nil, fmt.Errorf("expected either a closing parenthesis or comma, but got %q", p.tokenizer.Text())
+		}
+	}
+
+	if funcValidator.ExpectedNumArgs() != len(args) {
+		return nil, fmt.Errorf("expected %d args, got %d", funcValidator.ExpectedNumArgs(), len(args))
+	}
+
+	return &Function{
+		Name: funcName,
+		Args: args,
 	}, nil
 }
 

@@ -3,6 +3,7 @@ package breeze
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // ConstKind enumerates the kinds of constants in breeze.
@@ -72,6 +73,28 @@ func (f *FieldRef) GetStringRepr() string {
 	return f.Field
 }
 
+// Function is a breeze function.
+type Function struct {
+	Name string
+	Args []Value
+}
+
+// GetKind implements the Value interface.
+func (f *Function) GetKind() ValueKind {
+	return ValueKindFunc
+}
+
+// GetStringRepr implements the Value interface.
+// TODO: Test this?
+func (f *Function) GetStringRepr() string {
+	argsStrSlice := make([]string, len(f.Args))
+	for i := range f.Args {
+		argsStrSlice[i] = f.Args[i].GetStringRepr()
+	}
+
+	return fmt.Sprintf("%s(%s)", f.Name, strings.Join(argsStrSlice, ","))
+}
+
 // ValueKind enumerates the kinds of values in breeze expressions.
 // TODO: Move this and Value to the top, above const and fieldref.
 type ValueKind string
@@ -88,9 +111,6 @@ const (
 // Value is simply a value in breeze. It could be a constant, field reference, or
 // function.
 type Value interface {
-	// TODO: Now that Value can have a type, ConstKind should probably be renamed
-	// and become more general (e.g. one kind should probably be variable, another
-	// func, etc.).
 	GetKind() ValueKind
 	GetStringRepr() string
 }
