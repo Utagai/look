@@ -11,7 +11,7 @@ import (
 // This is the expected number of 'custom' Breeze tokens (aka, tokens that are
 // not mapped to the ones found in the scanner package).
 // Note that this should always match the length of the below map.
-const expectedNumBreezeTokenTypes = 13
+const expectedNumBreezeTokenTypes = 16
 
 // This should always have a number of elements equal to the constant above.
 var tokenToExampleStr = map[breeze.Token]string{
@@ -20,6 +20,9 @@ var tokenToExampleStr = map[breeze.Token]string{
 	breeze.TokenSort:           "sort",
 	breeze.TokenGroup:          "group",
 	breeze.TokenMap:            "map",
+	breeze.TokenLParen:         "(",
+	breeze.TokenRParen:         ")",
+	breeze.TokenComma:          ",",
 	breeze.TokenContains:       "contains",
 	breeze.TokenEquals:         "=",
 	breeze.TokenGEQ:            ">",
@@ -168,6 +171,27 @@ func TestTokenizerWithDotPrefixedTokens(t *testing.T) {
 	// We should check that the . is included here. This could be important for
 	// the parser layer to distinguish the ident.
 	require.Equal(t, tokenizer.Text(), ".foo")
+}
+
+func TestTokenizerWithFunctionStyle(t *testing.T) {
+	input := "hello foo(2, \"hi\")"
+	tokenizer := breeze.NewTokenizer(input)
+
+	tok := tokenizer.Next()
+
+	require.Equal(t, tok, breeze.TokenIdent, "expected TokenIdent")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenIdent, "expected TokenIdent")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenLParen, "expected TokenLParen")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenInt, "expected TokenInt")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenComma, "expected TokenComma")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenString, "expected TokenString")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenRParen, "expected TokenRParen")
 }
 
 func TestTokenizerPosition(t *testing.T) {

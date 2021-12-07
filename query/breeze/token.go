@@ -32,6 +32,11 @@ const (
 	TokenGroup
 	TokenMap
 
+	// Punctuators
+	TokenLParen
+	TokenRParen
+	TokenComma
+
 	// Binary operators:
 	TokenEquals
 	TokenGEQ
@@ -65,6 +70,12 @@ func (t Token) String() string {
 		return "Group"
 	case TokenMap:
 		return "Map"
+	case TokenLParen:
+		return "LParen"
+	case TokenRParen:
+		return "RParen"
+	case TokenComma:
+		return "Comma"
 	case TokenContains:
 		return "Contains"
 	case TokenEquals:
@@ -94,7 +105,7 @@ func (t Token) String() string {
 	case TokenEOF:
 		return "EOF"
 	default:
-		panic(fmt.Sprintf("unhandled token type: %d", t))
+		panic(fmt.Sprintf("unhandled token type: %d (%v)", t, scanner.TokenString(rune(t))))
 	}
 }
 
@@ -197,6 +208,12 @@ func (t *Tokenizer) next() Token {
 			return TokenEquals
 		case ">":
 			return TokenGEQ
+		case "(":
+			return TokenLParen
+		case ")":
+			return TokenRParen
+		case ",":
+			return TokenComma
 		}
 	}
 
