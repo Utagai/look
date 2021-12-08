@@ -213,7 +213,7 @@ func (p *Parser) parseMap() (*Map, error) {
 		if err == io.EOF {
 			break // No more checks to parse.
 		} else if err != nil {
-			return nil, fmt.Errorf("failed to parse check: %w", err)
+			return nil, fmt.Errorf("failed to parse assignment: %w", err)
 		}
 
 		assignments = append(assignments, *assignment)
@@ -274,14 +274,14 @@ func (p *Parser) parseAssignment() (*FieldAssignment, error) {
 	}
 	err = p.parseEquals(token)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse op: %w", err)
+		return nil, err
 	}
 
 	log.Println("just parsed: ", p.tokenizer.Text())
 
 	expr, err := p.parseExpr()
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse constant value: %w", err)
+		return nil, err
 	}
 
 	log.Println("parsed expr: ", expr)
@@ -399,68 +399,73 @@ func getBinaryOpPrecedence(bOp BinaryOp) int {
 }
 
 func (p *Parser) parseExpr() (Expr, error) {
-	// We should always expect _at least_ a single value, aka, a single-term
-	// expression. If we don't find this at least, that means the expression
-	// doesn't exist in the query even though it should.
-	val, err := p.parseValue()
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse value in expr: %w", err)
-	}
+	var leftExpr Expr
+	var err error
 
-	// Now we'll try to form the rest of the binary expression. If this really is
-	// a single term expression, then this will give back nil for the binary expr
-	// and we'll default to just returning the value.
-	expr, err := p.parseBinaryExpr(val)
-	if err == nil && expr == nil {
-		return val, nil
-	}
-
-	return expr, err
-}
-
-func (p *Parser) parseBinaryExpr(firstVal Expr) (*BinaryExpr, error) {
-	var expr *BinaryExpr
-
-	for {
-		token, _ := p.tokenizer.Peek()
-		bOp, err := p.parseBinaryOp(token)
-		if err != nil {
-			// No more tokens for this expression.
-			break
-		}
+	if token, _ := p.tokenizer.Peek(); token == TokenLParen {
 		_ = p.tokenizer.Next()
-		val, err := p.parseValue()
+		leftExpr, err = p.parseExpr()
+		if p.tokenizer.Next() != TokenRParen {
+			return nil, fmt.Errorf("expected a closing paranthesis, but got %q", p.tokenizer.Text())
+		}
+	} else {
+		// We should always expect _at least_ a single value, aka, a single-term
+		// expression. If we don't find this at least, that means the expression
+		// doesn't exist in the query even though it should.
+		leftExpr, err = p.parseValue(p.tokenizer.Next())
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse value in expr: %w", err)
 		}
-
-		if expr != nil && getBinaryOpPrecedence(expr.Op) < getBinaryOpPrecedence(bOp) {
-			// Take the past operation and embed this one below it on the right side,
-			// to ensure this operation happens prior.
-			// Classically, this is achieved implicitly through the recursion tree,
-			// the textbook example being parseTerm and parseFactor functions. I find
-			// that to not be as clean because the data structure you build has a
-			// shape that is extremely important and yet _implicitly_ guaranteed.
-			expr.Right = &BinaryExpr{
-				Left:  expr.Right,
-				Op:    bOp,
-				Right: val,
-			}
-			continue
-		}
-
-		var leftExpr Expr = expr
-		if expr == nil {
-			leftExpr = firstVal
-		}
-		expr = &BinaryExpr{
-			Left:  leftExpr,
-			Op:    bOp,
-			Right: val,
-		}
 	}
 
-	return expr, nil
+	token, _ := p.tokenizer.Peek()
+	bOp, err := p.parseBinaryOp(token)
+	if err != nil {
+		// No more tokens for this expression.
+		return leftExpr, nil
+	}
+	_ = p.tokenizer.Next()
+
+	// Grab the next token, so that we can check if the next suffix of the
+	// expression input is parenthesized for precedence determination.
+	token, _ = p.tokenizer.Peek()
+	rightExpr, err := p.parseExpr()
+
+	return p.applyPrecedence(leftExpr, bOp, rightExpr, token == TokenLParen), err
+}
+
+func (p *Parser) applyPrecedence(leftExpr Expr, leftOp BinaryOp, rightExpr Expr, rightIsParenthesized bool) *BinaryExpr {
+	// Fixes the precedence before committing to the binary expr.
+	// Classically, this is achieved implicitly through the recursion tree, the
+	// textbook example being parseTerm and parseFactor functions. I decided to
+	// try something different to see if the code gets more readable, since the
+	// classical approach involves building the shape of the AST _implicitly_,
+	// which seems a bad decision for a trait so important (and it took me
+	// personally a while to see how precedence is encoded into the call stack).
+	// TODO: That said, this if statement is not easy to look at and moving
+	// around trees aren't easy to visualize either... I'll let this sit for now
+	// and revisit it later (or, if this is buggy, I'll probably just give up).
+	if rightBinaryExpr, ok := rightExpr.(*BinaryExpr); ok &&
+		!rightIsParenthesized &&
+		getBinaryOpPrecedence(leftOp) > getBinaryOpPrecedence(rightBinaryExpr.Op) {
+		// We have the higher precedence operator, call it *. We have a value X,
+		// and a right-side expression with lower precedence operator, +: Y + Z.
+		// Without this, we would do X * Y + Z -> X * (Y + Z).
+		// With this, we do X * Y + Z -> (X * Y) + Z.
+		leftExpr = &BinaryExpr{
+			Left:  leftExpr,
+			Op:    leftOp,
+			Right: rightBinaryExpr.Left,
+		}
+		leftOp = rightBinaryExpr.Op
+		rightExpr = rightBinaryExpr.Right
+	}
+
+	return &BinaryExpr{
+		Left:  leftExpr,
+		Op:    leftOp,
+		Right: rightExpr,
+	}
 }
 
 // TODO: This function (and likely others) have similar constructs that are
@@ -468,8 +473,7 @@ func (p *Parser) parseBinaryExpr(firstVal Expr) (*BinaryExpr, error) {
 // that can handle this could be possible, even without generics in Go. Possibly
 // it would look ugly, so maybe we can keep this comment here until Go has
 // generics.
-func (p *Parser) parseValue() (Value, error) {
-	token := p.tokenizer.Next()
+func (p *Parser) parseValue(token Token) (Value, error) {
 	if token == TokenEOF {
 		return nil, errors.New("expected a value, but reached end of query")
 	}
@@ -593,7 +597,7 @@ func (p *Parser) parseFunction(token Token) (*Function, error) {
 	// Expects a comma between each argument.
 	args := []Value{}
 	for {
-		val, err := p.parseValue()
+		val, err := p.parseValue(p.tokenizer.Next())
 		if err != nil {
 			break
 		}

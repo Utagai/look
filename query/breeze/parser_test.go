@@ -415,21 +415,21 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
-								Left: &breeze.BinaryExpr{
+								Left: &breeze.Const{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "2",
+								},
+								Op: breeze.BinaryOpPlus,
+								Right: &breeze.BinaryExpr{
 									Left: &breeze.Const{
-										Kind:        breeze.ConstKindNumber,
-										Stringified: "2",
-									},
-									Op: breeze.BinaryOpPlus,
-									Right: &breeze.Const{
 										Kind:        breeze.ConstKindNumber,
 										Stringified: "5",
 									},
-								},
-								Op: breeze.BinaryOpMinus,
-								Right: &breeze.Const{
-									Kind:        breeze.ConstKindNumber,
-									Stringified: "3",
+									Op: breeze.BinaryOpMinus,
+									Right: &breeze.Const{
+										Kind:        breeze.ConstKindNumber,
+										Stringified: "3",
+									},
 								},
 							},
 						},
@@ -445,29 +445,17 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
-								Left: &breeze.BinaryExpr{
-									Left: &breeze.Const{
-										Kind:        breeze.ConstKindNumber,
-										Stringified: "2",
+								Left: &breeze.Const{Kind: "number", Stringified: "2"},
+								Right: &breeze.BinaryExpr{
+									Left: &breeze.BinaryExpr{
+										Left:  &breeze.Const{Kind: "number", Stringified: "5"},
+										Right: &breeze.Const{Kind: "number", Stringified: "3"},
+										Op:    "*",
 									},
-									Op: breeze.BinaryOpPlus,
-									Right: &breeze.BinaryExpr{
-										Left: &breeze.Const{
-											Kind:        breeze.ConstKindNumber,
-											Stringified: "5",
-										},
-										Op: breeze.BinaryOpMultiply,
-										Right: &breeze.Const{
-											Kind:        breeze.ConstKindNumber,
-											Stringified: "3",
-										},
-									},
+									Right: &breeze.Const{Kind: "number", Stringified: "4"},
+									Op:    "-",
 								},
-								Op: breeze.BinaryOpMinus,
-								Right: &breeze.Const{
-									Kind:        breeze.ConstKindNumber,
-									Stringified: "4",
-								},
+								Op: "+",
 							},
 						},
 					},
@@ -483,55 +471,91 @@ func TestParser(t *testing.T) {
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
 								Left: &breeze.BinaryExpr{
-									Left: &breeze.BinaryExpr{
+									Left:  &breeze.Const{Kind: "number", Stringified: "4"},
+									Right: &breeze.Const{Kind: "number", Stringified: "3"},
+									Op:    "*",
+								},
+								Right: &breeze.BinaryExpr{
+									Left: &breeze.Const{Kind: "number", Stringified: "1"},
+									Right: &breeze.BinaryExpr{
 										Left: &breeze.BinaryExpr{
-											Left: &breeze.BinaryExpr{
-												Left: &breeze.Const{
-													Kind:        breeze.ConstKindNumber,
-													Stringified: "4",
-												},
-												Op: breeze.BinaryOpMultiply,
-												Right: &breeze.Const{
-													Kind:        breeze.ConstKindNumber,
-													Stringified: "3",
-												},
+											Left: &breeze.Const{Kind: "number", Stringified: "2"},
+											Right: &breeze.BinaryExpr{
+												Left:  &breeze.Const{Kind: "number", Stringified: "8"},
+												Right: &breeze.Const{Kind: "number", Stringified: "9"},
+												Op:    "/",
 											},
-											Op: breeze.BinaryOpPlus,
-											Right: &breeze.Const{
-												Kind:        breeze.ConstKindNumber,
-												Stringified: "1",
-											},
+											Op: "*",
 										},
-										Op: breeze.BinaryOpPlus,
 										Right: &breeze.BinaryExpr{
-											Left: &breeze.BinaryExpr{
-												Left: &breeze.Const{
-													Kind:        breeze.ConstKindNumber,
-													Stringified: "2",
-												},
-												Op: breeze.BinaryOpMultiply,
-												Right: &breeze.Const{
-													Kind:        breeze.ConstKindNumber,
-													Stringified: "8",
-												},
-											},
-											Op: breeze.BinaryOpDivide,
-											Right: &breeze.Const{
-												Kind:        breeze.ConstKindNumber,
-												Stringified: "9",
-											},
+											Left:  &breeze.Const{Kind: "number", Stringified: "4"},
+											Right: &breeze.Const{Kind: "number", Stringified: "1"},
+											Op:    "-",
 										},
+										Op: "+",
+									},
+									Op: "+",
+								},
+								Op: "+",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "map foo = 3 * (5 + 2)",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: &breeze.BinaryExpr{
+								Left: &breeze.Const{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "3",
+								},
+								Op: breeze.BinaryOpMultiply,
+								Right: &breeze.BinaryExpr{
+									Left: &breeze.Const{
+										Kind:        breeze.ConstKindNumber,
+										Stringified: "5",
 									},
 									Op: breeze.BinaryOpPlus,
 									Right: &breeze.Const{
 										Kind:        breeze.ConstKindNumber,
-										Stringified: "4",
+										Stringified: "2",
 									},
 								},
-								Op: breeze.BinaryOpMinus,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "map foo = (5 + 2) * 3",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: &breeze.BinaryExpr{
+								Left: &breeze.BinaryExpr{
+									Left: &breeze.Const{
+										Kind:        breeze.ConstKindNumber,
+										Stringified: "5",
+									},
+									Op: breeze.BinaryOpPlus,
+									Right: &breeze.Const{
+										Kind:        breeze.ConstKindNumber,
+										Stringified: "2",
+									},
+								},
+								Op: breeze.BinaryOpMultiply,
 								Right: &breeze.Const{
 									Kind:        breeze.ConstKindNumber,
-									Stringified: "1",
+									Stringified: "3",
 								},
 							},
 						},
@@ -572,20 +596,24 @@ func TestParser(t *testing.T) {
 		},
 		// TODO: Yea, we obviously need to be better about the error message here.
 		{
+			query:  "map foo = 3 * (5 + 2 LOL",
+			errMsg: "failed to parse: failed to parse assignment: expected a closing paranthesis, but got \"LOL\"",
+		},
+		{
 			query:  "map foo = 4.2 bar = jelly()",
-			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
 		},
 		{
 			query:  "map foo = 4.2 bar = pow()",
-			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
 		},
 		{
 			query:  "map foo = 4.2 bar = pow(",
-			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
 		},
 		{
 			query:  "map foo = 4.2 bar = ishouldhaveadotatbeginning",
-			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
 		},
 		// TODO: END OF MAP TESTS
 		{
