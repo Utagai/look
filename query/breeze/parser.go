@@ -363,18 +363,42 @@ func isQuotedString(text string) bool {
 	return text[0] == '"' && text[len(text)-1] == '"'
 }
 
-// A mapping of expression operator tokens linked to their precedence level.
-// Higher precedence values means the token has a higher precedence.
-var tokenPrecedence = map[Token]int{
-	TokenMultiply: 1,
-	TokenDivide:   1,
-	TokenPlus:     0,
-	TokenMinus:    0,
+func binaryOpToToken(bOp BinaryOp) Token {
+	switch bOp {
+	case BinaryOpPlus:
+		return TokenPlus
+	case BinaryOpMinus:
+		return TokenMinus
+	case BinaryOpMultiply:
+		return TokenMultiply
+	case BinaryOpDivide:
+		return TokenDivide
+	default:
+		panic(fmt.Sprintf("unrecognized binary op: %v", bOp))
+	}
+}
+
+func getBinaryOpPrecedence(bOp BinaryOp) int {
+	// A mapping of expression operator tokens linked to their precedence level.
+	// Higher precedence values means the token has a higher precedence.
+	binaryOpPrecedence := map[Token]int{
+		TokenMultiply: 1,
+		TokenDivide:   1,
+		TokenPlus:     0,
+		TokenMinus:    0,
+	}
+
+	bOpToken := binaryOpToToken(bOp)
+
+	prec, ok := binaryOpPrecedence[bOpToken]
+	if !ok {
+		panic(fmt.Sprintf("unrecognized binary op: %v", bOp))
+	}
+
+	return prec
 }
 
 func (p *Parser) parseExpr() (Expr, error) {
-	var expr Expr
-
 	// We should always expect _at least_ a single value, aka, a single-term
 	// expression. If we don't find this at least, that means the expression
 	// doesn't exist in the query even though it should.
@@ -382,7 +406,20 @@ func (p *Parser) parseExpr() (Expr, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse value in expr: %w", err)
 	}
-	expr = val
+
+	// Now we'll try to form the rest of the binary expression. If this really is
+	// a single term expression, then this will give back nil for the binary expr
+	// and we'll default to just returning the value.
+	expr, err := p.parseBinaryExpr(val)
+	if err == nil && expr == nil {
+		return val, nil
+	}
+
+	return expr, err
+}
+
+func (p *Parser) parseBinaryExpr(firstVal Expr) (*BinaryExpr, error) {
+	var expr *BinaryExpr
 
 	for {
 		token, _ := p.tokenizer.Peek()
@@ -396,8 +433,28 @@ func (p *Parser) parseExpr() (Expr, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse value in expr: %w", err)
 		}
+
+		if expr != nil && getBinaryOpPrecedence(expr.Op) < getBinaryOpPrecedence(bOp) {
+			// Take the past operation and embed this one below it on the right side,
+			// to ensure this operation happens prior.
+			// Classically, this is achieved implicitly through the recursion tree,
+			// the textbook example being parseTerm and parseFactor functions. I find
+			// that to not be as clean because the data structure you build has a
+			// shape that is extremely important and yet _implicitly_ guaranteed.
+			expr.Right = &BinaryExpr{
+				Left:  expr.Right,
+				Op:    bOp,
+				Right: val,
+			}
+			continue
+		}
+
+		var leftExpr Expr = expr
+		if expr == nil {
+			leftExpr = firstVal
+		}
 		expr = &BinaryExpr{
-			Left:  expr,
+			Left:  leftExpr,
 			Op:    bOp,
 			Right: val,
 		}

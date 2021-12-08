@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/utagai/look/query/breeze"
 )
 
@@ -429,6 +430,108 @@ func TestParser(t *testing.T) {
 								Right: &breeze.Const{
 									Kind:        breeze.ConstKindNumber,
 									Stringified: "3",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "map foo = 2 + 5 * 3 - 4",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: &breeze.BinaryExpr{
+								Left: &breeze.BinaryExpr{
+									Left: &breeze.Const{
+										Kind:        breeze.ConstKindNumber,
+										Stringified: "2",
+									},
+									Op: breeze.BinaryOpPlus,
+									Right: &breeze.BinaryExpr{
+										Left: &breeze.Const{
+											Kind:        breeze.ConstKindNumber,
+											Stringified: "5",
+										},
+										Op: breeze.BinaryOpMultiply,
+										Right: &breeze.Const{
+											Kind:        breeze.ConstKindNumber,
+											Stringified: "3",
+										},
+									},
+								},
+								Op: breeze.BinaryOpMinus,
+								Right: &breeze.Const{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "4",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "map foo = 4 * 3 + 1 + 2 * 8 / 9 + 4 - 1",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: &breeze.BinaryExpr{
+								Left: &breeze.BinaryExpr{
+									Left: &breeze.BinaryExpr{
+										Left: &breeze.BinaryExpr{
+											Left: &breeze.BinaryExpr{
+												Left: &breeze.Const{
+													Kind:        breeze.ConstKindNumber,
+													Stringified: "4",
+												},
+												Op: breeze.BinaryOpMultiply,
+												Right: &breeze.Const{
+													Kind:        breeze.ConstKindNumber,
+													Stringified: "3",
+												},
+											},
+											Op: breeze.BinaryOpPlus,
+											Right: &breeze.Const{
+												Kind:        breeze.ConstKindNumber,
+												Stringified: "1",
+											},
+										},
+										Op: breeze.BinaryOpPlus,
+										Right: &breeze.BinaryExpr{
+											Left: &breeze.BinaryExpr{
+												Left: &breeze.Const{
+													Kind:        breeze.ConstKindNumber,
+													Stringified: "2",
+												},
+												Op: breeze.BinaryOpMultiply,
+												Right: &breeze.Const{
+													Kind:        breeze.ConstKindNumber,
+													Stringified: "8",
+												},
+											},
+											Op: breeze.BinaryOpDivide,
+											Right: &breeze.Const{
+												Kind:        breeze.ConstKindNumber,
+												Stringified: "9",
+											},
+										},
+									},
+									Op: breeze.BinaryOpPlus,
+									Right: &breeze.Const{
+										Kind:        breeze.ConstKindNumber,
+										Stringified: "4",
+									},
+								},
+								Op: breeze.BinaryOpMinus,
+								Right: &breeze.Const{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "1",
 								},
 							},
 						},
