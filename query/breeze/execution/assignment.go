@@ -9,7 +9,7 @@ import (
 
 func executeAssignment(assignment breeze.FieldAssignment, datum datum.Datum) error {
 	fieldToAssign := assignment.Field
-	newValue, err := evaluateValueOrExpr(assignment.Assignment, datum)
+	newValue, err := evaluateExpr(assignment.Assignment, datum)
 	if err != nil {
 		return fmt.Errorf("failed to evaluate assignment: %w", err)
 	}

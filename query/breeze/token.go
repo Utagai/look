@@ -37,12 +37,18 @@ const (
 	TokenRParen
 	TokenComma
 
-	// Binary operators:
+	// Binary comparison operators:
 	TokenEquals
 	TokenGEQ
 	TokenContains
 	TokenExists
 	TokenExistsNot
+
+	// Binary expression operations:
+	TokenPlus
+	TokenMinus
+	TokenMultiply
+	TokenDivide
 
 	// Keyword consts:
 	TokenFalse
@@ -86,6 +92,14 @@ func (t Token) String() string {
 		return "Exists"
 	case TokenExistsNot:
 		return "Not Exists"
+	case TokenPlus:
+		return "Plus"
+	case TokenMinus:
+		return "Minus"
+	case TokenMultiply:
+		return "Multiply"
+	case TokenDivide:
+		return "Divide"
 	case TokenFalse:
 		return "False"
 	case TokenTrue:
@@ -214,6 +228,14 @@ func (t *Tokenizer) next() Token {
 			return TokenRParen
 		case ",":
 			return TokenComma
+		case "+":
+			return TokenPlus
+		case "-":
+			return TokenMinus
+		case "*":
+			return TokenMultiply
+		case "/":
+			return TokenDivide
 		}
 	}
 

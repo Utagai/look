@@ -9,8 +9,8 @@ import (
 	"github.com/utagai/look/query/breeze"
 )
 
-func evaluateValueOrExpr(valOrExpr breeze.ValueOrExpr, datum datum.Datum) (interface{}, error) {
-	breezeConst, err := evaluateValueOrExprToConst(valOrExpr, datum)
+func evaluateExpr(expr breeze.Expr, datum datum.Datum) (interface{}, error) {
+	breezeConst, err := evaluateExprToConst(expr, datum)
 	if err != nil {
 		return nil, fmt.Errorf("failed to evaluate to constant: %w", err)
 	}
@@ -29,24 +29,27 @@ func evaluateValueOrExpr(valOrExpr breeze.ValueOrExpr, datum datum.Datum) (inter
 		}
 		return num, nil
 	default:
-		panic(fmt.Errorf("unrecognized kind: %q", breezeConst.Kind))
+		panic(fmt.Errorf("unrecognized const kind: %q", breezeConst.Kind))
 	}
 }
 
-func evaluateValueOrExprToConst(valOrExpr breeze.ValueOrExpr, datum datum.Datum) (*breeze.Const, error) {
-	if valOrExpr.Value != nil {
+func evaluateExprToConst(expr breeze.Expr, datum datum.Datum) (*breeze.Const, error) {
+	switch expr.ExprKind() {
+	case breeze.ExprKindTerm:
 		// The simple case where this is already just a single value.
-		return evaluateValue(valOrExpr.Value, datum)
+		return evaluateValue(expr.(breeze.Value), datum)
+	case breeze.ExprKindBinary:
+		// Otherwise, we must evaluate this expr:
+		binaryExpr := expr.(*breeze.BinaryExpr)
+		return evaluateBinaryExpr(binaryExpr, datum)
 	}
-
-	// Otherwise, we must evaluate this expr:
-	return evaluateExpr(valOrExpr.Expr, datum)
+	panic(fmt.Sprintf("unrecognized expr kind: %q", expr.ExprKind()))
 }
 
 func evaluateValue(value breeze.Value, datum datum.Datum) (*breeze.Const, error) {
 	// TODO: Later, this can return things like function or field reference. In
 	// these cases, we can't just cast into a native go type.
-	switch value.GetKind() {
+	switch value.ValueKind() {
 	case breeze.ValueKindConst:
 		constValue := value.(*breeze.Const)
 		return constValue, nil
@@ -55,7 +58,7 @@ func evaluateValue(value breeze.Value, datum datum.Datum) (*breeze.Const, error)
 	case breeze.ValueKindFunc:
 		return evaluateFunction(value.(*breeze.Function), datum)
 	default:
-		panic(fmt.Sprintf("unrecognized value kind: %v", value.GetKind()))
+		panic(fmt.Sprintf("unrecognized value kind: %v", value.ValueKind()))
 	}
 }
 
@@ -138,6 +141,51 @@ func goValueToConst(val interface{}) *breeze.Const {
 	panic(fmt.Sprintf("unrecognized base type: %T", val))
 }
 
-func evaluateExpr(expr breeze.Expr, datum datum.Datum) (*breeze.Const, error) {
-	panic("TODO")
+func evaluateBinaryExpr(expr *breeze.BinaryExpr, datum datum.Datum) (*breeze.Const, error) {
+	leftConst, err := evaluateExpr(expr.Left, datum)
+	if err != nil {
+		return nil, err
+	}
+	rightConst, err := evaluateExpr(expr.Right, datum)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: For now, we are only supporting numbers and these 4 ops, but in the
+	// future, some of these ops will work across different types and there are
+	// more ops as well.
+	leftNum, ok := leftConst.(float64)
+	if !ok {
+		// TODO: These should be type mismatch error strings.
+		return &breeze.Const{
+			Kind:        breeze.ConstKindNull,
+			Stringified: "null",
+		}, nil
+	}
+	rightNum, ok := rightConst.(float64)
+	if !ok {
+		return &breeze.Const{
+			Kind:        breeze.ConstKindNull,
+			Stringified: "null",
+		}, nil
+	}
+
+	result := 0.0
+	switch expr.Op {
+	case breeze.BinaryOpPlus:
+		result = leftNum + rightNum
+	case breeze.BinaryOpMinus:
+		result = leftNum - rightNum
+	case breeze.BinaryOpMultiply:
+		result = leftNum * rightNum
+	case breeze.BinaryOpDivide:
+		result = leftNum / rightNum
+	default:
+		panic(fmt.Sprintf("unrecognized operator: %q", expr.Op))
+	}
+
+	return &breeze.Const{
+		Kind:        breeze.ConstKindNumber,
+		Stringified: fmt.Sprintf("%f", result),
+	}, nil
 }

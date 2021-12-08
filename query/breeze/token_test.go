@@ -1,6 +1,7 @@
 package breeze_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -11,7 +12,7 @@ import (
 // This is the expected number of 'custom' Breeze tokens (aka, tokens that are
 // not mapped to the ones found in the scanner package).
 // Note that this should always match the length of the below map.
-const expectedNumBreezeTokenTypes = 16
+const expectedNumBreezeTokenTypes = 20
 
 // This should always have a number of elements equal to the constant above.
 var tokenToExampleStr = map[breeze.Token]string{
@@ -28,6 +29,10 @@ var tokenToExampleStr = map[breeze.Token]string{
 	breeze.TokenGEQ:            ">",
 	breeze.TokenExists:         "exists",
 	breeze.TokenExistsNot:      "!exists",
+	breeze.TokenPlus:           "+",
+	breeze.TokenMinus:          "-",
+	breeze.TokenMultiply:       "*",
+	breeze.TokenDivide:         "/",
 	breeze.TokenFalse:          "false",
 	breeze.TokenTrue:           "true",
 	breeze.TokenNull:           "null",
@@ -178,7 +183,6 @@ func TestTokenizerWithFunctionStyle(t *testing.T) {
 	tokenizer := breeze.NewTokenizer(input)
 
 	tok := tokenizer.Next()
-
 	require.Equal(t, tok, breeze.TokenIdent, "expected TokenIdent")
 	tok = tokenizer.Next()
 	require.Equal(t, tok, breeze.TokenIdent, "expected TokenIdent")
@@ -192,6 +196,34 @@ func TestTokenizerWithFunctionStyle(t *testing.T) {
 	require.Equal(t, tok, breeze.TokenString, "expected TokenString")
 	tok = tokenizer.Next()
 	require.Equal(t, tok, breeze.TokenRParen, "expected TokenRParen")
+}
+
+func TestDetectsBinaryOpTokens(t *testing.T) {
+	input := "+ - / *"
+	tokenizer := breeze.NewTokenizer(input)
+
+	tok := tokenizer.Next()
+	// TODO: We can factor out these require.Equal() token checks to a helper.
+	require.Equal(t, tok, breeze.TokenPlus, "expected TokenPlus")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenMinus, "expected TokenMinus")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenDivide, "expected TokenPlus")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenMultiply, "expected TokenMinus")
+}
+
+// Basically, tokens found inside of a string should be detected as indivual
+// tokens. The whole string should be one TokenString.
+func TestKnownTokensInStringAreNotDetected(t *testing.T) {
+	allExampleStrings := make([]string, expectedNumBreezeTokenTypes)
+	for i := 0; i < expectedNumBreezeTokenTypes; i++ {
+		allExampleStrings[i] = tokenToExampleStr[breeze.Token(i)]
+	}
+	input := fmt.Sprintf("%q", strings.Join(allExampleStrings, " "))
+	tokenizer := breeze.NewTokenizer(input)
+	tok := tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenString, "expected TokenString")
 }
 
 func TestTokenizerPosition(t *testing.T) {

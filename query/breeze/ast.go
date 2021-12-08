@@ -6,6 +6,51 @@ import (
 	"strings"
 )
 
+// BinaryOp enumerates the kinds of binary operations in breeze.
+// TODO: This is confusing when used alongside BinaryCmpOp.
+type BinaryOp string
+
+const (
+	// BinaryOpPlus is the equality operation.
+	BinaryOpPlus BinaryOp = "+"
+	// BinaryOpMinus is the equality operation.
+	BinaryOpMinus BinaryOp = "-"
+	// BinaryOpMultiply is the equality operation.
+	BinaryOpMultiply BinaryOp = "*"
+	// BinaryOpDivide is the equality operation.
+	BinaryOpDivide BinaryOp = "/"
+)
+
+// ExprKind denotes the kind of expression.
+type ExprKind string
+
+const (
+	// ExprKindTerm is for the terms that make up an expression, joined together
+	// by operators.
+	ExprKindTerm = "TERM"
+	// ExprKindBinary is for binary expressions that tie together expressions with
+	// an operator.
+	ExprKindBinary = "BINARY"
+)
+
+// Expr is a breeze expression.
+type Expr interface {
+	ExprKind() ExprKind
+}
+
+// BinaryExpr is a binary expression that combines two expressions together by
+// an operator.
+type BinaryExpr struct {
+	Left  Expr
+	Right Expr
+	Op    BinaryOp
+}
+
+// ExprKind implements the Expr interface.
+func (b *BinaryExpr) ExprKind() ExprKind {
+	return ExprKindBinary
+}
+
 // ConstKind enumerates the kinds of constants in breeze.
 type ConstKind string
 
@@ -26,14 +71,19 @@ type Const struct {
 	Stringified string
 }
 
-// GetKind implements the Value interface.
-func (c *Const) GetKind() ValueKind {
+// ValueKind implements the Value interface.
+func (c *Const) ValueKind() ValueKind {
 	return ValueKindConst
 }
 
 // GetStringRepr implements the Value interface.
 func (c *Const) GetStringRepr() string {
 	return c.Stringified
+}
+
+// ExprKind implements the Expr interface.
+func (c *Const) ExprKind() ExprKind {
+	return ExprKindTerm
 }
 
 func (c *Const) String() string {
@@ -63,8 +113,8 @@ type FieldRef struct {
 	Field string
 }
 
-// GetKind implements the Value interface.
-func (f *FieldRef) GetKind() ValueKind {
+// ValueKind implements the Value interface.
+func (f *FieldRef) ValueKind() ValueKind {
 	return ValueKindFieldRef
 }
 
@@ -73,14 +123,19 @@ func (f *FieldRef) GetStringRepr() string {
 	return f.Field
 }
 
+// ExprKind implements the Expr interface.
+func (f *FieldRef) ExprKind() ExprKind {
+	return ExprKindTerm
+}
+
 // Function is a breeze function.
 type Function struct {
 	Name string
 	Args []Value
 }
 
-// GetKind implements the Value interface.
-func (f *Function) GetKind() ValueKind {
+// ValueKind implements the Value interface.
+func (f *Function) ValueKind() ValueKind {
 	return ValueKindFunc
 }
 
@@ -93,6 +148,11 @@ func (f *Function) GetStringRepr() string {
 	}
 
 	return fmt.Sprintf("%s(%s)", f.Name, strings.Join(argsStrSlice, ","))
+}
+
+// ExprKind implements the Expr interface.
+func (f *Function) ExprKind() ExprKind {
+	return ExprKindTerm
 }
 
 // ValueKind enumerates the kinds of values in breeze expressions.
@@ -111,7 +171,9 @@ const (
 // Value is simply a value in breeze. It could be a constant, field reference, or
 // function.
 type Value interface {
-	GetKind() ValueKind
+	Expr
+	// TODO: Rename this to ValueKind() for consistency with Expr.
+	ValueKind() ValueKind
 	GetStringRepr() string
 }
 
@@ -135,12 +197,12 @@ func (c *UnaryCheck) String() string {
 	return fmt.Sprintf("%s %s", c.Field, c.Op)
 }
 
-// BinaryOp enumerates the kinds of binary operations in breeze.
-type BinaryOp string
+// BinaryCmpOp enumerates the kinds of binary comparison operations in breeze.
+type BinaryCmpOp string
 
 const (
 	// BinaryOpEquals is the equality operation.
-	BinaryOpEquals BinaryOp = "="
+	BinaryOpEquals BinaryCmpOp = "="
 	// BinaryOpGeq is the greater-than-or-equal operation.
 	BinaryOpGeq = ">"
 	// BinaryOpContains is the contains operation.
@@ -151,7 +213,7 @@ const (
 type BinaryCheck struct {
 	Field string
 	Value *Const
-	Op    BinaryOp
+	Op    BinaryCmpOp
 }
 
 func (c *BinaryCheck) String() string {
@@ -227,21 +289,5 @@ func (m *Map) Name() string {
 type FieldAssignment struct {
 	Field string
 	// TODO: We should possibly be able to handle non-binary exprs.
-	Assignment ValueOrExpr
-}
-
-// ValueOrExpr is an intermediate union type for describing what could be a
-// straight value, or a full expression.
-// TODO: Is it possible that this is excessive? Can we just have Expr and it
-// having a null op + rightexpr -> value?
-type ValueOrExpr struct {
-	Value Value
-	Expr  Expr
-}
-
-// Expr is a breeze expression. This is commonly used in filters & maps.
-type Expr struct {
-	LeftExpr  *ValueOrExpr
-	Op        string
-	RightExpr *ValueOrExpr
+	Assignment Expr
 }

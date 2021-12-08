@@ -279,18 +279,16 @@ func (p *Parser) parseAssignment() (*FieldAssignment, error) {
 
 	log.Println("just parsed: ", p.tokenizer.Text())
 
-	value, err := p.parseValue()
+	expr, err := p.parseExpr()
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse constant value: %w", err)
 	}
 
-	log.Println("parsed value: ", value)
+	log.Println("parsed expr: ", expr)
 
 	return &FieldAssignment{
-		Field: field,
-		Assignment: ValueOrExpr{
-			Value: value,
-		},
+		Field:      field,
+		Assignment: expr,
 	}, nil
 }
 
@@ -315,7 +313,7 @@ func (p *Parser) parseField() (string, error) {
 	return "", fmt.Errorf("expected a field identifier, but got %q (%s)", p.tokenizer.Text(), token.String())
 }
 
-func (p *Parser) parseOp() (UnaryOp, BinaryOp, error) {
+func (p *Parser) parseOp() (UnaryOp, BinaryCmpOp, error) {
 	token := p.tokenizer.Next()
 	if token == TokenEOF {
 		return "", "", errors.New("expected an operator, but reached end of query")
@@ -323,7 +321,7 @@ func (p *Parser) parseOp() (UnaryOp, BinaryOp, error) {
 
 	if uOp, err := p.parseUnaryOp(token); err == nil {
 		return uOp, "", nil
-	} else if bOp, err := p.parseBinaryOp(token); err == nil {
+	} else if bOp, err := p.parseBinaryCmpOp(token); err == nil {
 		return "", bOp, nil
 	}
 
@@ -340,10 +338,10 @@ func (p *Parser) parseUnaryOp(token Token) (UnaryOp, error) {
 
 }
 
-func (p *Parser) parseBinaryOp(token Token) (BinaryOp, error) {
+func (p *Parser) parseBinaryCmpOp(token Token) (BinaryCmpOp, error) {
 	switch token {
 	case TokenGEQ, TokenEquals, TokenContains:
-		return BinaryOp(p.tokenizer.Text()), nil
+		return BinaryCmpOp(p.tokenizer.Text()), nil
 	default:
 		return "", fmt.Errorf("unrecognized binary operator: %q (%v)", p.tokenizer.Text(), token)
 	}
@@ -363,6 +361,49 @@ func isQuotedString(text string) bool {
 	}
 
 	return text[0] == '"' && text[len(text)-1] == '"'
+}
+
+// A mapping of expression operator tokens linked to their precedence level.
+// Higher precedence values means the token has a higher precedence.
+var tokenPrecedence = map[Token]int{
+	TokenMultiply: 1,
+	TokenDivide:   1,
+	TokenPlus:     0,
+	TokenMinus:    0,
+}
+
+func (p *Parser) parseExpr() (Expr, error) {
+	var expr Expr
+
+	// We should always expect _at least_ a single value, aka, a single-term
+	// expression. If we don't find this at least, that means the expression
+	// doesn't exist in the query even though it should.
+	val, err := p.parseValue()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse value in expr: %w", err)
+	}
+	expr = val
+
+	for {
+		token, _ := p.tokenizer.Peek()
+		bOp, err := p.parseBinaryOp(token)
+		if err != nil {
+			// No more tokens for this expression.
+			break
+		}
+		_ = p.tokenizer.Next()
+		val, err := p.parseValue()
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse value in expr: %w", err)
+		}
+		expr = &BinaryExpr{
+			Left:  expr,
+			Op:    bOp,
+			Right: val,
+		}
+	}
+
+	return expr, nil
 }
 
 // TODO: This function (and likely others) have similar constructs that are
@@ -396,6 +437,23 @@ func (p *Parser) parseValue() (Value, error) {
 	// TODO: Should we perhaps flesh this out with each error from attempts at
 	// parsing const/fieldref/function?
 	return nil, errors.New("failed to parse a value; expected a constant value, field reference or function")
+}
+
+func (p *Parser) parseBinaryOp(token Token) (BinaryOp, error) {
+	switch token {
+	case TokenPlus:
+		return BinaryOpPlus, nil
+	case TokenMinus:
+		return BinaryOpMinus, nil
+	case TokenMultiply:
+		return BinaryOpMultiply, nil
+	case TokenDivide:
+		return BinaryOpDivide, nil
+	}
+
+	// TODO: The error message here assumes that p.tokenizer.Text() holds the
+	// token passed in, but this is not guaranteed by the caller.
+	return "", fmt.Errorf("unrecognized binary operator: %q (%v)", p.tokenizer.Text(), token)
 }
 
 func (p *Parser) parseConstValue(token Token, identIsString bool) (*Const, error) {

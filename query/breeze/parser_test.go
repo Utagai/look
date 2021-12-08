@@ -301,11 +301,9 @@ func TestParser(t *testing.T) {
 					Assignments: []breeze.FieldAssignment{
 						{
 							Field: "foo",
-							Assignment: breeze.ValueOrExpr{
-								Value: &breeze.Const{
-									Kind:        breeze.ConstKindNumber,
-									Stringified: "4.2",
-								},
+							Assignment: &breeze.Const{
+								Kind:        breeze.ConstKindNumber,
+								Stringified: "4.2",
 							},
 						},
 					},
@@ -319,10 +317,8 @@ func TestParser(t *testing.T) {
 					Assignments: []breeze.FieldAssignment{
 						{
 							Field: "foo",
-							Assignment: breeze.ValueOrExpr{
-								Value: &breeze.FieldRef{
-									Field: "jelly",
-								},
+							Assignment: &breeze.FieldRef{
+								Field: "jelly",
 							},
 						},
 					},
@@ -336,18 +332,16 @@ func TestParser(t *testing.T) {
 					Assignments: []breeze.FieldAssignment{
 						{
 							Field: "foo",
-							Assignment: breeze.ValueOrExpr{
-								Value: &breeze.Function{
-									Name: "pow",
-									Args: []breeze.Value{
-										&breeze.Const{
-											Kind:        breeze.ConstKindNumber,
-											Stringified: "2",
-										},
-										&breeze.Const{
-											Kind:        breeze.ConstKindNumber,
-											Stringified: "3",
-										},
+							Assignment: &breeze.Function{
+								Name: "pow",
+								Args: []breeze.Value{
+									&breeze.Const{
+										Kind:        breeze.ConstKindNumber,
+										Stringified: "2",
+									},
+									&breeze.Const{
+										Kind:        breeze.ConstKindNumber,
+										Stringified: "3",
 									},
 								},
 							},
@@ -363,24 +357,22 @@ func TestParser(t *testing.T) {
 					Assignments: []breeze.FieldAssignment{
 						{
 							Field: "foo",
-							Assignment: breeze.ValueOrExpr{
-								Value: &breeze.Function{
-									Name: "pow",
-									Args: []breeze.Value{
-										&breeze.FieldRef{
-											Field: "bar",
-										},
-										&breeze.Function{
-											Name: "pow",
-											Args: []breeze.Value{
-												&breeze.Const{
-													Kind:        breeze.ConstKindNumber,
-													Stringified: "3",
-												},
-												&breeze.Const{
-													Kind:        breeze.ConstKindString,
-													Stringified: "2",
-												},
+							Assignment: &breeze.Function{
+								Name: "pow",
+								Args: []breeze.Value{
+									&breeze.FieldRef{
+										Field: "bar",
+									},
+									&breeze.Function{
+										Name: "pow",
+										Args: []breeze.Value{
+											&breeze.Const{
+												Kind:        breeze.ConstKindNumber,
+												Stringified: "3",
+											},
+											&breeze.Const{
+												Kind:        breeze.ConstKindString,
+												Stringified: "2",
 											},
 										},
 									},
@@ -391,22 +383,106 @@ func TestParser(t *testing.T) {
 				},
 			},
 		},
+		{
+			query: "map foo = 2 + 5",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: &breeze.BinaryExpr{
+								Left: &breeze.Const{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "2",
+								},
+								Op: breeze.BinaryOpPlus,
+								Right: &breeze.Const{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "5",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "map foo = 2 + 5 - 3",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: &breeze.BinaryExpr{
+								Left: &breeze.BinaryExpr{
+									Left: &breeze.Const{
+										Kind:        breeze.ConstKindNumber,
+										Stringified: "2",
+									},
+									Op: breeze.BinaryOpPlus,
+									Right: &breeze.Const{
+										Kind:        breeze.ConstKindNumber,
+										Stringified: "5",
+									},
+								},
+								Op: breeze.BinaryOpMinus,
+								Right: &breeze.Const{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "3",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "map foo = pow(2,2) + .jelly",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: &breeze.BinaryExpr{
+								Left: &breeze.Function{
+									Name: "pow",
+									Args: []breeze.Value{
+										&breeze.Const{
+											Kind:        breeze.ConstKindNumber,
+											Stringified: "2",
+										},
+										&breeze.Const{
+											Kind:        breeze.ConstKindNumber,
+											Stringified: "2",
+										},
+									},
+								},
+								Op: breeze.BinaryOpPlus,
+								Right: &breeze.FieldRef{
+									Field: "jelly",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		// TODO: Yea, we obviously need to be better about the error message here.
 		{
 			query:  "map foo = 4.2 bar = jelly()",
-			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
 		},
 		{
 			query:  "map foo = 4.2 bar = pow()",
-			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
 		},
 		{
 			query:  "map foo = 4.2 bar = pow(",
-			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
 		},
 		{
 			query:  "map foo = 4.2 bar = ishouldhaveadotatbeginning",
-			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
 		},
 		// TODO: END OF MAP TESTS
 		{
