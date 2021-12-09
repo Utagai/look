@@ -479,24 +479,27 @@ func (p *Parser) parseValue(token Token) (Value, error) {
 
 	// We do not want idents to be treated as consts, otherwise field references
 	// and functions would be considered consts which is not desirable here.
-	constValue, err := p.parseConstValue(token, false)
-	if err == nil {
+	constValue, constErr := p.parseConstValue(token, false)
+	if constErr == nil {
 		return constValue, nil
 	}
 
-	fieldRefValue, err := p.parseFieldRef(token)
-	if err == nil {
+	fieldRefValue, fieldRefErr := p.parseFieldRef(token)
+	if fieldRefErr == nil {
 		return fieldRefValue, nil
 	}
 
-	functionValue, err := p.parseFunction(token)
-	if err == nil {
+	functionValue, funcErr := p.parseFunction(token)
+	if funcErr == nil {
 		return functionValue, nil
 	}
 
-	// TODO: Should we perhaps flesh this out with each error from attempts at
-	// parsing const/fieldref/function?
-	return nil, errors.New("failed to parse a value; expected a constant value, field reference or function")
+	return nil, fmt.Errorf(
+		"failed to parse a value; expected a constant value (%s), field reference (%s), or function (%s)",
+		constErr,
+		fieldRefErr,
+		funcErr,
+	)
 }
 
 func (p *Parser) parseBinaryOp(token Token) (BinaryOp, error) {

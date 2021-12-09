@@ -661,19 +661,19 @@ func TestParser(t *testing.T) {
 		},
 		{
 			query:  "map foo = 4.2 bar = jelly()",
-			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got \"jelly\" (strings should be quoted in this context)), field reference (field references must start with '.'), or function (unrecognized function: \"jelly\")",
 		},
 		{
 			query:  "map foo = 4.2 bar = pow()",
-			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got \"pow\" (strings should be quoted in this context)), field reference (field references must start with '.'), or function (expected 2 args, got 0)",
 		},
 		{
 			query:  "map foo = 4.2 bar = pow(",
-			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got \"pow\" (strings should be quoted in this context)), field reference (field references must start with '.'), or function (expected 2 args, got 0)",
 		},
 		{
 			query:  "map foo = 4.2 bar = ishouldhaveadotatbeginning",
-			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value, field reference or function",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got \"ishouldhaveadotatbeginning\" (strings should be quoted in this context)), field reference (field references must start with '.'), or function (unrecognized function: \"ishouldhaveadotatbeginning\")",
 		},
 		// TODO: END OF MAP TESTS
 		{
