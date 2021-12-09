@@ -12,12 +12,17 @@ func executeUnaryCheck(check *breeze.UnaryCheck, datum datum.Datum) bool {
 	return executeUnaryOp(fieldValue, check.Op)
 }
 
-func executeBinaryCheck(check *breeze.BinaryCheck, datum datum.Datum) bool {
+func executeBinaryCheck(check *breeze.BinaryCheck, datum datum.Datum) (bool, error) {
 	fieldValue, ok := datum[check.Field]
 	if !ok {
 		// If the field does not exist on this datum, evaluate to false.
-		return false
+		return false, nil
 	}
 
-	return executeBinaryOp(fieldValue, check.Value, check.Op)
+	value, err := evaluateExprToConst(check.Expr, datum)
+	if err != nil {
+		return false, err
+	}
+
+	return executeBinaryOp(fieldValue, value, check.Op), nil
 }

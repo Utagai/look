@@ -1,7 +1,5 @@
 package execution
 
-// TODO: Rename this file to filter.go.
-
 import (
 	"github.com/utagai/look/datum"
 	"github.com/utagai/look/query/breeze"
@@ -39,7 +37,9 @@ outer:
 
 		for _, check := range fs.Filter.BinaryChecks {
 			// If we failed, move onto the next datum.
-			if !executeBinaryCheck(check, datum) {
+			if pass, err := executeBinaryCheck(check, datum); err != nil {
+				return nil, err
+			} else if !pass {
 				continue outer
 			}
 		}

@@ -218,12 +218,12 @@ const (
 // BinaryCheck is a filter condition for filter that uses a binary operation.
 type BinaryCheck struct {
 	Field string
-	Value *Const
+	Expr  Expr
 	Op    BinaryCmpOp
 }
 
 func (c *BinaryCheck) String() string {
-	return fmt.Sprintf("%s %s %v", c.Field, c.Op, c.Value)
+	return fmt.Sprintf("%s %s %v", c.Field, c.Op, c.Expr)
 }
 
 // Filter is a stage that applies a series of filters to the data.

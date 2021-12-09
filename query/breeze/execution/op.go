@@ -20,7 +20,7 @@ func executeUnaryOp(left interface{}, op breeze.UnaryOp) bool {
 	}
 }
 
-func executeBinaryOp(left interface{}, right *breeze.Const, op breeze.BinaryCmpOp) bool {
+func executeBinaryOp(left interface{}, right breeze.Const, op breeze.BinaryCmpOp) bool {
 	switch op {
 	case breeze.BinaryOpEquals:
 		return Compare(left, right.Interface()) == Equal

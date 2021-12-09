@@ -3,7 +3,6 @@ package breeze_test
 import (
 	"testing"
 
-	"github.com/kr/pretty"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/utagai/look/query/breeze"
@@ -24,7 +23,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -32,7 +31,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "bar",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "7",
 							},
@@ -40,7 +39,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "car",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindString,
 								Stringified: "hello",
 							},
@@ -48,7 +47,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "dar",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNull,
 								Stringified: "null",
 							},
@@ -70,9 +69,34 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
+							},
+							Op: breeze.BinaryOpEquals,
+						},
+					},
+					UnaryChecks: []*breeze.UnaryCheck{},
+				},
+			},
+		},
+		{
+			query: "filter foo = 8 * 4.2",
+			stages: []breeze.Stage{
+				&breeze.Filter{
+					BinaryChecks: []*breeze.BinaryCheck{
+						{
+							Field: "foo",
+							Expr: &breeze.BinaryExpr{
+								Left: &breeze.Const{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "8",
+								},
+								Op: breeze.BinaryOpMultiply,
+								Right: &breeze.Const{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "4.2",
+								},
 							},
 							Op: breeze.BinaryOpEquals,
 						},
@@ -88,7 +112,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo|",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -106,7 +130,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -114,7 +138,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "bar",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "6.4",
 							},
@@ -163,7 +187,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -185,7 +209,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -240,7 +264,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "bar",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -248,7 +272,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "quux",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.1",
 							},
@@ -275,7 +299,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -283,7 +307,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "foo",
-							Value: &breeze.Const{
+							Expr: &breeze.Const{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.1",
 							},
@@ -662,7 +686,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			query:  "filter foo = ",
-			errMsg: "failed to parse: failed to parse check: failed to parse constant value: expected a constant value, but reached end of query",
+			errMsg: "failed to parse: failed to parse check: failed to parse constant value: failed to parse value in expr: expected a value, but reached end of query",
 		},
 		{
 			query:  "sort",
@@ -680,7 +704,7 @@ func TestParser(t *testing.T) {
 			stages, err := parser.Parse()
 			if tc.errMsg == "" {
 				assert.NoError(t, err)
-				pretty.Println(stages)
+				// pretty.Println(stages)
 				assert.Equal(t, tc.stages, stages)
 			} else {
 				assert.EqualError(t, err, tc.errMsg)

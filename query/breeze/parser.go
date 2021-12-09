@@ -250,14 +250,14 @@ func (p *Parser) parseCheck() (*UnaryCheck, *BinaryCheck, error) {
 		}, nil, nil
 	}
 
-	value, err := p.parseConstValue(p.tokenizer.Next(), true)
+	value, err := p.parseExpr(p.tokenizer.Next())
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse constant value: %w", err)
 	}
 
 	return nil, &BinaryCheck{
 		Field: field,
-		Value: value,
+		Expr:  value,
 		Op:    bOp,
 	}, nil
 }
