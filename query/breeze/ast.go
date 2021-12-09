@@ -36,6 +36,7 @@ const (
 // Expr is a breeze expression.
 type Expr interface {
 	ExprKind() ExprKind
+	GetStringRepr() string
 }
 
 // BinaryExpr is a binary expression that combines two expressions together by
@@ -49,6 +50,11 @@ type BinaryExpr struct {
 // ExprKind implements the Expr interface.
 func (b *BinaryExpr) ExprKind() ExprKind {
 	return ExprKindBinary
+}
+
+// GetStringRepr implements the Expr interface.
+func (b *BinaryExpr) GetStringRepr() string {
+	return fmt.Sprintf("%s %s %s", b.Left.GetStringRepr(), b.Op, b.Right.GetStringRepr())
 }
 
 // ConstKind enumerates the kinds of constants in breeze.
@@ -131,7 +137,7 @@ func (f *FieldRef) ExprKind() ExprKind {
 // Function is a breeze function.
 type Function struct {
 	Name string
-	Args []Value
+	Args []Expr
 }
 
 // ValueKind implements the Value interface.

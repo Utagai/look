@@ -279,7 +279,7 @@ func (p *Parser) parseAssignment() (*FieldAssignment, error) {
 
 	log.Println("just parsed: ", p.tokenizer.Text())
 
-	expr, err := p.parseExpr()
+	expr, err := p.parseExpr(p.tokenizer.Next())
 	if err != nil {
 		return nil, err
 	}
@@ -398,13 +398,12 @@ func getBinaryOpPrecedence(bOp BinaryOp) int {
 	return prec
 }
 
-func (p *Parser) parseExpr() (Expr, error) {
+func (p *Parser) parseExpr(token Token) (Expr, error) {
 	var leftExpr Expr
 	var err error
 
-	if token, _ := p.tokenizer.Peek(); token == TokenLParen {
-		_ = p.tokenizer.Next()
-		leftExpr, err = p.parseExpr()
+	if token == TokenLParen {
+		leftExpr, err = p.parseExpr(p.tokenizer.Next())
 		if p.tokenizer.Next() != TokenRParen {
 			return nil, fmt.Errorf("expected a closing paranthesis, but got %q", p.tokenizer.Text())
 		}
@@ -412,13 +411,13 @@ func (p *Parser) parseExpr() (Expr, error) {
 		// We should always expect _at least_ a single value, aka, a single-term
 		// expression. If we don't find this at least, that means the expression
 		// doesn't exist in the query even though it should.
-		leftExpr, err = p.parseValue(p.tokenizer.Next())
+		leftExpr, err = p.parseValue(token)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse value in expr: %w", err)
 		}
 	}
 
-	token, _ := p.tokenizer.Peek()
+	token, _ = p.tokenizer.Peek()
 	bOp, err := p.parseBinaryOp(token)
 	if err != nil {
 		// No more tokens for this expression.
@@ -428,8 +427,8 @@ func (p *Parser) parseExpr() (Expr, error) {
 
 	// Grab the next token, so that we can check if the next suffix of the
 	// expression input is parenthesized for precedence determination.
-	token, _ = p.tokenizer.Peek()
-	rightExpr, err := p.parseExpr()
+	token = p.tokenizer.Next()
+	rightExpr, err := p.parseExpr(token)
 
 	return p.applyPrecedence(leftExpr, bOp, rightExpr, token == TokenLParen), err
 }
@@ -595,14 +594,14 @@ func (p *Parser) parseFunction(token Token) (*Function, error) {
 
 	// Loop for collecting function arguments. Keeps going until it hits RParen.
 	// Expects a comma between each argument.
-	args := []Value{}
+	args := []Expr{}
 	for {
-		val, err := p.parseValue(p.tokenizer.Next())
+		expr, err := p.parseExpr(p.tokenizer.Next())
 		if err != nil {
 			break
 		}
 
-		args = append(args, val)
+		args = append(args, expr)
 
 		nextToken := p.tokenizer.Next()
 		if nextToken == TokenRParen {

@@ -74,7 +74,7 @@ func evaluateFunction(function *breeze.Function, datum datum.Datum) (*breeze.Con
 	// Evaluate the arguments.
 	evaluatedArgs := make([]*breeze.Const, len(function.Args))
 	for i := range function.Args {
-		evaluatedArg, err := evaluateValue(function.Args[i], datum)
+		evaluatedArg, err := evaluateExprToConst(function.Args[i], datum)
 		if err != nil {
 			return nil, fmt.Errorf("failed to evaluate argument %d (%q): %w", i, function.Args[i].GetStringRepr(), err)
 		}

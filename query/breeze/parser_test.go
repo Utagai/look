@@ -3,6 +3,7 @@ package breeze_test
 import (
 	"testing"
 
+	"github.com/kr/pretty"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/utagai/look/query/breeze"
@@ -335,7 +336,7 @@ func TestParser(t *testing.T) {
 							Field: "foo",
 							Assignment: &breeze.Function{
 								Name: "pow",
-								Args: []breeze.Value{
+								Args: []breeze.Expr{
 									&breeze.Const{
 										Kind:        breeze.ConstKindNumber,
 										Stringified: "2",
@@ -360,13 +361,13 @@ func TestParser(t *testing.T) {
 							Field: "foo",
 							Assignment: &breeze.Function{
 								Name: "pow",
-								Args: []breeze.Value{
+								Args: []breeze.Expr{
 									&breeze.FieldRef{
 										Field: "bar",
 									},
 									&breeze.Function{
 										Name: "pow",
-										Args: []breeze.Value{
+										Args: []breeze.Expr{
 											&breeze.Const{
 												Kind:        breeze.ConstKindNumber,
 												Stringified: "3",
@@ -573,7 +574,7 @@ func TestParser(t *testing.T) {
 							Assignment: &breeze.BinaryExpr{
 								Left: &breeze.Function{
 									Name: "pow",
-									Args: []breeze.Value{
+									Args: []breeze.Expr{
 										&breeze.Const{
 											Kind:        breeze.ConstKindNumber,
 											Stringified: "2",
@@ -587,6 +588,41 @@ func TestParser(t *testing.T) {
 								Op: breeze.BinaryOpPlus,
 								Right: &breeze.FieldRef{
 									Field: "jelly",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "map pythag = pow(pow(.a,2) + pow(.b,2), 0.5)",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "pythag",
+							Assignment: &breeze.Function{
+								Name: "pow",
+								Args: []breeze.Expr{
+									&breeze.BinaryExpr{
+										Left: &breeze.Function{
+											Name: "pow",
+											Args: []breeze.Expr{
+												&breeze.FieldRef{Field: "a"},
+												&breeze.Const{Kind: "number", Stringified: "2"},
+											},
+										},
+										Right: &breeze.Function{
+											Name: "pow",
+											Args: []breeze.Expr{
+												&breeze.FieldRef{Field: "b"},
+												&breeze.Const{Kind: "number", Stringified: "2"},
+											},
+										},
+										Op: "+",
+									},
+									&breeze.Const{Kind: "number", Stringified: "0.5"},
 								},
 							},
 						},
@@ -644,6 +680,7 @@ func TestParser(t *testing.T) {
 			stages, err := parser.Parse()
 			if tc.errMsg == "" {
 				assert.NoError(t, err)
+				pretty.Println(stages)
 				assert.Equal(t, tc.stages, stages)
 			} else {
 				assert.EqualError(t, err, tc.errMsg)
