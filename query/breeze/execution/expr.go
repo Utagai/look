@@ -32,7 +32,7 @@ func evaluateExpr(expr breeze.Expr, datum datum.Datum) (interface{}, error) {
 	}
 }
 
-func evaluateExprToConst(expr breeze.Expr, datum datum.Datum) (*breeze.Const, error) {
+func evaluateExprToConst(expr breeze.Expr, datum datum.Datum) (breeze.Const, error) {
 	switch expr.ExprKind() {
 	case breeze.ExprKindTerm:
 		// The simple case where this is already just a single value.
@@ -45,13 +45,13 @@ func evaluateExprToConst(expr breeze.Expr, datum datum.Datum) (*breeze.Const, er
 	panic(fmt.Sprintf("unrecognized expr kind: %q", expr.ExprKind()))
 }
 
-func evaluateValue(value breeze.Value, datum datum.Datum) (*breeze.Const, error) {
+func evaluateValue(value breeze.Value, datum datum.Datum) (breeze.Const, error) {
 	// TODO: Later, this can return things like function or field reference. In
 	// these cases, we can't just cast into a native go type.
 	switch value.ValueKind() {
 	case breeze.ValueKindConst:
 		constValue := value.(*breeze.Const)
-		return constValue, nil
+		return *constValue, nil
 	case breeze.ValueKindFieldRef:
 		return evaluateFieldRef(value.(*breeze.FieldRef), datum), nil
 	case breeze.ValueKindFunc:
@@ -61,17 +61,17 @@ func evaluateValue(value breeze.Value, datum datum.Datum) (*breeze.Const, error)
 	}
 }
 
-func evaluateFieldRef(fieldRef *breeze.FieldRef, datum datum.Datum) *breeze.Const {
+func evaluateFieldRef(fieldRef *breeze.FieldRef, datum datum.Datum) breeze.Const {
 	return goValueToConst(datum[fieldRef.Field])
 }
 
-func evaluateFunction(function *breeze.Function, datum datum.Datum) (*breeze.Const, error) {
+func evaluateFunction(function *breeze.Function, datum datum.Datum) (breeze.Const, error) {
 	// Evaluate the arguments.
-	evaluatedArgs := make([]*breeze.Const, len(function.Args))
+	evaluatedArgs := make([]breeze.Const, len(function.Args))
 	for i := range function.Args {
 		evaluatedArg, err := evaluateExprToConst(function.Args[i], datum)
 		if err != nil {
-			return nil, fmt.Errorf("failed to evaluate argument %d (%q): %w", i, function.Args[i].GetStringRepr(), err)
+			return breeze.Const{}, fmt.Errorf("failed to evaluate argument %d (%q): %w", i, function.Args[i].GetStringRepr(), err)
 		}
 		evaluatedArgs[i] = evaluatedArg
 	}
@@ -79,9 +79,9 @@ func evaluateFunction(function *breeze.Function, datum datum.Datum) (*breeze.Con
 	return executeFunction(function, evaluatedArgs)
 }
 
-func goValueToConst(val interface{}) *breeze.Const {
+func goValueToConst(val interface{}) breeze.Const {
 	if val == nil {
-		return &breeze.Const{
+		return breeze.Const{
 			Kind:        breeze.ConstKindNull,
 			Stringified: "null",
 		}
@@ -91,17 +91,17 @@ func goValueToConst(val interface{}) *breeze.Const {
 	case uint, uint8, uint16, uint32, uint64:
 	case int, int8, int16, int32, int64:
 	case float32, float64:
-		return &breeze.Const{
+		return breeze.Const{
 			Kind:        breeze.ConstKindNumber,
 			Stringified: fmt.Sprintf("%v", tval),
 		}
 	case string:
-		return &breeze.Const{
+		return breeze.Const{
 			Kind:        breeze.ConstKindString,
 			Stringified: tval,
 		}
 	case bool:
-		return &breeze.Const{
+		return breeze.Const{
 			Kind:        breeze.ConstKindBool,
 			Stringified: fmt.Sprintf("%t", tval),
 		}
@@ -110,15 +110,15 @@ func goValueToConst(val interface{}) *breeze.Const {
 	panic(fmt.Sprintf("unrecognized base type: %T", val))
 }
 
-func evaluateBinaryExpr(expr *breeze.BinaryExpr, datum datum.Datum) (*breeze.Const, error) {
+func evaluateBinaryExpr(expr *breeze.BinaryExpr, datum datum.Datum) (breeze.Const, error) {
 	leftConst, err := evaluateExprToConst(expr.Left, datum)
 	if err != nil {
-		return nil, err
+		return breeze.Const{}, err
 	}
 	rightConst, err := evaluateExprToConst(expr.Right, datum)
 	if err != nil {
-		return nil, err
+		return breeze.Const{}, err
 	}
 
-	return evaluateOp(*leftConst, *rightConst, expr.Op, datum)
+	return evaluateOp(leftConst, rightConst, expr.Op, datum)
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/utagai/look/query/breeze"
 )
 
-func evaluateOp(left, right breeze.Const, op breeze.BinaryOp, datum datum.Datum) (*breeze.Const, error) {
+func evaluateOp(left, right breeze.Const, op breeze.BinaryOp, datum datum.Datum) (breeze.Const, error) {
 	switch op {
 	case breeze.BinaryOpPlus:
 		return evaluatePlus(left, right, op, datum)
@@ -22,45 +22,45 @@ func evaluateOp(left, right breeze.Const, op breeze.BinaryOp, datum datum.Datum)
 	}
 }
 
-func evaluatePlus(left, right breeze.Const, op breeze.BinaryOp, datum datum.Datum) (*breeze.Const, error) {
+func evaluatePlus(left, right breeze.Const, op breeze.BinaryOp, datum datum.Datum) (breeze.Const, error) {
 	if err := checkTypes(left, breeze.ConstKindNumber, right, breeze.ConstKindNumber); err != nil {
 		return err.ToEmbeddedDatumErrorMessage(), nil
 	}
 
-	return &breeze.Const{
+	return breeze.Const{
 		Kind:        breeze.ConstKindNumber,
 		Stringified: fmt.Sprintf("%f", left.Interface().(float64)+right.Interface().(float64)),
 	}, nil
 }
 
-func evaluateMinus(left, right breeze.Const, op breeze.BinaryOp, datum datum.Datum) (*breeze.Const, error) {
+func evaluateMinus(left, right breeze.Const, op breeze.BinaryOp, datum datum.Datum) (breeze.Const, error) {
 	if err := checkTypes(left, breeze.ConstKindNumber, right, breeze.ConstKindNumber); err != nil {
 		return err.ToEmbeddedDatumErrorMessage(), nil
 	}
 
-	return &breeze.Const{
+	return breeze.Const{
 		Kind:        breeze.ConstKindNumber,
 		Stringified: fmt.Sprintf("%f", left.Interface().(float64)-right.Interface().(float64)),
 	}, nil
 }
 
-func evaluateMultiply(left, right breeze.Const, op breeze.BinaryOp, datum datum.Datum) (*breeze.Const, error) {
+func evaluateMultiply(left, right breeze.Const, op breeze.BinaryOp, datum datum.Datum) (breeze.Const, error) {
 	if err := checkTypes(left, breeze.ConstKindNumber, right, breeze.ConstKindNumber); err != nil {
 		return err.ToEmbeddedDatumErrorMessage(), nil
 	}
 
-	return &breeze.Const{
+	return breeze.Const{
 		Kind:        breeze.ConstKindNumber,
 		Stringified: fmt.Sprintf("%f", left.Interface().(float64)*right.Interface().(float64)),
 	}, nil
 }
 
-func evaluateDivide(left, right breeze.Const, op breeze.BinaryOp, datum datum.Datum) (*breeze.Const, error) {
+func evaluateDivide(left, right breeze.Const, op breeze.BinaryOp, datum datum.Datum) (breeze.Const, error) {
 	if err := checkTypes(left, breeze.ConstKindNumber, right, breeze.ConstKindNumber); err != nil {
 		return err.ToEmbeddedDatumErrorMessage(), nil
 	}
 
-	return &breeze.Const{
+	return breeze.Const{
 		Kind:        breeze.ConstKindNumber,
 		Stringified: fmt.Sprintf("%f", left.Interface().(float64)/right.Interface().(float64)),
 	}, nil

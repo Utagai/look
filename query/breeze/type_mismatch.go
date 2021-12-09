@@ -21,8 +21,8 @@ func NewTypeMismatchErr(expected ConstKind, actual Const) *TypeMismatchErr {
 // ToEmbeddedDatumErrorMessage returns a string that is suitable for embedding
 // into a Datum as a way to communicate error messages about types on a
 // per-datum basis.
-func (t *TypeMismatchErr) ToEmbeddedDatumErrorMessage() *Const {
-	return &Const{
+func (t *TypeMismatchErr) ToEmbeddedDatumErrorMessage() Const {
+	return Const{
 		Kind:        ConstKindString,
 		Stringified: fmt.Sprintf("[TYPE ERR: expected %s, got '%s' (%s)]", t.ExpectedKind, t.Actual.Stringified, t.Actual.Kind),
 	}

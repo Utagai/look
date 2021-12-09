@@ -7,7 +7,7 @@ import (
 	"github.com/utagai/look/query/breeze"
 )
 
-func executeFunction(function *breeze.Function, args []*breeze.Const) (*breeze.Const, error) {
+func executeFunction(function *breeze.Function, args []breeze.Const) (breeze.Const, error) {
 	// This should always exist, because if it did not, parsing would have failed
 	// earlier.
 	funcValidator, _ := breeze.LookupFuncValidator(function.Name)
@@ -26,18 +26,18 @@ func executeFunction(function *breeze.Function, args []*breeze.Const) (*breeze.C
 		return hello(), nil
 	}
 
-	return nil, fmt.Errorf("unrecognized function: %q", function.Name)
+	return breeze.Const{}, fmt.Errorf("unrecognized function: %q", function.Name)
 }
 
-func pow(base float64, exp float64) *breeze.Const {
-	return &breeze.Const{
+func pow(base float64, exp float64) breeze.Const {
+	return breeze.Const{
 		Kind:        breeze.ConstKindNumber,
 		Stringified: fmt.Sprintf("%f", math.Pow(base, exp)),
 	}
 }
 
-func hello() *breeze.Const {
-	return &breeze.Const{
+func hello() breeze.Const {
+	return breeze.Const{
 		Kind:        breeze.ConstKindString,
 		Stringified: "hello world!",
 	}

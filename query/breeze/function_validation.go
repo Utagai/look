@@ -6,7 +6,7 @@ type FunctionValidator interface {
 	ExpectedNumArgs() int
 	// ValidateTypes determines if the given arguments are of valid types.
 	// It assumes that the members of the given slice of *Const are non-nil.
-	ValidateTypes(args []*Const) *TypeMismatchErr
+	ValidateTypes(args []Const) *TypeMismatchErr
 }
 
 type helloValidator struct{}
@@ -15,7 +15,7 @@ func (p *helloValidator) ExpectedNumArgs() int {
 	return 0
 }
 
-func (p *helloValidator) ValidateTypes(args []*Const) *TypeMismatchErr {
+func (p *helloValidator) ValidateTypes(args []Const) *TypeMismatchErr {
 	return nil
 }
 
@@ -25,12 +25,12 @@ func (p *powValidator) ExpectedNumArgs() int {
 	return 2
 }
 
-func (p *powValidator) ValidateTypes(args []*Const) *TypeMismatchErr {
+func (p *powValidator) ValidateTypes(args []Const) *TypeMismatchErr {
 	for _, arg := range args {
 		if arg.Kind != ConstKindNumber {
 			return &TypeMismatchErr{
 				ExpectedKind: ConstKindNumber,
-				Actual:       *arg,
+				Actual:       arg,
 			}
 		}
 	}
