@@ -1,21 +1,5 @@
 package breeze
 
-import "fmt"
-
-// TypeMismatchErr describes a type validation error in finer detail.
-type TypeMismatchErr struct {
-	error
-	ExpectedKind ConstKind
-	ActualKind   ConstKind
-}
-
-// ToEmbeddedDatumErrorMessage returns a string that is suitable for embedding
-// into a Datum as a way to communicate error messages about types on a
-// per-datum basis.
-func (t *TypeMismatchErr) ToEmbeddedDatumErrorMessage() string {
-	return fmt.Sprintf("[TYPE ERR: expected %s, got %s]", t.ExpectedKind, t.ActualKind)
-}
-
 // FunctionValidator validates the use of a function.
 type FunctionValidator interface {
 	// ExpectedNumArgs returns the expected number of arguments.
@@ -42,12 +26,11 @@ func (p *powValidator) ExpectedNumArgs() int {
 }
 
 func (p *powValidator) ValidateTypes(args []*Const) *TypeMismatchErr {
-	for i, arg := range args {
+	for _, arg := range args {
 		if arg.Kind != ConstKindNumber {
 			return &TypeMismatchErr{
-				error:        fmt.Errorf("argument %d (%s) is of type %s, not number", i+1, arg.Stringified, arg.Kind),
 				ExpectedKind: ConstKindNumber,
-				ActualKind:   arg.Kind,
+				Actual:       *arg,
 			}
 		}
 	}

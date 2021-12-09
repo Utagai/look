@@ -2,7 +2,6 @@ package execution
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 
 	"github.com/utagai/look/datum"
@@ -67,10 +66,6 @@ func evaluateFieldRef(fieldRef *breeze.FieldRef, datum datum.Datum) *breeze.Cons
 }
 
 func evaluateFunction(function *breeze.Function, datum datum.Datum) (*breeze.Const, error) {
-	// This should always exist, because if it did not, parsing would have failed
-	// earlier.
-	funcValidator, _ := breeze.LookupFuncValidator(function.Name)
-
 	// Evaluate the arguments.
 	evaluatedArgs := make([]*breeze.Const, len(function.Args))
 	for i := range function.Args {
@@ -81,33 +76,7 @@ func evaluateFunction(function *breeze.Function, datum datum.Datum) (*breeze.Con
 		evaluatedArgs[i] = evaluatedArg
 	}
 
-	if err := funcValidator.ValidateTypes(evaluatedArgs); err != nil {
-		return &breeze.Const{
-			Kind:        breeze.ConstKindString,
-			Stringified: err.ToEmbeddedDatumErrorMessage(),
-		}, nil
-	}
-
 	return executeFunction(function, evaluatedArgs)
-}
-
-func executeFunction(function *breeze.Function, args []*breeze.Const) (*breeze.Const, error) {
-	switch function.Name {
-	case "pow":
-		base := args[0].Interface()
-		exp := args[1].Interface()
-
-		return &breeze.Const{
-			Kind:        breeze.ConstKindNumber,
-			Stringified: fmt.Sprintf("%f", math.Pow(base.(float64), exp.(float64))),
-		}, nil
-	case "hello":
-		return &breeze.Const{
-			Kind:        breeze.ConstKindString,
-			Stringified: "hello world!",
-		}, nil
-	}
-	return nil, fmt.Errorf("unrecognized function: %q", function.Name)
 }
 
 func goValueToConst(val interface{}) *breeze.Const {
@@ -142,50 +111,14 @@ func goValueToConst(val interface{}) *breeze.Const {
 }
 
 func evaluateBinaryExpr(expr *breeze.BinaryExpr, datum datum.Datum) (*breeze.Const, error) {
-	leftConst, err := evaluateExpr(expr.Left, datum)
+	leftConst, err := evaluateExprToConst(expr.Left, datum)
 	if err != nil {
 		return nil, err
 	}
-	rightConst, err := evaluateExpr(expr.Right, datum)
+	rightConst, err := evaluateExprToConst(expr.Right, datum)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: For now, we are only supporting numbers and these 4 ops, but in the
-	// future, some of these ops will work across different types and there are
-	// more ops as well.
-	leftNum, ok := leftConst.(float64)
-	if !ok {
-		// TODO: These should be type mismatch error strings.
-		return &breeze.Const{
-			Kind:        breeze.ConstKindNull,
-			Stringified: "null",
-		}, nil
-	}
-	rightNum, ok := rightConst.(float64)
-	if !ok {
-		return &breeze.Const{
-			Kind:        breeze.ConstKindNull,
-			Stringified: "null",
-		}, nil
-	}
-
-	result := 0.0
-	switch expr.Op {
-	case breeze.BinaryOpPlus:
-		result = leftNum + rightNum
-	case breeze.BinaryOpMinus:
-		result = leftNum - rightNum
-	case breeze.BinaryOpMultiply:
-		result = leftNum * rightNum
-	case breeze.BinaryOpDivide:
-		result = leftNum / rightNum
-	default:
-		panic(fmt.Sprintf("unrecognized operator: %q", expr.Op))
-	}
-
-	return &breeze.Const{
-		Kind:        breeze.ConstKindNumber,
-		Stringified: fmt.Sprintf("%f", result),
-	}, nil
+	return evaluateOp(*leftConst, *rightConst, expr.Op, datum)
 }
