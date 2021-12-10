@@ -8,6 +8,7 @@ import (
 	"github.com/utagai/look/query/breeze"
 )
 
+// Would be good to split this gigantic test into pieces for e.g. each stage.
 func TestParser(t *testing.T) {
 	type testCase struct {
 		query  string
@@ -23,7 +24,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -31,7 +32,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "bar",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "7",
 							},
@@ -39,7 +40,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "car",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindString,
 								Stringified: "hello",
 							},
@@ -47,7 +48,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "dar",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNull,
 								Stringified: "null",
 							},
@@ -69,7 +70,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -88,12 +89,12 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Expr: &breeze.BinaryExpr{
-								Left: &breeze.Const{
+								Left: &breeze.Scalar{
 									Kind:        breeze.ConstKindNumber,
 									Stringified: "8",
 								},
 								Op: breeze.BinaryOpMultiply,
-								Right: &breeze.Const{
+								Right: &breeze.Scalar{
 									Kind:        breeze.ConstKindNumber,
 									Stringified: "4.2",
 								},
@@ -112,7 +113,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo|",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -130,7 +131,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -138,7 +139,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "bar",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "6.4",
 							},
@@ -187,7 +188,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -209,7 +210,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -264,7 +265,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "bar",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -272,7 +273,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "quux",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.1",
 							},
@@ -299,7 +300,7 @@ func TestParser(t *testing.T) {
 					BinaryChecks: []*breeze.BinaryCheck{
 						{
 							Field: "foo",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -307,7 +308,7 @@ func TestParser(t *testing.T) {
 						},
 						{
 							Field: "foo",
-							Expr: &breeze.Const{
+							Expr: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.1",
 							},
@@ -315,6 +316,32 @@ func TestParser(t *testing.T) {
 						},
 					},
 					UnaryChecks: []*breeze.UnaryCheck{},
+				},
+			},
+		},
+		{
+			query: "map foo = [1,2,3]",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: breeze.Array{
+								&breeze.Scalar{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "1",
+								},
+								&breeze.Scalar{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "2",
+								},
+								&breeze.Scalar{
+									Kind:        breeze.ConstKindNumber,
+									Stringified: "3",
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -327,7 +354,7 @@ func TestParser(t *testing.T) {
 					Assignments: []breeze.FieldAssignment{
 						{
 							Field: "foo",
-							Assignment: &breeze.Const{
+							Assignment: &breeze.Scalar{
 								Kind:        breeze.ConstKindNumber,
 								Stringified: "4.2",
 							},
@@ -361,11 +388,11 @@ func TestParser(t *testing.T) {
 							Assignment: &breeze.Function{
 								Name: "pow",
 								Args: []breeze.Expr{
-									&breeze.Const{
+									&breeze.Scalar{
 										Kind:        breeze.ConstKindNumber,
 										Stringified: "2",
 									},
-									&breeze.Const{
+									&breeze.Scalar{
 										Kind:        breeze.ConstKindNumber,
 										Stringified: "3",
 									},
@@ -392,11 +419,11 @@ func TestParser(t *testing.T) {
 									&breeze.Function{
 										Name: "pow",
 										Args: []breeze.Expr{
-											&breeze.Const{
+											&breeze.Scalar{
 												Kind:        breeze.ConstKindNumber,
 												Stringified: "3",
 											},
-											&breeze.Const{
+											&breeze.Scalar{
 												Kind:        breeze.ConstKindString,
 												Stringified: "2",
 											},
@@ -417,12 +444,12 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
-								Left: &breeze.Const{
+								Left: &breeze.Scalar{
 									Kind:        breeze.ConstKindNumber,
 									Stringified: "2",
 								},
 								Op: breeze.BinaryOpPlus,
-								Right: &breeze.Const{
+								Right: &breeze.Scalar{
 									Kind:        breeze.ConstKindNumber,
 									Stringified: "5",
 								},
@@ -440,18 +467,18 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
-								Left: &breeze.Const{
+								Left: &breeze.Scalar{
 									Kind:        breeze.ConstKindNumber,
 									Stringified: "2",
 								},
 								Op: breeze.BinaryOpPlus,
 								Right: &breeze.BinaryExpr{
-									Left: &breeze.Const{
+									Left: &breeze.Scalar{
 										Kind:        breeze.ConstKindNumber,
 										Stringified: "5",
 									},
 									Op: breeze.BinaryOpMinus,
-									Right: &breeze.Const{
+									Right: &breeze.Scalar{
 										Kind:        breeze.ConstKindNumber,
 										Stringified: "3",
 									},
@@ -470,14 +497,14 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
-								Left: &breeze.Const{Kind: "number", Stringified: "2"},
+								Left: &breeze.Scalar{Kind: "number", Stringified: "2"},
 								Right: &breeze.BinaryExpr{
 									Left: &breeze.BinaryExpr{
-										Left:  &breeze.Const{Kind: "number", Stringified: "5"},
-										Right: &breeze.Const{Kind: "number", Stringified: "3"},
+										Left:  &breeze.Scalar{Kind: "number", Stringified: "5"},
+										Right: &breeze.Scalar{Kind: "number", Stringified: "3"},
 										Op:    "*",
 									},
-									Right: &breeze.Const{Kind: "number", Stringified: "4"},
+									Right: &breeze.Scalar{Kind: "number", Stringified: "4"},
 									Op:    "-",
 								},
 								Op: "+",
@@ -496,25 +523,25 @@ func TestParser(t *testing.T) {
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
 								Left: &breeze.BinaryExpr{
-									Left:  &breeze.Const{Kind: "number", Stringified: "4"},
-									Right: &breeze.Const{Kind: "number", Stringified: "3"},
+									Left:  &breeze.Scalar{Kind: "number", Stringified: "4"},
+									Right: &breeze.Scalar{Kind: "number", Stringified: "3"},
 									Op:    "*",
 								},
 								Right: &breeze.BinaryExpr{
-									Left: &breeze.Const{Kind: "number", Stringified: "1"},
+									Left: &breeze.Scalar{Kind: "number", Stringified: "1"},
 									Right: &breeze.BinaryExpr{
 										Left: &breeze.BinaryExpr{
-											Left: &breeze.Const{Kind: "number", Stringified: "2"},
+											Left: &breeze.Scalar{Kind: "number", Stringified: "2"},
 											Right: &breeze.BinaryExpr{
-												Left:  &breeze.Const{Kind: "number", Stringified: "8"},
-												Right: &breeze.Const{Kind: "number", Stringified: "9"},
+												Left:  &breeze.Scalar{Kind: "number", Stringified: "8"},
+												Right: &breeze.Scalar{Kind: "number", Stringified: "9"},
 												Op:    "/",
 											},
 											Op: "*",
 										},
 										Right: &breeze.BinaryExpr{
-											Left:  &breeze.Const{Kind: "number", Stringified: "4"},
-											Right: &breeze.Const{Kind: "number", Stringified: "1"},
+											Left:  &breeze.Scalar{Kind: "number", Stringified: "4"},
+											Right: &breeze.Scalar{Kind: "number", Stringified: "1"},
 											Op:    "-",
 										},
 										Op: "+",
@@ -536,18 +563,18 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
-								Left: &breeze.Const{
+								Left: &breeze.Scalar{
 									Kind:        breeze.ConstKindNumber,
 									Stringified: "3",
 								},
 								Op: breeze.BinaryOpMultiply,
 								Right: &breeze.BinaryExpr{
-									Left: &breeze.Const{
+									Left: &breeze.Scalar{
 										Kind:        breeze.ConstKindNumber,
 										Stringified: "5",
 									},
 									Op: breeze.BinaryOpPlus,
-									Right: &breeze.Const{
+									Right: &breeze.Scalar{
 										Kind:        breeze.ConstKindNumber,
 										Stringified: "2",
 									},
@@ -567,18 +594,18 @@ func TestParser(t *testing.T) {
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
 								Left: &breeze.BinaryExpr{
-									Left: &breeze.Const{
+									Left: &breeze.Scalar{
 										Kind:        breeze.ConstKindNumber,
 										Stringified: "5",
 									},
 									Op: breeze.BinaryOpPlus,
-									Right: &breeze.Const{
+									Right: &breeze.Scalar{
 										Kind:        breeze.ConstKindNumber,
 										Stringified: "2",
 									},
 								},
 								Op: breeze.BinaryOpMultiply,
-								Right: &breeze.Const{
+								Right: &breeze.Scalar{
 									Kind:        breeze.ConstKindNumber,
 									Stringified: "3",
 								},
@@ -599,11 +626,11 @@ func TestParser(t *testing.T) {
 								Left: &breeze.Function{
 									Name: "pow",
 									Args: []breeze.Expr{
-										&breeze.Const{
+										&breeze.Scalar{
 											Kind:        breeze.ConstKindNumber,
 											Stringified: "2",
 										},
-										&breeze.Const{
+										&breeze.Scalar{
 											Kind:        breeze.ConstKindNumber,
 											Stringified: "2",
 										},
@@ -634,19 +661,19 @@ func TestParser(t *testing.T) {
 											Name: "pow",
 											Args: []breeze.Expr{
 												&breeze.FieldRef{Field: "a"},
-												&breeze.Const{Kind: "number", Stringified: "2"},
+												&breeze.Scalar{Kind: "number", Stringified: "2"},
 											},
 										},
 										Right: &breeze.Function{
 											Name: "pow",
 											Args: []breeze.Expr{
 												&breeze.FieldRef{Field: "b"},
-												&breeze.Const{Kind: "number", Stringified: "2"},
+												&breeze.Scalar{Kind: "number", Stringified: "2"},
 											},
 										},
 										Op: "+",
 									},
-									&breeze.Const{Kind: "number", Stringified: "0.5"},
+									&breeze.Scalar{Kind: "number", Stringified: "0.5"},
 								},
 							},
 						},
@@ -661,19 +688,19 @@ func TestParser(t *testing.T) {
 		},
 		{
 			query:  "map foo = 4.2 bar = jelly()",
-			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got \"jelly\" (strings should be quoted in this context)), field reference (field references must start with '.'), or function (unrecognized function: \"jelly\")",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got: \"jelly\"), field reference (field references must start with '.'), function (unrecognized function: \"jelly\"), or array (expected array to start with '[', but found \"jelly\")",
 		},
 		{
 			query:  "map foo = 4.2 bar = pow()",
-			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got \"pow\" (strings should be quoted in this context)), field reference (field references must start with '.'), or function (expected 2 args, got 0)",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got: \"pow\"), field reference (field references must start with '.'), function (expected 2 args, got 0), or array (expected array to start with '[', but found \")\")",
 		},
 		{
 			query:  "map foo = 4.2 bar = pow(",
-			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got \"pow\" (strings should be quoted in this context)), field reference (field references must start with '.'), or function (expected 2 args, got 0)",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got: \"pow\"), field reference (field references must start with '.'), function (expected 2 args, got 0), or array (expected array to start with '[', but found \"\")",
 		},
 		{
 			query:  "map foo = 4.2 bar = ishouldhaveadotatbeginning",
-			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got \"ishouldhaveadotatbeginning\" (strings should be quoted in this context)), field reference (field references must start with '.'), or function (unrecognized function: \"ishouldhaveadotatbeginning\")",
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got: \"ishouldhaveadotatbeginning\"), field reference (field references must start with '.'), function (unrecognized function: \"ishouldhaveadotatbeginning\"), or array (expected array to start with '[', but found \"ishouldhaveadotatbeginning\")",
 		},
 		// TODO: END OF MAP TESTS
 		{

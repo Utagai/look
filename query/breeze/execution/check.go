@@ -19,10 +19,10 @@ func executeBinaryCheck(check *breeze.BinaryCheck, datum datum.Datum) (bool, err
 		return false, nil
 	}
 
-	value, err := evaluateExprToConst(check.Expr, datum)
+	value, err := evaluateExprToConcrete(check.Expr, datum)
 	if err != nil {
 		return false, err
 	}
 
-	return executeBinaryOp(fieldValue, value, check.Op), nil
+	return executeBinaryOp(fieldValue, value, check.Op)
 }

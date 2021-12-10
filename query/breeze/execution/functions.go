@@ -7,7 +7,7 @@ import (
 	"github.com/utagai/look/query/breeze"
 )
 
-func executeFunction(function *breeze.Function, args []breeze.Const) (breeze.Const, error) {
+func executeFunction(function *breeze.Function, args []breeze.Concrete) (breeze.Concrete, error) {
 	// This should always exist, because if it did not, parsing would have failed
 	// earlier.
 	funcValidator, _ := breeze.LookupFuncValidator(function.Name)
@@ -18,27 +18,35 @@ func executeFunction(function *breeze.Function, args []breeze.Const) (breeze.Con
 
 	switch function.Name {
 	case "pow":
-		base := args[0].Interface().(float64)
-		exp := args[1].Interface().(float64)
+		untypedBase, err := args[0].Interface()
+		if err != nil {
+			return nil, err
+		}
+		base := untypedBase.(float64)
+		untypedExp, err := args[1].Interface()
+		if err != nil {
+			return nil, err
+		}
+		exp := untypedExp.(float64)
 
 		return pow(base, exp), nil
 	case "hello":
 		return hello(), nil
 	}
 
-	return breeze.Const{}, fmt.Errorf("unrecognized function: %q", function.Name)
+	return nil, fmt.Errorf("unrecognized function: %q", function.Name)
 }
 
-func pow(base float64, exp float64) breeze.Const {
-	return breeze.Const{
-		Kind:        breeze.ConstKindNumber,
+func pow(base float64, exp float64) *breeze.Scalar {
+	return &breeze.Scalar{
+		Kind:        breeze.ScalarKindNumber,
 		Stringified: fmt.Sprintf("%f", math.Pow(base, exp)),
 	}
 }
 
-func hello() breeze.Const {
-	return breeze.Const{
-		Kind:        breeze.ConstKindString,
+func hello() *breeze.Scalar {
+	return &breeze.Scalar{
+		Kind:        breeze.ScalarKindString,
 		Stringified: "hello world!",
 	}
 }

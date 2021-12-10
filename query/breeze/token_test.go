@@ -12,7 +12,7 @@ import (
 // This is the expected number of 'custom' Breeze tokens (aka, tokens that are
 // not mapped to the ones found in the scanner package).
 // Note that this should always match the length of the below map.
-const expectedNumBreezeTokenTypes = 20
+const expectedNumBreezeTokenTypes = 22
 
 // This should always have a number of elements equal to the constant above.
 var tokenToExampleStr = map[breeze.Token]string{
@@ -23,6 +23,8 @@ var tokenToExampleStr = map[breeze.Token]string{
 	breeze.TokenMap:            "map",
 	breeze.TokenLParen:         "(",
 	breeze.TokenRParen:         ")",
+	breeze.TokenLSqBracket:     "[",
+	breeze.TokenRSqBracket:     "]",
 	breeze.TokenComma:          ",",
 	breeze.TokenContains:       "contains",
 	breeze.TokenEquals:         "=",
@@ -211,6 +213,23 @@ func TestDetectsBinaryOpTokens(t *testing.T) {
 	require.Equal(t, tok, breeze.TokenDivide, "expected TokenPlus")
 	tok = tokenizer.Next()
 	require.Equal(t, tok, breeze.TokenMultiply, "expected TokenMinus")
+}
+
+func TestDetectsArrayBrackets(t *testing.T) {
+	input := "[1,2]"
+	tokenizer := breeze.NewTokenizer(input)
+
+	tok := tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenLSqBracket, "expected TokenLSqBracket")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenInt, "expected TokenInt")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenComma, "expected TokenComma")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenInt, "expected TokenInt")
+	tok = tokenizer.Next()
+	require.Equal(t, tok, breeze.TokenRSqBracket, "expected TokenRSqBracket")
+
 }
 
 // Basically, tokens found inside of a string should be detected as indivual

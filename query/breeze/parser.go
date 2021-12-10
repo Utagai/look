@@ -477,9 +477,18 @@ func (p *Parser) parseValue(token Token) (Value, error) {
 		return nil, errors.New("expected a value, but reached end of query")
 	}
 
-	// We do not want idents to be treated as consts, otherwise field references
-	// and functions would be considered consts which is not desirable here.
-	constValue, constErr := p.parseConstValue(token, false)
+	// The follow attempts at parsing the possibilities is actually _incorrect_.
+	// If any of these fail midway through their parse, then the tokenizer will
+	// have advanced past where token in this context is, meaning the later parse
+	// functions will fail.
+	// That said, this is basically the whole ambiguous grammar issue. Our parser
+	// is recursive descent, so it is limited to LL(k) grammars for it to run
+	// without backtracking. Right now, I think all these parse functions
+	// represent _unambiguous_ non-terminals, so there's no actual issue here
+	// (they'll fail with k = 1 tokens), but if we do encounter an issue, we'll
+	// have to either bump up k and pass in multiple tokens, or implement some
+	// rewind feature to the tokenizer.
+	constValue, constErr := p.parseConstValue(token)
 	if constErr == nil {
 		return constValue, nil
 	}
@@ -494,11 +503,17 @@ func (p *Parser) parseValue(token Token) (Value, error) {
 		return functionValue, nil
 	}
 
+	arrayValue, arrayErr := p.parseArray(token)
+	if arrayErr == nil {
+		return arrayValue, nil
+	}
+
 	return nil, fmt.Errorf(
-		"failed to parse a value; expected a constant value (%s), field reference (%s), or function (%s)",
+		"failed to parse a value; expected a constant value (%s), field reference (%s), function (%s), or array (%s)",
 		constErr,
 		fieldRefErr,
 		funcErr,
+		arrayErr,
 	)
 }
 
@@ -519,15 +534,15 @@ func (p *Parser) parseBinaryOp(token Token) (BinaryOp, error) {
 	return "", fmt.Errorf("unrecognized binary operator: %q (%v)", p.tokenizer.Text(), token)
 }
 
-func (p *Parser) parseConstValue(token Token, identIsString bool) (*Const, error) {
+func (p *Parser) parseConstValue(token Token) (*Scalar, error) {
 	if token == TokenEOF {
 		return nil, errors.New("expected a constant value, but reached end of query")
 	}
 
 	switch token {
 	case TokenFloat, TokenInt:
-		return &Const{
-			Kind:        ConstKindNumber,
+		return &Scalar{
+			Kind:        ScalarKindNumber,
 			Stringified: p.tokenizer.Text(),
 		}, nil
 	case TokenChar, TokenString:
@@ -536,33 +551,51 @@ func (p *Parser) parseConstValue(token Token, identIsString bool) (*Const, error
 			return nil, fmt.Errorf("expected a properly quoted string, but got %q", text)
 		}
 		textWithoutQuotes := text[1 : len(text)-1]
-		return &Const{
-			Kind:        ConstKindString,
+		return &Scalar{
+			Kind:        ScalarKindString,
 			Stringified: textWithoutQuotes,
 		}, nil
 	case TokenFalse, TokenTrue:
-		return &Const{
-			Kind:        ConstKindBool,
+		return &Scalar{
+			Kind:        ScalarKindBool,
 			Stringified: p.tokenizer.Text(),
 		}, nil
 	case TokenNull:
-		return &Const{
-			Kind:        ConstKindNull,
+		return &Scalar{
+			Kind:        ScalarKindNull,
 			Stringified: p.tokenizer.Text(),
 		}, nil
-	case TokenIdent:
-		// Treat this as a string if we are told to, otherwise, error:
-		if identIsString {
-			return &Const{
-				Kind:        ConstKindString,
-				Stringified: p.tokenizer.Text(),
-			}, nil
-		}
-
-		return nil, fmt.Errorf("expected a constant value, but got %q (strings should be quoted in this context)", p.tokenizer.Text())
 	default:
 		return nil, fmt.Errorf("expected a constant value, but got: %q", p.tokenizer.Text())
 	}
+}
+
+func (p *Parser) parseArray(token Token) (Array, error) {
+	if token != TokenLSqBracket {
+		return nil, fmt.Errorf("expected array to start with '[', but found %q", p.tokenizer.Text())
+	}
+	token = p.tokenizer.Next() // Advance past the bracket we just parsed.
+
+	if token, _ := p.tokenizer.Peek(); token == TokenRSqBracket { // Empty array.
+		return []Expr{}, nil
+	}
+
+	exprs := []Expr{}
+	for ; token != TokenRSqBracket && token != TokenEOF; token = p.tokenizer.Next() {
+		expr, err := p.parseExpr(token)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse %dth array member: %w", len(exprs)+1, err)
+		}
+		token = p.tokenizer.Next() // Advance past the expr we just parsed.
+
+		if token != TokenComma && token != TokenRSqBracket {
+			return nil, fmt.Errorf("array items should be delimited by commas, but found %q", p.tokenizer.Text())
+		}
+
+		exprs = append(exprs, expr)
+	}
+
+	return exprs, nil
 }
 
 func (p *Parser) parseFieldRef(token Token) (*FieldRef, error) {

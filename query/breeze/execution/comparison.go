@@ -10,11 +10,12 @@ import (
 // Comparison represents the result of a comparison between two const types.
 type Comparison string
 
-// The three cases of comparison.
+// The four cases of comparison.
 const (
-	Lesser  = "less than"
-	Greater = "greater than"
-	Equal   = "equal"
+	Lesser       = "less than"
+	Greater      = "greater than"
+	Equal        = "equal"
+	Incomparable = "incomparable"
 )
 
 // Compare takes two interfaces that represent some const (see breeze.Const)
@@ -25,6 +26,15 @@ const (
 // Pointers to const types are not const.
 // When differing const kinds are compared, they are casted to allow comparison.
 // The type hierarchy is string <- number <- bool.
+//                       For null: null < any.
+// For complex types (arrays, docs):
+//    Array: An array is incomparable to a non-null scalar. Otherwise, array -
+//    array comparisons are done lexicographically.
+//    Doc: A document is incomparable to a non-null scalar. Otherwise, doc - doc
+//    comparisons are done recursively on a field by field basis. A document is
+//    greater than another document if, for all of its fields, their values are
+//    greater than the values of the same fields in the other document. If the
+//    other document is missing a field, the other document is greater.
 func Compare(x, to interface{}) Comparison {
 	return compareInterfaceToInterface(x, to)
 }
@@ -38,6 +48,8 @@ func compareInterfaceToInterface(a, b interface{}) Comparison {
 		return compareBoolToInterface(bool, b)
 	} else if null, ok := convertPotentialNull(a); ok {
 		return compareNullToInterface(null, b)
+	} else if arr, ok := convertPotentialArray(a); ok {
+		return compareArrayToInterface(arr, b)
 	}
 
 	panic(fmt.Sprintf("failed to cast to known type (was %T)", a))
@@ -57,6 +69,8 @@ func compareNumberToInterface(a float64, b interface{}) Comparison {
 		return compareNumberAndBool(a, bool)
 	} else if null, ok := convertPotentialNull(b); ok {
 		return compareInterfaceToNull(a, null)
+	} else if _, ok := convertPotentialArray(b); ok {
+		return Incomparable
 	}
 
 	panic(fmt.Sprintf("failed to cast to known type (was %T)", b))
@@ -71,6 +85,8 @@ func compareStringToInterface(a string, b interface{}) Comparison {
 		return compareStringAndBool(a, bool)
 	} else if null, ok := convertPotentialNull(b); ok {
 		return compareInterfaceToNull(a, null)
+	} else if _, ok := convertPotentialArray(b); ok {
+		return Incomparable
 	}
 
 	panic(fmt.Sprintf("failed to cast to known type (was %T)", b))
@@ -85,6 +101,8 @@ func compareBoolToInterface(a bool, b interface{}) Comparison {
 		return compareBoolAndNumber(a, num)
 	} else if null, ok := convertPotentialNull(b); ok {
 		return compareInterfaceToNull(a, null)
+	} else if _, ok := convertPotentialArray(b); ok {
+		return Incomparable
 	}
 
 	panic(fmt.Sprintf("failed to cast to known type (was %T)", b))
@@ -100,6 +118,33 @@ func compareNullToInterface(a interface{}, b interface{}) Comparison {
 	}
 
 	return cmp
+}
+
+func compareArrayToInterface(arr []interface{}, b interface{}) Comparison {
+	bArr, ok := convertPotentialArray(b)
+	if !ok {
+		return Incomparable
+	}
+
+	if len(arr) > len(bArr) {
+		return Greater
+	} else if len(arr) < len(bArr) {
+		return Lesser
+	}
+
+	for i := range arr {
+		cmp := Compare(arr[i], bArr[i])
+		switch cmp {
+		case Greater, Lesser:
+			return cmp
+		case Equal, Incomparable:
+			continue
+		default:
+			panic(fmt.Sprintf("unrecognized comparison result: %q", cmp))
+		}
+	}
+
+	return Equal
 }
 
 func compareInterfaceToNull(a interface{}, b interface{}) Comparison {
@@ -166,6 +211,41 @@ func convertPotentialBool(a interface{}) (bool, bool) {
 func convertPotentialNull(a interface{}) (interface{}, bool) {
 	if a == nil {
 		return a, true
+	}
+
+	return nil, false
+}
+
+// Generics could not come sooner. I think they might help with this file.
+func convertPotentialArray(a interface{}) ([]interface{}, bool) {
+	// TODO: We might be missing other int types, though it is unclear if it
+	// matters. Likely this code changes substantially with generics?
+	if arr, ok := a.([]interface{}); ok {
+		return arr, true
+	} else if arr, ok := a.([]int); ok {
+		arrInterface := make([]interface{}, len(arr))
+		for i := range arr {
+			arrInterface[i] = arr[i]
+		}
+		return arrInterface, true
+	} else if arr, ok := a.([]float64); ok {
+		arrInterface := make([]interface{}, len(arr))
+		for i := range arr {
+			arrInterface[i] = arr[i]
+		}
+		return arrInterface, true
+	} else if arr, ok := a.([]string); ok {
+		arrInterface := make([]interface{}, len(arr))
+		for i := range arr {
+			arrInterface[i] = arr[i]
+		}
+		return arrInterface, true
+	} else if arr, ok := a.([]bool); ok {
+		arrInterface := make([]interface{}, len(arr))
+		for i := range arr {
+			arrInterface[i] = arr[i]
+		}
+		return arrInterface, true
 	}
 
 	return nil, false

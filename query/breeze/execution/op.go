@@ -20,14 +20,19 @@ func executeUnaryOp(left interface{}, op breeze.UnaryOp) bool {
 	}
 }
 
-func executeBinaryOp(left interface{}, right breeze.Const, op breeze.BinaryCmpOp) bool {
+func executeBinaryOp(left interface{}, right breeze.Concrete, op breeze.BinaryCmpOp) (bool, error) {
+	rightIf, err := right.Interface()
+	if err != nil {
+		return false, err
+	}
+
 	switch op {
 	case breeze.BinaryOpEquals:
-		return Compare(left, right.Interface()) == Equal
+		return Compare(left, rightIf) == Equal, nil
 	case breeze.BinaryOpGeq:
-		return Compare(left, right.Interface()) == Greater
+		return Compare(left, rightIf) == Greater, nil
 	case breeze.BinaryOpContains:
-		return strings.Contains(left.(string), right.Stringified)
+		return strings.Contains(left.(string), right.GetStringRepr()), nil
 	default:
 		panic(fmt.Sprintf("unrecognized BinaryOp: %q", op))
 	}

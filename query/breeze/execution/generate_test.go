@@ -30,6 +30,10 @@ func TestGenerateGoTestCases(t *testing.T) {
 		0, 1,
 		"0", "1",
 
+		[]int{}, []int{1, 1, 2}, []int{1, 2, 3, 4}, []int{7, 8, 9}, []int{2, 3},
+		[]float64{}, []float64{1.0, 1.0, 2.0}, []float64{1.0, 2.0, 3.14, 4.0}, []float64{7.0, 8.0, 9.0}, []float64{3.14, 6.28},
+		[]string{}, []string{"foo", "bar"}, []string{"baz", "qux", "alpha"}, []string{"1", "2", "3"}, []string{"0", "3.14", "6.28"},
+
 		nil,
 	}
 
@@ -53,6 +57,8 @@ func TestGenerateGoTestCases(t *testing.T) {
 			expectedLabel = "execution.Lesser"
 		case execution.Greater:
 			expectedLabel = "execution.Greater"
+		case execution.Incomparable:
+			expectedLabel = "execution.Incomparable"
 		default:
 			panic(fmt.Sprintf("unrecognized comparison result: %q", tc.expected))
 		}

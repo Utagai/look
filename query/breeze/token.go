@@ -35,6 +35,8 @@ const (
 	// Punctuators
 	TokenLParen
 	TokenRParen
+	TokenLSqBracket
+	TokenRSqBracket
 	TokenComma
 
 	// Binary comparison operators:
@@ -82,6 +84,10 @@ func (t Token) String() string {
 		return "RParen"
 	case TokenComma:
 		return "Comma"
+	case TokenLSqBracket:
+		return "LSqBracket"
+	case TokenRSqBracket:
+		return "RSqBracket"
 	case TokenContains:
 		return "Contains"
 	case TokenEquals:
@@ -199,8 +205,9 @@ func (t *Tokenizer) Next() Token {
 // past it.
 func (t *Tokenizer) Peek() (Token, string) {
 	if t.peeked == nil {
+		lastText := t.Text()
 		t.peeked = &peeked{}
-		t.peeked.lastText = t.Text()
+		t.peeked.lastText = lastText
 		t.peeked.token = t.next()
 	}
 	return t.peeked.token, t.s.TokenText()
@@ -226,6 +233,10 @@ func (t *Tokenizer) next() Token {
 			return TokenLParen
 		case ")":
 			return TokenRParen
+		case "[":
+			return TokenLSqBracket
+		case "]":
+			return TokenRSqBracket
 		case ",":
 			return TokenComma
 		case "+":

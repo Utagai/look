@@ -57,61 +57,134 @@ func (b *BinaryExpr) GetStringRepr() string {
 	return fmt.Sprintf("%s %s %s", b.Left.GetStringRepr(), b.Op, b.Right.GetStringRepr())
 }
 
-// ConstKind enumerates the kinds of constants in breeze.
-type ConstKind string
+// ConcreteKind enumerates the kinds of concrete values in Breeze.
+type ConcreteKind string
 
 const (
-	// ConstKindString represents a string constant.
-	ConstKindString ConstKind = "string"
-	// ConstKindNumber represents a number constant.
-	ConstKindNumber ConstKind = "number"
-	// ConstKindBool represents a bool constant.
-	ConstKindBool ConstKind = "bool"
-	// ConstKindNull represents the special null constant value.
-	ConstKindNull ConstKind = "null"
+	// ConcreteKindScalar refers to scalar values.
+	ConcreteKindScalar = "scalar"
+	// ConcreteKindArray refers to arrays.
+	ConcreteKindArray = "array"
+	// ConcreteKindDoc = "doc"
 )
 
-// Const is a constant.
-type Const struct {
-	Kind        ConstKind
+// Concrete represents a breeze expression & value that can be evaluated to a
+// single, 'concrete' Go value for query processing. In other words, this is an
+// AST node that can be realized as a true Go value for use in actual
+// computation.
+type Concrete interface {
+	Value
+	ConcreteKind() ConcreteKind
+	Interface() (interface{}, error)
+}
+
+// ScalarKind enumerates the kinds of scalars in breeze.
+type ScalarKind string
+
+const (
+	// ScalarKindString represents a string constant.
+	ScalarKindString ScalarKind = "string"
+	// ScalarKindNumber represents a number constant.
+	ScalarKindNumber ScalarKind = "number"
+	// ScalarKindBool represents a bool constant.
+	ScalarKindBool ScalarKind = "bool"
+	// ScalarKindNull represents the special null constant value.
+	ScalarKindNull ScalarKind = "null"
+)
+
+// Scalar is a single-dimensional constant value.
+// TODO: Can be confused with const keywords.
+// TODO: Do you think it would be better to have implementations of the concrete
+// interface for each type, e.g. StringScalar, NumberScalar instead of a single
+// one?
+type Scalar struct {
+	Kind        ScalarKind
 	Stringified string
 }
 
 // ValueKind implements the Value interface.
-func (c *Const) ValueKind() ValueKind {
-	return ValueKindConst
+func (c *Scalar) ValueKind() ValueKind {
+	return ValueKindScalar
 }
 
-// GetStringRepr implements the Value interface.
-func (c *Const) GetStringRepr() string {
+// GetStringRepr implements the Expr interface.
+func (c *Scalar) GetStringRepr() string {
 	return c.Stringified
 }
 
 // ExprKind implements the Expr interface.
-func (c *Const) ExprKind() ExprKind {
+func (c *Scalar) ExprKind() ExprKind {
 	return ExprKindTerm
 }
 
-func (c *Const) String() string {
-	return c.Stringified
+// ConcreteKind implements the Concrete interface.
+// TODO: The member variable 'c' does not match the starting 'S' of scalar.
+func (c *Scalar) ConcreteKind() ConcreteKind {
+	return ConcreteKindScalar
 }
 
-// Interface returns this constant, casted from its stringified version into the
-// proper Go type.
-func (c *Const) Interface() interface{} {
+// Interface implements the Concrete interface.
+func (c *Scalar) Interface() (interface{}, error) {
 	switch c.Kind {
-	case ConstKindString:
-		return c.Stringified
-	case ConstKindNumber:
+	case ScalarKindString:
+		return c.Stringified, nil
+	case ScalarKindNumber:
 		f64, _ := strconv.ParseFloat(c.Stringified, 64)
-		return f64
-	case ConstKindBool:
-		return c.Stringified == "true"
-	case ConstKindNull:
-		return nil
+		return f64, nil
+	case ScalarKindBool:
+		return c.Stringified == "true", nil
+	case ScalarKindNull:
+		return nil, nil
 	default:
 		panic(fmt.Sprintf("unexpected const kind: %q", c.Kind))
 	}
+}
+
+// Array is a breeze array.
+type Array []Expr
+
+// ExprKind implements the Expr interface.
+func (a Array) ExprKind() ExprKind {
+	return ExprKindTerm
+}
+
+// ValueKind implements the Value interface.
+func (a Array) ValueKind() ValueKind {
+	return ValueKindArray
+}
+
+// GetStringRepr implements the Value interface.
+func (a Array) GetStringRepr() string {
+	memberStrs := make([]string, len(a))
+	for i := range a {
+		memberStrs[i] = a[i].GetStringRepr()
+	}
+
+	return fmt.Sprintf("[%s]", strings.Join(memberStrs, ","))
+}
+
+// ConcreteKind implements the Concrete interface.
+func (a Array) ConcreteKind() ConcreteKind {
+	return ConcreteKindArray
+}
+
+// Interface implements the Concrete interface.
+func (a Array) Interface() (interface{}, error) {
+	goArr := make([]interface{}, len(a))
+	for i := range a {
+		c, ok := a[i].(Concrete)
+		if !ok {
+			return nil, fmt.Errorf("element %d (%q) is not a const but must be for Array to be const", i, a[i].GetStringRepr())
+		}
+
+		var err error
+		goArr[i], err = c.Interface()
+		if err != nil {
+			return nil, fmt.Errorf("failed to realize element %d (%q): %w", i, a[i].GetStringRepr(), err)
+		}
+	}
+
+	return goArr, nil
 }
 
 // FieldRef is a reference to a field of a datum.
@@ -166,8 +239,10 @@ func (f *Function) ExprKind() ExprKind {
 type ValueKind string
 
 const (
-	// ValueKindConst represents a breeze Const.
-	ValueKindConst = "const"
+	// ValueKindScalar represents a breeze Const.
+	ValueKindScalar = "scalar"
+	// ValueKindArray represents a breeze Array.
+	ValueKindArray = "array"
 	// ValueKindFieldRef represents a reference to a field.
 	ValueKindFieldRef = "fieldref"
 	// ValueKindFunc represents a evaluatable function.
@@ -180,7 +255,6 @@ type Value interface {
 	Expr
 	// TODO: Rename this to ValueKind() for consistency with Expr.
 	ValueKind() ValueKind
-	GetStringRepr() string
 }
 
 // UnaryOp enumerates the kinds of unary operations in breeze.
