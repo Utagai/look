@@ -25,7 +25,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "4.2",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -33,7 +33,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "bar",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "7",
 							},
 							Op: breeze.BinaryOpGeq,
@@ -41,7 +41,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "car",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindString,
+								Kind:        breeze.ScalarKindString,
 								Stringified: "hello",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -49,7 +49,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "dar",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNull,
+								Kind:        breeze.ScalarKindNull,
 								Stringified: "null",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -71,7 +71,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "4.2",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -90,12 +90,12 @@ func TestParser(t *testing.T) {
 							Field: "foo",
 							Expr: &breeze.BinaryExpr{
 								Left: &breeze.Scalar{
-									Kind:        breeze.ConstKindNumber,
+									Kind:        breeze.ScalarKindNumber,
 									Stringified: "8",
 								},
 								Op: breeze.BinaryOpMultiply,
 								Right: &breeze.Scalar{
-									Kind:        breeze.ConstKindNumber,
+									Kind:        breeze.ScalarKindNumber,
 									Stringified: "4.2",
 								},
 							},
@@ -114,7 +114,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo|",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "4.2",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -132,7 +132,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "4.2",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -140,7 +140,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "bar",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "6.4",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -189,7 +189,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "4.2",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -211,7 +211,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "4.2",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -266,7 +266,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "bar",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "4.2",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -274,7 +274,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "quux",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "4.1",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -301,7 +301,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "4.2",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -309,7 +309,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Expr: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "4.1",
 							},
 							Op: breeze.BinaryOpEquals,
@@ -328,18 +328,49 @@ func TestParser(t *testing.T) {
 							Field: "foo",
 							Assignment: breeze.Array{
 								&breeze.Scalar{
-									Kind:        breeze.ConstKindNumber,
+									Kind:        breeze.ScalarKindNumber,
 									Stringified: "1",
 								},
 								&breeze.Scalar{
-									Kind:        breeze.ConstKindNumber,
+									Kind:        breeze.ScalarKindNumber,
 									Stringified: "2",
 								},
 								&breeze.Scalar{
-									Kind:        breeze.ConstKindNumber,
+									Kind:        breeze.ScalarKindNumber,
 									Stringified: "3",
 								},
 							},
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "map foo = [1]",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: breeze.Array{
+								&breeze.Scalar{
+									Kind:        breeze.ScalarKindNumber,
+									Stringified: "1",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			query: "map foo = []",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field:      "foo",
+							Assignment: breeze.Array{},
 						},
 					},
 				},
@@ -355,7 +386,7 @@ func TestParser(t *testing.T) {
 						{
 							Field: "foo",
 							Assignment: &breeze.Scalar{
-								Kind:        breeze.ConstKindNumber,
+								Kind:        breeze.ScalarKindNumber,
 								Stringified: "4.2",
 							},
 						},
@@ -389,11 +420,11 @@ func TestParser(t *testing.T) {
 								Name: "pow",
 								Args: []breeze.Expr{
 									&breeze.Scalar{
-										Kind:        breeze.ConstKindNumber,
+										Kind:        breeze.ScalarKindNumber,
 										Stringified: "2",
 									},
 									&breeze.Scalar{
-										Kind:        breeze.ConstKindNumber,
+										Kind:        breeze.ScalarKindNumber,
 										Stringified: "3",
 									},
 								},
@@ -420,11 +451,11 @@ func TestParser(t *testing.T) {
 										Name: "pow",
 										Args: []breeze.Expr{
 											&breeze.Scalar{
-												Kind:        breeze.ConstKindNumber,
+												Kind:        breeze.ScalarKindNumber,
 												Stringified: "3",
 											},
 											&breeze.Scalar{
-												Kind:        breeze.ConstKindString,
+												Kind:        breeze.ScalarKindString,
 												Stringified: "2",
 											},
 										},
@@ -445,12 +476,12 @@ func TestParser(t *testing.T) {
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
 								Left: &breeze.Scalar{
-									Kind:        breeze.ConstKindNumber,
+									Kind:        breeze.ScalarKindNumber,
 									Stringified: "2",
 								},
 								Op: breeze.BinaryOpPlus,
 								Right: &breeze.Scalar{
-									Kind:        breeze.ConstKindNumber,
+									Kind:        breeze.ScalarKindNumber,
 									Stringified: "5",
 								},
 							},
@@ -468,18 +499,18 @@ func TestParser(t *testing.T) {
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
 								Left: &breeze.Scalar{
-									Kind:        breeze.ConstKindNumber,
+									Kind:        breeze.ScalarKindNumber,
 									Stringified: "2",
 								},
 								Op: breeze.BinaryOpPlus,
 								Right: &breeze.BinaryExpr{
 									Left: &breeze.Scalar{
-										Kind:        breeze.ConstKindNumber,
+										Kind:        breeze.ScalarKindNumber,
 										Stringified: "5",
 									},
 									Op: breeze.BinaryOpMinus,
 									Right: &breeze.Scalar{
-										Kind:        breeze.ConstKindNumber,
+										Kind:        breeze.ScalarKindNumber,
 										Stringified: "3",
 									},
 								},
@@ -564,18 +595,18 @@ func TestParser(t *testing.T) {
 							Field: "foo",
 							Assignment: &breeze.BinaryExpr{
 								Left: &breeze.Scalar{
-									Kind:        breeze.ConstKindNumber,
+									Kind:        breeze.ScalarKindNumber,
 									Stringified: "3",
 								},
 								Op: breeze.BinaryOpMultiply,
 								Right: &breeze.BinaryExpr{
 									Left: &breeze.Scalar{
-										Kind:        breeze.ConstKindNumber,
+										Kind:        breeze.ScalarKindNumber,
 										Stringified: "5",
 									},
 									Op: breeze.BinaryOpPlus,
 									Right: &breeze.Scalar{
-										Kind:        breeze.ConstKindNumber,
+										Kind:        breeze.ScalarKindNumber,
 										Stringified: "2",
 									},
 								},
@@ -595,18 +626,18 @@ func TestParser(t *testing.T) {
 							Assignment: &breeze.BinaryExpr{
 								Left: &breeze.BinaryExpr{
 									Left: &breeze.Scalar{
-										Kind:        breeze.ConstKindNumber,
+										Kind:        breeze.ScalarKindNumber,
 										Stringified: "5",
 									},
 									Op: breeze.BinaryOpPlus,
 									Right: &breeze.Scalar{
-										Kind:        breeze.ConstKindNumber,
+										Kind:        breeze.ScalarKindNumber,
 										Stringified: "2",
 									},
 								},
 								Op: breeze.BinaryOpMultiply,
 								Right: &breeze.Scalar{
-									Kind:        breeze.ConstKindNumber,
+									Kind:        breeze.ScalarKindNumber,
 									Stringified: "3",
 								},
 							},
@@ -627,11 +658,11 @@ func TestParser(t *testing.T) {
 									Name: "pow",
 									Args: []breeze.Expr{
 										&breeze.Scalar{
-											Kind:        breeze.ConstKindNumber,
+											Kind:        breeze.ScalarKindNumber,
 											Stringified: "2",
 										},
 										&breeze.Scalar{
-											Kind:        breeze.ConstKindNumber,
+											Kind:        breeze.ScalarKindNumber,
 											Stringified: "2",
 										},
 									},

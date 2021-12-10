@@ -203,7 +203,8 @@ func (p *Parser) parseGroup() (*Group, error) {
 func (p *Parser) parseMap() (*Map, error) {
 	assignments := []FieldAssignment{}
 	for {
-		if token, _ := p.tokenizer.Peek(); token == TokenStageSeparator || token == TokenEOF {
+		token, _ := p.tokenizer.Peek()
+		if token == TokenStageSeparator || token == TokenEOF {
 			break // No more checks to parse.
 		}
 
@@ -576,7 +577,8 @@ func (p *Parser) parseArray(token Token) (Array, error) {
 	}
 	token = p.tokenizer.Next() // Advance past the bracket we just parsed.
 
-	if token, _ := p.tokenizer.Peek(); token == TokenRSqBracket { // Empty array.
+	if token == TokenRSqBracket { // Empty array.
+		p.tokenizer.Next() // Advance past the closing ']'.
 		return []Expr{}, nil
 	}
 
@@ -586,14 +588,20 @@ func (p *Parser) parseArray(token Token) (Array, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse %dth array member: %w", len(exprs)+1, err)
 		}
+		exprs = append(exprs, expr)
 		token = p.tokenizer.Next() // Advance past the expr we just parsed.
 
-		if token != TokenComma && token != TokenRSqBracket {
-			return nil, fmt.Errorf("array items should be delimited by commas, but found %q", p.tokenizer.Text())
+		if token == TokenRSqBracket {
+			break
 		}
 
-		exprs = append(exprs, expr)
+		if token != TokenComma {
+			return nil, fmt.Errorf("array items should be delimited by commas, but found %q", p.tokenizer.Text())
+		}
 	}
+
+	// Once we get here, we've parsed the closing '],' so we should advance past it.
+	p.tokenizer.Next()
 
 	return exprs, nil
 }
