@@ -175,13 +175,17 @@ type stddev struct {
 }
 
 func (s *stddev) ingest(v interface{}) {
-	floatVal, ok := v.(float64)
-	if !ok {
-		// If this is not a float value, then we actually want it to _not_ affect
-		// the variance. Setting it to 0 or something similar would mean non-floats
-		// would affect the variance, which would be incorrect. So, we skip it.
+	var ok bool
+	var floatVal float64 = 0
+	if floatVal, ok = convertPotentialNumber(v); ok {
+	} else if boolValue, ok := convertPotentialBool(v); ok {
+		if boolValue {
+			floatVal = 1
+		}
+	} else {
 		return
 	}
+
 	s.count++
 	delta := floatVal - s.mean
 	s.mean += delta / float64(s.count)
