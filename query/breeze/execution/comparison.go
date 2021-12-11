@@ -12,10 +12,9 @@ type Comparison string
 
 // The four cases of comparison.
 const (
-	Lesser       = "less than"
-	Greater      = "greater than"
-	Equal        = "equal"
-	Incomparable = "incomparable"
+	Lesser  = "less than"
+	Greater = "greater than"
+	Equal   = "equal"
 )
 
 // Compare takes two interfaces that represent some const (see breeze.Const)
@@ -28,13 +27,13 @@ const (
 // The type hierarchy is string <- number <- bool.
 //                       For null: null < any.
 // For complex types (arrays, docs):
-//    Array: An array is incomparable to a non-null scalar. Otherwise, array -
+//    Array: An array is always greater than a non-null scalar. Otherwise, array -
 //    array comparisons are done lexicographically.
-//    Doc: A document is incomparable to a non-null scalar. Otherwise, doc - doc
-//    comparisons are done recursively on a field by field basis. A document is
-//    greater than another document if, for all of its fields, their values are
-//    greater than the values of the same fields in the other document. If the
-//    other document is missing a field, the other document is greater.
+//    Doc: A document is always greater than a non-null scalar. Otherwise, doc -
+//    doc comparisons are done recursively on a field by field basis. A document
+//    is greater than another document if, for all of its fields, their values
+//    are greater than the values of the same fields in the other document. If
+//    the other document is missing a field, the other document is greater.
 func Compare(x, to interface{}) Comparison {
 	return compareInterfaceToInterface(x, to)
 }
@@ -70,7 +69,7 @@ func compareNumberToInterface(a float64, b interface{}) Comparison {
 	} else if null, ok := convertPotentialNull(b); ok {
 		return compareInterfaceToNull(a, null)
 	} else if _, ok := convertPotentialArray(b); ok {
-		return Incomparable
+		return Lesser
 	}
 
 	panic(fmt.Sprintf("failed to cast to known type (was %T)", b))
@@ -86,7 +85,7 @@ func compareStringToInterface(a string, b interface{}) Comparison {
 	} else if null, ok := convertPotentialNull(b); ok {
 		return compareInterfaceToNull(a, null)
 	} else if _, ok := convertPotentialArray(b); ok {
-		return Incomparable
+		return Lesser
 	}
 
 	panic(fmt.Sprintf("failed to cast to known type (was %T)", b))
@@ -102,7 +101,7 @@ func compareBoolToInterface(a bool, b interface{}) Comparison {
 	} else if null, ok := convertPotentialNull(b); ok {
 		return compareInterfaceToNull(a, null)
 	} else if _, ok := convertPotentialArray(b); ok {
-		return Incomparable
+		return Lesser
 	}
 
 	panic(fmt.Sprintf("failed to cast to known type (was %T)", b))
@@ -123,7 +122,7 @@ func compareNullToInterface(a interface{}, b interface{}) Comparison {
 func compareArrayToInterface(arr []interface{}, b interface{}) Comparison {
 	bArr, ok := convertPotentialArray(b)
 	if !ok {
-		return Incomparable
+		return Greater
 	}
 
 	if len(arr) > len(bArr) {
@@ -137,7 +136,7 @@ func compareArrayToInterface(arr []interface{}, b interface{}) Comparison {
 		switch cmp {
 		case Greater, Lesser:
 			return cmp
-		case Equal, Incomparable:
+		case Equal:
 			continue
 		default:
 			panic(fmt.Sprintf("unrecognized comparison result: %q", cmp))

@@ -57,8 +57,6 @@ func TestGenerateGoTestCases(t *testing.T) {
 			expectedLabel = "execution.Lesser"
 		case execution.Greater:
 			expectedLabel = "execution.Greater"
-		case execution.Incomparable:
-			expectedLabel = "execution.Incomparable"
 		default:
 			panic(fmt.Sprintf("unrecognized comparison result: %q", tc.expected))
 		}
