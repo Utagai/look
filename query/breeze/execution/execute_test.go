@@ -301,9 +301,56 @@ func TestFilter(t *testing.T) {
 				},
 			},
 		},
-		// TODO: Empty input.
-		// TODO: Nested array.
-		// TODO: Sad path
+		{
+			name: "filter on nested array",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": []interface{}{3, "hi there", []int{1, 2, 3}},
+				},
+				{
+					"a": 3,
+				},
+			},
+			query: "filter a = [3, \"hi there\", [1,2,3]]",
+			expectedResult: []datum.Datum{
+				{
+					"a": []interface{}{3, "hi there", []int{1, 2, 3}},
+				},
+			},
+		},
+		{
+			name:           "filter on empty input",
+			input:          []datum.Datum{},
+			query:          "filter a = 3",
+			expectedResult: []datum.Datum{},
+		},
+		{
+			name: "filter on empty datums",
+			input: []datum.Datum{
+				{},
+				{},
+				{},
+			},
+			query:          "filter a = 3",
+			expectedResult: []datum.Datum{},
+		},
+		{
+			name: "filter on empty datums with empty condition",
+			input: []datum.Datum{
+				{},
+				{},
+				{},
+			},
+			query: "filter",
+			expectedResult: []datum.Datum{
+				{},
+				{},
+				{},
+			},
+		},
 	}
 
 	runExecutionTestCases(t, tcs)
