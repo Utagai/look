@@ -4,3 +4,4 @@ notes.txt
 rsrc/mongodb/
 testdata/mongodb/logs/
 testdata/mongodb/data/
+generated.txt
