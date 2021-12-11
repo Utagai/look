@@ -84,7 +84,15 @@ func goValueToConcrete(val interface{}) breeze.Concrete {
 
 	switch tval := val.(type) {
 	case uint, uint8, uint16, uint32, uint64:
+		return &breeze.Scalar{
+			Kind:        breeze.ScalarKindNumber,
+			Stringified: fmt.Sprintf("%v", tval),
+		}
 	case int, int8, int16, int32, int64:
+		return &breeze.Scalar{
+			Kind:        breeze.ScalarKindNumber,
+			Stringified: fmt.Sprintf("%v", tval),
+		}
 	case float32, float64:
 		return &breeze.Scalar{
 			Kind:        breeze.ScalarKindNumber,
