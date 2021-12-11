@@ -314,7 +314,8 @@ func (f *Filter) Name() string {
 // Sort is a stage that sorts the data.
 type Sort struct {
 	Descending bool
-	Field      string
+	// TODO: Sort via multiple fields?
+	Field string
 }
 
 // Name implements the Stage interface.
