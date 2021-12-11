@@ -6,6 +6,13 @@ import "fmt"
 // for each, uses an actual map. Exceptions exist for bool and null, whose
 // value space is small enough to effectively hardcode with a field.
 type table struct {
+	// TODO: This table does not support arrays. Now, we could attempt to add yet
+	// another map here for holding arrays, but that may get hairy...
+	// I wonder if making this hold breeze.Concrete is a better solution?
+	// In particular, I think we're going to need to be able to ensure that each
+	// breeze.Concrete has a way of providing a unique string/number to identify
+	// itself amongst all other breeze.Concrete besides an equivalently valued
+	// one.
 	stringMap    map[string]interface{}
 	numberMap    map[float64]interface{}
 	boolMap      map[bool]interface{}
@@ -48,8 +55,12 @@ func (t *table) GetOK(key interface{}) (interface{}, bool) {
 	switch typedKey := key.(type) {
 	case string:
 		val, ok = t.stringMap[typedKey]
-	case float64:
-		val, ok = t.numberMap[typedKey]
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+		f64, convertOK := convertPotentialNumber(typedKey)
+		if !convertOK {
+			panic(fmt.Sprintf("bad type given to map: %T", typedKey))
+		}
+		val, ok = t.numberMap[f64]
 	case bool:
 		val, ok = t.boolMap[typedKey]
 	default:
@@ -69,8 +80,12 @@ func (t *table) Set(key interface{}, value interface{}) {
 	switch typedKey := key.(type) {
 	case string:
 		t.stringMap[typedKey] = value
-	case float64:
-		t.numberMap[typedKey] = value
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+		f64, ok := convertPotentialNumber(typedKey)
+		if !ok {
+			panic(fmt.Sprintf("bad type given to map: %T", typedKey))
+		}
+		t.numberMap[f64] = value
 	case bool:
 		t.boolMap[typedKey] = value
 	default:

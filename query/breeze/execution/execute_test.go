@@ -662,7 +662,1177 @@ func TestSort(t *testing.T) {
 				},
 			},
 		},
+		// TODO: Missing sort field.
 	}
 
 	runExecutionTestCases(t, tcs)
 }
+
+func TestAggregations(t *testing.T) {
+	tcs := []executionTestCase{
+		{
+			name: "sum with number",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 2,
+				},
+				{
+					"a": 3,
+				},
+			},
+			query: "group sum a",
+			expectedResult: []datum.Datum{
+				{
+					// TODO: We are probably gonna want proper comparisons for floats here
+					// that have a tolerance.
+					"a": 6.0,
+				},
+			},
+		},
+		{
+			name: "sum with bool gives true",
+			input: []datum.Datum{
+				{
+					"a": true,
+				},
+				{
+					"a": true,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group sum a",
+			expectedResult: []datum.Datum{
+				{
+					"a": true,
+				},
+			},
+		},
+		{
+			name: "sum with bool gives false",
+			input: []datum.Datum{
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group sum a",
+			expectedResult: []datum.Datum{
+				{
+					"a": false,
+				},
+			},
+		},
+		{
+			name:  "sum no datums",
+			input: []datum.Datum{},
+			query: "group sum a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.0,
+				},
+			},
+		},
+		{
+			name: "min with number",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 2,
+				},
+				{
+					"a": 3,
+				},
+			},
+			query: "group min a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 1,
+				},
+			},
+		},
+		{
+			name: "max with number",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 2,
+				},
+				{
+					"a": 3,
+				},
+			},
+			query: "group max a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 3,
+				},
+			},
+		},
+		{
+			name: "min with bool gives false",
+			input: []datum.Datum{
+				{
+					"a": true,
+				},
+				{
+					"a": true,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group min a",
+			expectedResult: []datum.Datum{
+				{
+					"a": false,
+				},
+			},
+		},
+		{
+			name: "min with only true gives true",
+			input: []datum.Datum{
+				{
+					"a": true,
+				},
+				{
+					"a": true,
+				},
+				{
+					"a": true,
+				},
+			},
+			query: "group min a",
+			expectedResult: []datum.Datum{
+				{
+					"a": true,
+				},
+			},
+		},
+		{
+			name: "max with bool gives false",
+			input: []datum.Datum{
+				{
+					"a": true,
+				},
+				{
+					"a": true,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group max a",
+			expectedResult: []datum.Datum{
+				{
+					"a": true,
+				},
+			},
+		},
+		{
+			name: "max with only false gives false",
+			input: []datum.Datum{
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group max a",
+			expectedResult: []datum.Datum{
+				{
+					"a": false,
+				},
+			},
+		},
+		{
+			name: "max with only false gives false",
+			input: []datum.Datum{
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group max a",
+			expectedResult: []datum.Datum{
+				{
+					"a": false,
+				},
+			},
+		},
+		{
+			name: "min with all equal",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 1,
+				},
+				{
+					"a": 1,
+				},
+			},
+			query: "group min a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 1,
+				},
+			},
+		},
+		{
+			name: "max with all equal",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 1,
+				},
+				{
+					"a": 1,
+				},
+			},
+			query: "group max a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 1,
+				},
+			},
+		},
+		{
+			name:  "max with no datums",
+			input: []datum.Datum{},
+			query: "group max a",
+			expectedResult: []datum.Datum{
+				{
+					"a": nil,
+				},
+			},
+		},
+		{
+			name:  "min with no datums",
+			input: []datum.Datum{},
+			query: "group min a",
+			expectedResult: []datum.Datum{
+				{
+					"a": nil,
+				},
+			},
+		},
+		{
+			name: "min with string",
+			input: []datum.Datum{
+				{
+					"a": "abc",
+				},
+				{
+					"a": "zzz",
+				},
+				{
+					"a": "def",
+				},
+			},
+			query: "group min a",
+			expectedResult: []datum.Datum{
+				{
+					"a": "abc",
+				},
+			},
+		},
+		{
+			name: "max with string",
+			input: []datum.Datum{
+				{
+					"a": "abc",
+				},
+				{
+					"a": "zzz",
+				},
+				{
+					"a": "def",
+				},
+			},
+			query: "group max a",
+			expectedResult: []datum.Datum{
+				{
+					"a": "zzz",
+				},
+			},
+		},
+		{
+			// TODO: These names all stutter because they begin with the stage name,
+			// but the test function already includes the stage name.
+			name: "min with null",
+			input: []datum.Datum{
+				{
+					"a": "abc",
+				},
+				{
+					"a": nil,
+				},
+				{
+					"a": "def",
+				},
+			},
+			query: "group min a",
+			expectedResult: []datum.Datum{
+				{
+					"a": nil,
+				},
+			},
+		},
+		{
+			name: "max with nil",
+			input: []datum.Datum{
+				{
+					"a": 5,
+				},
+				{
+					"a": 3,
+				},
+				{
+					"a": nil,
+				},
+			},
+			query: "group max a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 5,
+				},
+			},
+		},
+		{
+			name: "max with only nil gives nil",
+			input: []datum.Datum{
+				{
+					"a": nil,
+				},
+				{
+					"a": nil,
+				},
+				{
+					"a": nil,
+				},
+			},
+			query: "group max a",
+			expectedResult: []datum.Datum{
+				{
+					"a": nil,
+				},
+			},
+		},
+		{
+			name: "min with array",
+			input: []datum.Datum{
+				{
+					"a": []int{4, 5, 6},
+				},
+				{
+					"a": []int{1, 2, 3},
+				},
+				{
+					"a": []int{7, 8, 9},
+				},
+			},
+			query: "group min a",
+			expectedResult: []datum.Datum{
+				{
+					"a": []int{1, 2, 3},
+				},
+			},
+		},
+		{
+			name: "max with array",
+			input: []datum.Datum{
+				{
+					"a": []int{4, 5, 6},
+				},
+				{
+					"a": []int{1, 2, 3},
+				},
+				{
+					"a": []int{7, 8, 9},
+				},
+			},
+			query: "group max a",
+			expectedResult: []datum.Datum{
+				{
+					"a": []int{7, 8, 9},
+				},
+			},
+		},
+		{
+			name: "avg with number",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 2,
+				},
+				{
+					"a": 3,
+				},
+			},
+			query: "group avg a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 2.0,
+				},
+			},
+		},
+		{
+			name: "avg with mixed bool gives number between 0 and 1",
+			input: []datum.Datum{
+				{
+					"a": true,
+				},
+				{
+					"a": true,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group avg a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.6666666666666666,
+				},
+			},
+		},
+		{
+			name: "avg with all false gives 0",
+			input: []datum.Datum{
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group avg a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.0,
+				},
+			},
+		},
+		{
+			name:  "avg with no datums",
+			input: []datum.Datum{},
+			query: "group avg a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0,
+				},
+			},
+		},
+		{
+			name: "stddev with number",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 2,
+				},
+				{
+					"a": 3,
+				},
+			},
+			query: "group stddev a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.816496580927726,
+				},
+			},
+		},
+		{
+			name: "stddev with mixed bool gives result as stddev of 0s and 1s",
+			input: []datum.Datum{
+				{
+					"a": true,
+				},
+				{
+					"a": true,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group stddev a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.4714045207910317,
+				},
+			},
+		},
+		{
+			name: "stddev with all false gives 0",
+			input: []datum.Datum{
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group stddev a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.0,
+				},
+			},
+		},
+		{
+			name:  "stddev with no datums gives NaN",
+			input: []datum.Datum{},
+			query: "group stddev a",
+			expectedResult: []datum.Datum{
+				{
+					"a": "NaN",
+				},
+			},
+		},
+		{
+			name: "stddev with 1 datum gives NaN",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+			},
+			query: "group stddev a",
+			expectedResult: []datum.Datum{
+				{
+					"a": "NaN",
+				},
+			},
+		},
+		{
+			name: "stddev with 2 datums does not give NaN",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 2,
+				},
+			},
+			query: "group stddev a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.5,
+				},
+			},
+		},
+		{
+			name: "stddev with identical values gives 0",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 1,
+				},
+			},
+			query: "group stddev a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.0,
+				},
+			},
+		},
+		{
+			name: "count N datums",
+			input: []datum.Datum{
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group count a",
+			expectedResult: []datum.Datum{
+				{
+					"a": uint(3),
+				},
+			},
+		},
+		{
+			name: "count N datums on nonexistent field is 0",
+			input: []datum.Datum{
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group count b",
+			expectedResult: []datum.Datum{
+				{
+					"b": uint(0),
+				},
+			},
+		},
+		{
+			name: "count N datums on sometimes missing field",
+			input: []datum.Datum{
+				{
+					"a": false,
+				},
+				{
+					"b": false,
+				},
+				{
+					"a": false,
+				},
+			},
+			query: "group count b",
+			expectedResult: []datum.Datum{
+				{
+					"b": uint(1),
+				},
+			},
+		},
+		{
+			name: "count single datum",
+			input: []datum.Datum{
+				{
+					"a": false,
+				},
+			},
+			query: "group count a",
+			expectedResult: []datum.Datum{
+				{
+					"a": uint(1),
+				},
+			},
+		},
+		{
+			name:  "count no datums",
+			input: []datum.Datum{},
+			query: "group count a",
+			expectedResult: []datum.Datum{
+				{
+					"a": uint(0),
+				},
+			},
+		},
+		{
+			name: "count non-numeric type",
+			input: []datum.Datum{
+				{
+					"a": "hello",
+				},
+				{
+					"a": "world",
+				},
+				{
+					"a": "!",
+				},
+			},
+			query: "group count a",
+			expectedResult: []datum.Datum{
+				{
+					"a": uint(3),
+				},
+			},
+		},
+		{
+			name: "mode simple win",
+			input: []datum.Datum{
+				{
+					"a": 0,
+				},
+				{
+					"a": 2,
+				},
+				{
+					"a": 2,
+				},
+			},
+			query: "group mode a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 2.0,
+				},
+			},
+		},
+		{
+			name: "mode all datums equal",
+			input: []datum.Datum{
+				{
+					"a": 2,
+				},
+				{
+					"a": 2,
+				},
+				{
+					"a": 2,
+				},
+			},
+			query: "group mode a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 2.0,
+				},
+			},
+		},
+		{
+			name: "mode only cares about the specified field",
+			input: []datum.Datum{
+				{
+					"a": 1,
+					"b": 2,
+				},
+				{
+					"a": 5,
+					"b": 2,
+				},
+				{
+					"a": 5,
+					"b": 2,
+				},
+				{
+					"a": 3,
+					"b": 2,
+				},
+			},
+			query: "group mode a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 5.0,
+				},
+			},
+		},
+		// TODO: This test is flaky because the winner is non-deterministic.
+		// We need to either remove the non-determinism from the mode
+		// implementation, implement a standalone test for mode ties, or extend this
+		// test 'framework' with support for non-deterministic result sets.
+		// {
+		// 	name: "mode tie",
+		// 	input: []datum.Datum{
+		// 		{
+		// 			"a": 0,
+		// 		},
+		// 		{
+		// 			"a": 1,
+		// 		},
+		// 		{
+		// 			"a": 2,
+		// 		},
+		// 	},
+		// 	query: "group mode a",
+		// 	expectedResult: []datum.Datum{
+		// 		{
+		// 			"a": 0.0,
+		// 		},
+		// 	},
+		// },
+		{
+			name:  "mode no datums",
+			input: []datum.Datum{},
+			query: "group mode a",
+			expectedResult: []datum.Datum{
+				{
+					"a": nil,
+				},
+			},
+		},
+		{
+			name: "mode single datum",
+			input: []datum.Datum{
+				{
+					"a": 0,
+				},
+			},
+			query: "group mode a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.0,
+				},
+			},
+		},
+		{
+			name: "mode strings",
+			input: []datum.Datum{
+				{
+					"a": "hello",
+				},
+				{
+					"a": "hello",
+				},
+				{
+					"a": "world",
+				},
+			},
+			query: "group mode a",
+			expectedResult: []datum.Datum{
+				{
+					"a": "hello",
+				},
+			},
+		},
+		{
+			name: "mode booleans",
+			input: []datum.Datum{
+				{
+					"a": true,
+				},
+				{
+					"a": false,
+				},
+				{
+					"a": true,
+				},
+			},
+			query: "group mode a",
+			expectedResult: []datum.Datum{
+				{
+					"a": true,
+				},
+			},
+		},
+		{
+			name: "mode nil",
+			input: []datum.Datum{
+				{
+					"a": nil,
+				},
+				{
+					"a": false,
+				},
+				{
+					"a": nil,
+				},
+			},
+			query: "group mode a",
+			expectedResult: []datum.Datum{
+				{
+					"a": nil,
+				},
+			},
+		},
+		// TODO: This test will panic/fail until we upgrade table.go to handle
+		// arrays.
+		// TODO: Once we do the above, we will also need to update the table_test.go
+		// tests.
+		// {
+		// 	name: "mode array",
+		// 	input: []datum.Datum{
+		// 		{
+		// 			"a": []int{1, 2, 3},
+		// 		},
+		// 		{
+		// 			"a": []int{3, 4, 5},
+		// 		},
+		// 		{
+		// 			"a": []int{1, 2, 3},
+		// 		},
+		// 	},
+		// 	query: "group mode a",
+		// 	expectedResult: []datum.Datum{
+		// 		{
+		// 			"a": []int{1, 2, 4},
+		// 		},
+		// 	},
+		// },
+	}
+
+	runExecutionTestCases(t, tcs)
+}
+
+func TestAggregationsUnsupportedTypes(t *testing.T) {
+	tcs := []executionTestCase{
+		// TODO: Below will follow a variety of groups against types that are
+		// currently not supported and will always to 0 or some other zero-ish
+		// value (until we add support for it).
+		{
+			name: "sum with string",
+			input: []datum.Datum{
+				{
+					"a": "a",
+				},
+				{
+					"a": "b",
+				},
+				{
+					"a": "c",
+				},
+			},
+			query: "group sum a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.0,
+				},
+			},
+		},
+		{
+			name: "sum with null",
+			input: []datum.Datum{
+				{
+					"a": nil,
+				},
+				{
+					"a": nil,
+				},
+				{
+					"a": nil,
+				},
+			},
+			query: "group sum a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.0,
+				},
+			},
+		},
+		{
+			name: "sum with array",
+			input: []datum.Datum{
+				{
+					"a": []int{1, 2, 3},
+				},
+				{
+					"a": []int{4, 5, 6},
+				},
+				{
+					"a": []int{7, 8, 9},
+				},
+			},
+			query: "group sum a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.0,
+				},
+			},
+		},
+		{
+			name: "sum with mix of supported and unsupported types",
+			input: []datum.Datum{
+				{
+					"a": []int{1, 2, 3},
+				},
+				{
+					"a": 3,
+				},
+				{
+					"a": 4.2,
+				},
+			},
+			query: "group sum a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 7.2,
+				},
+			},
+		},
+		{
+			name: "avg with string",
+			input: []datum.Datum{
+				{
+					"a": "a",
+				},
+				{
+					"a": "b",
+				},
+				{
+					"a": "c",
+				},
+			},
+			query: "group avg a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0,
+				},
+			},
+		},
+		{
+			name: "avg with null",
+			input: []datum.Datum{
+				{
+					"a": nil,
+				},
+				{
+					"a": nil,
+				},
+				{
+					"a": nil,
+				},
+			},
+			query: "group avg a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0,
+				},
+			},
+		},
+		{
+			name: "avg with array",
+			input: []datum.Datum{
+				{
+					"a": []int{1, 2, 3},
+				},
+				{
+					"a": []int{4, 5, 6},
+				},
+				{
+					"a": []int{7, 8, 9},
+				},
+			},
+			query: "group avg a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0,
+				},
+			},
+		},
+		{
+			name: "avg with mix of supported and unsupported types",
+			input: []datum.Datum{
+				{
+					"a": []int{1, 2, 3},
+				},
+				{
+					"a": 3,
+				},
+				{
+					"a": 4.2,
+				},
+			},
+			query: "group avg a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 3.6,
+				},
+			},
+		},
+		{
+			name: "stddev with string",
+			input: []datum.Datum{
+				{
+					"a": "a",
+				},
+				{
+					"a": "b",
+				},
+				{
+					"a": "c",
+				},
+			},
+			query: "group stddev a",
+			expectedResult: []datum.Datum{
+				{
+					"a": "NaN",
+				},
+			},
+		},
+		{
+			name: "stddev with null",
+			input: []datum.Datum{
+				{
+					"a": nil,
+				},
+				{
+					"a": nil,
+				},
+				{
+					"a": nil,
+				},
+			},
+			query: "group stddev a",
+			expectedResult: []datum.Datum{
+				{
+					"a": "NaN",
+				},
+			},
+		},
+		{
+			name: "stddev with array",
+			input: []datum.Datum{
+				{
+					"a": []int{1, 2, 3},
+				},
+				{
+					"a": []int{4, 5, 6},
+				},
+				{
+					"a": []int{7, 8, 9},
+				},
+			},
+			query: "group stddev a",
+			expectedResult: []datum.Datum{
+				{
+					"a": "NaN",
+				},
+			},
+		},
+		{
+			name: "stddev with mix of supported and unsupported types",
+			input: []datum.Datum{
+				{
+					"a": []int{1, 2, 3},
+				},
+				{
+					"a": 3,
+				},
+				{
+					"a": 4.2,
+				},
+			},
+			query: "group stddev a",
+			expectedResult: []datum.Datum{
+				{
+					"a": 0.6000000000000001,
+				},
+			},
+		},
+	}
+
+	runExecutionTestCases(t, tcs)
+}
+
+/*
+Cases:
+  * do the above, but without a group key
+    * don't need to be 1:1, just get the basic happy paths
+  * missing group key field
+**/
