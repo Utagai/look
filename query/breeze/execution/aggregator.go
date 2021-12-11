@@ -50,7 +50,6 @@ func (a *avg) ingest(v interface{}) {
 	var ingestibleValue float64 = 0
 	switch ta := v.(type) {
 	case bool:
-		ingestibleValue = 0
 		if ta {
 			ingestibleValue = 1
 		}
