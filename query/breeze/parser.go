@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 )
 
@@ -278,14 +277,10 @@ func (p *Parser) parseAssignment() (*FieldAssignment, error) {
 		return nil, err
 	}
 
-	log.Println("just parsed: ", p.tokenizer.Text())
-
 	expr, err := p.parseExpr(p.tokenizer.Next())
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println("parsed expr: ", expr)
 
 	return &FieldAssignment{
 		Field:      field,
@@ -599,9 +594,6 @@ func (p *Parser) parseArray(token Token) (Array, error) {
 			return nil, fmt.Errorf("array items should be delimited by commas, but found %q", p.tokenizer.Text())
 		}
 	}
-
-	// Once we get here, we've parsed the closing '],' so we should advance past it.
-	p.tokenizer.Next()
 
 	return exprs, nil
 }

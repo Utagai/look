@@ -376,6 +376,38 @@ func TestParser(t *testing.T) {
 				},
 			},
 		},
+		{
+			query: "map foo = [1,[2,3],4]",
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: breeze.Array{
+								&breeze.Scalar{
+									Kind:        breeze.ScalarKindNumber,
+									Stringified: "1",
+								},
+								breeze.Array{
+									&breeze.Scalar{
+										Kind:        breeze.ScalarKindNumber,
+										Stringified: "2",
+									},
+									&breeze.Scalar{
+										Kind:        breeze.ScalarKindNumber,
+										Stringified: "3",
+									},
+								},
+								&breeze.Scalar{
+									Kind:        breeze.ScalarKindNumber,
+									Stringified: "4",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		// TODO: These tests below are for maps. We should take some time at some
 		// point to further flesh these out e.g. with more cases, combinations, etc.
 		{
