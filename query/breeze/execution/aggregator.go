@@ -1,6 +1,7 @@
 package execution
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -53,8 +54,8 @@ func (a *avg) ingest(v interface{}) {
 		if ta {
 			ingestibleValue = 1
 		}
-	case float64:
-		ingestibleValue = ta
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+		ingestibleValue, _ = convertPotentialNumber(ta)
 	default:
 		ingestibleValue = 0
 	}
