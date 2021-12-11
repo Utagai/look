@@ -1,12 +1,16 @@
 package execution
 
-import "math"
+import (
+	"math"
+)
 
 type aggregator interface {
 	ingest(v interface{})
 	aggregate() interface{}
 }
 
+// TODO: We could (and possibly should) convert this to use breeze.Concrete or
+// something.
 type sum struct {
 	numberTotal float64
 	numNumbers  int
@@ -22,8 +26,10 @@ type sum struct {
 func (s *sum) ingest(v interface{}) {
 	if floatValue, ok := convertPotentialNumber(v); ok {
 		s.numberTotal += floatValue
+		s.numNumbers += 1
 	} else if boolValue, ok := convertPotentialBool(v); ok {
 		s.boolTotal = s.boolTotal || boolValue
+		s.numBools += 1
 	}
 	// Otherwise, do nothing.
 }
@@ -87,11 +93,13 @@ func (c *count) aggregate() interface{} {
 // it with simpler code.
 type min struct {
 	minimumVal interface{}
+	minSet     bool
 }
 
 func (m *min) ingest(v interface{}) {
-	if m.minimumVal == nil {
+	if !m.minSet {
 		m.minimumVal = v
+		m.minSet = true
 		return
 	}
 
