@@ -48,19 +48,17 @@ type avg struct {
 }
 
 func (a *avg) ingest(v interface{}) {
-	var ingestibleValue float64 = 0
-	switch ta := v.(type) {
-	case bool:
-		if ta {
-			ingestibleValue = 1
+	if floatValue, ok := convertPotentialNumber(v); ok {
+		a.total.ingest(floatValue)
+		a.numValues++
+	} else if boolValue, ok := convertPotentialBool(v); ok {
+		if boolValue {
+			a.total.ingest(1)
+		} else {
+			a.total.ingest(0)
 		}
-	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
-		ingestibleValue, _ = convertPotentialNumber(ta)
-	default:
-		ingestibleValue = 0
+		a.numValues++
 	}
-	a.total.ingest(ingestibleValue)
-	a.numValues++
 }
 
 func (a *avg) aggregate() interface{} {
