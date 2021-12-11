@@ -37,10 +37,10 @@ func TestGenerateGoTestCases(t *testing.T) {
 		nil,
 	}
 
-	tcs := make([]testCase, 0, len(values)*len(values))
+	tcs := make([]cmpTestCase, 0, len(values)*len(values))
 	for _, a := range values {
 		for _, b := range values {
-			tcs = append(tcs, testCase{
+			tcs = append(tcs, cmpTestCase{
 				a:        a,
 				b:        b,
 				expected: execution.Compare(a, b),

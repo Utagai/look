@@ -23,13 +23,13 @@ func comparisonToSymbol(cmp execution.Comparison) string {
 	}
 }
 
-type testCase struct {
+type cmpTestCase struct {
 	a        interface{}
 	b        interface{}
 	expected execution.Comparison
 }
 
-func (tc testCase) failureMessage(actual execution.Comparison) string {
+func (tc cmpTestCase) failureMessage(actual execution.Comparison) string {
 	return fmt.Sprintf(
 		"expected a %s b, but got a %s b",
 		comparisonToSymbol(tc.expected),
@@ -37,7 +37,7 @@ func (tc testCase) failureMessage(actual execution.Comparison) string {
 	)
 }
 
-func runTestCases(t *testing.T, tcs []testCase) {
+func runCmpTestCases(t *testing.T, tcs []cmpTestCase) {
 	t.Helper()
 	for _, tc := range tcs {
 		t.Run(
@@ -55,7 +55,7 @@ func runTestCases(t *testing.T, tcs []testCase) {
 // THESE TESTS ARE GENERATED.
 // YOU HAVE BEEN WARNED.
 func TestComparison(t *testing.T) {
-	tcs := []testCase{
+	tcs := []cmpTestCase{
 		{
 			a:        "foo",
 			b:        "foo",
@@ -5177,5 +5177,5 @@ func TestComparison(t *testing.T) {
 			expected: execution.Equal,
 		},
 	}
-	runTestCases(t, tcs)
+	runCmpTestCases(t, tcs)
 }
