@@ -18,9 +18,30 @@ func NewTypeMismatchErr(expected string, actual Concrete) *TypeMismatchErr {
 	}
 }
 
+func (t *TypeMismatchErr) Error() string {
+	var kindStr string = string(t.Actual.ConcreteKind())
+	if scalar, ok := t.Actual.(*Scalar); ok {
+		kindStr = string(scalar.Kind)
+	}
+
+	errMsg := fmt.Sprintf(
+		"type error: expected %s, got '%s' (%s)",
+		t.ExpectedKind,
+		t.Actual.GetStringRepr(),
+		kindStr,
+	)
+
+	return errMsg
+}
+
 // ToEmbeddedDatumErrorMessage returns a string that is suitable for embedding
 // into a Datum as a way to communicate error messages about types on a
 // per-datum basis.
+// TODO: We need to figure out a cleaner way to do all this. So we no longer
+// attach this to every single document, which is honestly better, but now it's
+// not clear which document caused the issue. We short-circuit on errors, so
+// maybe it is sufficient to make the caller annotate this with the offending
+// document?
 func (t *TypeMismatchErr) ToEmbeddedDatumErrorMessage() *Scalar {
 	errMsg := fmt.Sprintf(
 		"[TYPE ERR: expected %s, got '%s' (%s)]",

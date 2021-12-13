@@ -13,7 +13,7 @@ func executeFunction(function *breeze.Function, args []breeze.Concrete) (breeze.
 	funcValidator, _ := breeze.LookupFuncValidator(function.Name)
 
 	if err := funcValidator.ValidateTypes(args); err != nil {
-		return err.ToEmbeddedDatumErrorMessage(), nil
+		return nil, err
 	}
 
 	switch function.Name {

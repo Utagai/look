@@ -138,12 +138,16 @@ func initializeGowid(d data.Data) {
 				queryStatusTextbox.SetText(err.Error(), app)
 				return
 			} else if err != nil {
-				log.Fatalf("failed to construct the new data: %v", err)
+				queryTextboxHolder.SetSubWidget(framedQueryTextboxValid, app)
+				queryStatusTextboxHolder.SetSubWidget(framedQueryStatusTextboxInvalid, app)
+				queryStatusTextbox.SetText(err.Error(), app)
+				return
+			} else {
+				queryTextboxHolder.SetSubWidget(framedQueryTextboxValid, app)
+				queryStatusTextboxHolder.SetSubWidget(framedQueryStatusTextboxValid, app)
+				queryStatusTextbox.SetText("Done.", app)
+				lb.SetWalker(data.NewDataWalker(newData), app)
 			}
-			queryTextboxHolder.SetSubWidget(framedQueryTextboxValid, app)
-			queryStatusTextboxHolder.SetSubWidget(framedQueryStatusTextboxValid, app)
-			queryStatusTextbox.SetText("Done.", app)
-			lb.SetWalker(data.NewDataWalker(newData), app)
 		},
 	})
 
