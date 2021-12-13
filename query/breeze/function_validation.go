@@ -38,9 +38,29 @@ func (p *powValidator) ValidateTypes(args []Concrete) *TypeMismatchErr {
 	return nil
 }
 
+type hasSubstrValidator struct{}
+
+func (p *hasSubstrValidator) ExpectedNumArgs() int {
+	return 2
+}
+
+func (p *hasSubstrValidator) ValidateTypes(args []Concrete) *TypeMismatchErr {
+	for _, arg := range args {
+		if !(arg.ConcreteKind() == ConcreteKindScalar && arg.(*Scalar).Kind == ScalarKindString) {
+			return &TypeMismatchErr{
+				ExpectedKind: string(ScalarKindString),
+				Actual:       arg,
+			}
+		}
+	}
+
+	return nil
+}
+
 var functionValidators = map[string]FunctionValidator{
-	"pow":   &powValidator{},
-	"hello": &helloValidator{},
+	"pow":       &powValidator{},
+	"hello":     &helloValidator{},
+	"hasSubstr": &hasSubstrValidator{},
 }
 
 // LookupFuncValidator looks up a function by its name and returns its validator

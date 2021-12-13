@@ -3,6 +3,7 @@ package execution
 import (
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/utagai/look/query/breeze"
 )
@@ -32,6 +33,18 @@ func executeFunction(function *breeze.Function, args []breeze.Concrete) (breeze.
 		return pow(base, exp), nil
 	case "hello":
 		return hello(), nil
+	case "hasSubstr":
+		untypedStr, err := args[0].Interface()
+		if err != nil {
+			return nil, err
+		}
+
+		untypedSubStr, err := args[1].Interface()
+		if err != nil {
+			return nil, err
+		}
+
+		return hasSubstr(untypedStr.(string), untypedSubStr.(string)), nil
 	}
 
 	return nil, fmt.Errorf("unrecognized function: %q", function.Name)
@@ -48,5 +61,12 @@ func hello() *breeze.Scalar {
 	return &breeze.Scalar{
 		Kind:        breeze.ScalarKindString,
 		Stringified: "hello world!",
+	}
+}
+
+func hasSubstr(str, substr string) *breeze.Scalar {
+	return &breeze.Scalar{
+		Kind:        breeze.ScalarKindBool,
+		Stringified: fmt.Sprintf("%v", strings.Contains(str, substr)),
 	}
 }
