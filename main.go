@@ -127,9 +127,9 @@ func initializeGowid(d data.Data) {
 	queryTextbox.OnTextSet(gowid.WidgetCallback{
 		Name: "on query text change",
 		WidgetChangedFunction: func(app gowid.IApp, w gowid.IWidget) {
-			if newText := completeSurrounds(queryTextbox.Text(), queryTextbox.CursorPos()); newText != queryTextbox.Text() {
-				queryTextbox.SetText(newText, app)
-			}
+			// if newText := completeSurrounds(queryTextbox.Text(), queryTextbox.CursorPos()); newText != queryTextbox.Text() {
+			// 	queryTextbox.SetText(newText, app)
+			// }
 			newData, err := d.Find(context.Background(), queryTextbox.Text())
 			if errors.Is(err, query.ErrUnableToParseQuery) {
 				log.Printf("incomplete query: %q", queryTextbox.Text())
