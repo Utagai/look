@@ -39,7 +39,7 @@ func (ss *SortStream) sortStream() error {
 	if err != nil {
 		return fmt.Errorf("failed to read data: %w", err)
 	}
-	sortable := sortableDatums{datums: datums, fieldName: ss.Field}
+	sortable := sortableDatums{datums: datums, fieldName: ss.Field, descending: ss.Descending}
 	sort.Sort(sortable)
 	ss.sortedDatums = sortable.datums
 	ss.sortedSource = datum.NewDatumSliceStream(sortable.datums)
@@ -49,8 +49,9 @@ func (ss *SortStream) sortStream() error {
 
 // TODO: This maybe should not be done in memory.
 type sortableDatums struct {
-	datums    []datum.Datum
-	fieldName string
+	datums     []datum.Datum
+	fieldName  string
+	descending bool
 }
 
 func (ds sortableDatums) Len() int {
@@ -73,7 +74,11 @@ func (ds sortableDatums) Less(i, j int) bool {
 		return true
 	}
 
-	return Compare(ithValue, jthValue) == Lesser
+	if !ds.descending {
+		return (Compare(ithValue, jthValue) == Lesser)
+	}
+
+	return (Compare(jthValue, ithValue) == Lesser)
 }
 
 func (ds sortableDatums) Swap(i, j int) {
