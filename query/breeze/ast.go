@@ -328,18 +328,18 @@ type Stage interface {
 	Name() string
 }
 
-// Group is a stage that performs grouping of data and aggregates computations
+// Reduce is a stage that performs reducing of data and aggregates computations
 // over them.
 // TODO: Rename to reduce, or is reduce the wrong word?
-type Group struct {
+type Reduce struct {
 	AggFunc        AggregateFunc
-	GroupByField   *string
+	ReduceByField  *string
 	AggregateField string
 }
 
 // Name implements the Stage interface.
-func (g *Group) Name() string {
-	return "group"
+func (g *Reduce) Name() string {
+	return "reduce"
 }
 
 // AggregateFunc is an aggregate function.

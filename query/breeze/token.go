@@ -29,7 +29,7 @@ const (
 	TokenStageSeparator Token = iota
 	TokenFilter
 	TokenSort
-	TokenGroup
+	TokenReduce
 	TokenMap
 
 	// Punctuators
@@ -74,8 +74,8 @@ func (t Token) String() string {
 		return "Filter"
 	case TokenSort:
 		return "Sort"
-	case TokenGroup:
-		return "Group"
+	case TokenReduce:
+		return "Reduce"
 	case TokenMap:
 		return "Map"
 	case TokenLParen:
@@ -263,8 +263,8 @@ func (t *Tokenizer) convertIdentToken(tok rune) Token {
 		return TokenFilter
 	case "sort":
 		return TokenSort
-	case "group":
-		return TokenGroup
+	case "reduce":
+		return TokenReduce
 	case "map":
 		return TokenMap
 	case "contains":

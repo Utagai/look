@@ -120,8 +120,8 @@ func (p *Parser) parseStage() (Stage, error) {
 		return p.parseFilter()
 	case TokenSort:
 		return p.parseSort()
-	case TokenGroup:
-		return p.parseGroup()
+	case TokenReduce:
+		return p.parseReduce()
 	case TokenMap:
 		return p.parseMap()
 	default:
@@ -171,15 +171,15 @@ func (p *Parser) parseSort() (*Sort, error) {
 	}, nil
 }
 
-func (p *Parser) parseGroup() (*Group, error) {
-	var groupByFieldPtr *string
+func (p *Parser) parseReduce() (*Reduce, error) {
+	var reduceByFieldPtr *string
 	if p.parseBy() {
-		groupByField, err := p.parseField()
+		reduceByField, err := p.parseField()
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse the group-by field: %w", err)
+			return nil, fmt.Errorf("failed to parse the reduce-by field: %w", err)
 		}
 
-		groupByFieldPtr = &groupByField
+		reduceByFieldPtr = &reduceByField
 	}
 
 	aggFunc, err := p.parseAggFunc()
@@ -192,9 +192,9 @@ func (p *Parser) parseGroup() (*Group, error) {
 		return nil, fmt.Errorf("failed to parse field: %w", err)
 	}
 
-	return &Group{
+	return &Reduce{
 		AggFunc:        *aggFunc,
-		GroupByField:   groupByFieldPtr,
+		ReduceByField:  reduceByFieldPtr,
 		AggregateField: aggregateField,
 	}, nil
 }

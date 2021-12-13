@@ -16,8 +16,8 @@ func Execute(stream datum.DatumStream, stages []breeze.Stage) (datum.DatumStream
 			newStream = executeFilter(ts, stream)
 		case *breeze.Sort:
 			newStream = executeSort(ts, stream)
-		case *breeze.Group:
-			newStream = executeGroup(ts, stream)
+		case *breeze.Reduce:
+			newStream = executeReduce(ts, stream)
 		case *breeze.Map:
 			newStream = executeMap(ts, stream)
 		default:

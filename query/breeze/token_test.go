@@ -19,7 +19,7 @@ var tokenToExampleStr = map[breeze.Token]string{
 	breeze.TokenStageSeparator: "|",
 	breeze.TokenFilter:         "filter",
 	breeze.TokenSort:           "sort",
-	breeze.TokenGroup:          "group",
+	breeze.TokenReduce:         "group",
 	breeze.TokenMap:            "map",
 	breeze.TokenLParen:         "(",
 	breeze.TokenRParen:         ")",

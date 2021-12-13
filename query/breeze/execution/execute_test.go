@@ -351,6 +351,7 @@ func TestFilter(t *testing.T) {
 				{},
 			},
 		},
+    // TODO: Missing tests for other binary ops like contains, etc.
 	}
 
 	runExecutionTestCases(t, tcs)
