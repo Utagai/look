@@ -33,7 +33,10 @@ func (fs *MapStream) Next() (datum.Datum, error) {
 
 		for _, assignment := range fs.Map.Assignments {
 			// If we failed, move onto the next datum.
-			if err := executeAssignment(assignment, datum); err != nil {
+			// TODO: We can avoid extra copies per assignment if we move the datum
+			// copying up here.
+			datum, err = executeAssignment(assignment, datum)
+			if err != nil {
 				return nil, fmt.Errorf("failed to execute assignment: %w", err)
 			}
 		}
