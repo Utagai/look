@@ -58,7 +58,9 @@ func main() {
 
 	var d data.Data
 	switch cfg.Backend.Type {
-	case config.BackendTypeMemory:
+	case config.BackendTypeSubstring:
+		d = data.NewMemoryData(datums, query.NewSubstringQueryExecutor())
+	case config.BackendTypeBreeze:
 		d = data.NewMemoryData(datums, query.NewLiquidQueryExecutor())
 	case config.BackendTypeMongoDB:
 		d, err = data.NewMongoDBData(cfg.Backend.MongoDB, "look", cfg.Source.Name(), datums)

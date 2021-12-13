@@ -16,17 +16,16 @@ type BackendType string
 
 // The various backend types.
 const (
-	BackendTypeMemory  = "memory"
-	BackendTypeMongoDB = "mongodb"
+	BackendTypeSubstring = "substring"
+	BackendTypeBreeze    = "breeze"
+	BackendTypeMongoDB   = "mongodb"
 )
 
 // Config represents the configuration for look.
 type Config struct {
 	Source  *os.File
 	Backend struct {
-		Type BackendType
-		// TODO: Memory should be a string denoting the memory-based QL.
-		Memory  bool
+		Type    BackendType
 		MongoDB string
 	}
 	CustomFields *custom.Fields
@@ -35,6 +34,7 @@ type Config struct {
 // Get returns the config for the current look process.
 func Get() (*Config, error) {
 	sourcePtr := flag.String("source", "", "the source of data")
+	backendPtr := flag.String("backend", BackendTypeBreeze, "the query backend to use")
 	mongodbPtr := flag.String("mongodb", "", "specify the MongoDB connection string URI")
 	customParsePtr := flag.Bool("custom-parse", false, "enables custom parsing of the input into JSON")
 
@@ -62,8 +62,8 @@ func Get() (*Config, error) {
 	cfg.Source = fi
 
 	// Backend type.
-	cfg.Backend.Type = BackendTypeMemory
-	if *mongodbPtr != "" {
+	cfg.Backend.Type = BackendType(*backendPtr)
+	if cfg.Backend.Type == BackendTypeMongoDB && *mongodbPtr != "" {
 		cfg.Backend.Type = BackendTypeMongoDB
 		cfg.Backend.MongoDB = *mongodbPtr
 	}
