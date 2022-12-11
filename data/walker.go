@@ -40,14 +40,13 @@ func NewDataWalker(data Data) *DataWalker {
 }
 
 // First implements the list.IWalkerHome interface.
-// TODO: Our variable name should probably be something other than 'f'.
-func (f *DataWalker) First() list.IWalkerPosition {
+func (dw *DataWalker) First() list.IWalkerPosition {
 	return list.ListPos(0)
 }
 
 // Last implements the list.IWalkerEnd interface.
-func (f *DataWalker) Last() list.IWalkerPosition {
-	length, err := f.data.Length(f.ctx)
+func (dw *DataWalker) Last() list.IWalkerPosition {
+	length, err := dw.data.Length(dw.ctx)
 	if err != nil {
 		log.Fatalf("failed to fetch the length for data: %v", err)
 	}
@@ -74,9 +73,9 @@ func createWidgetFor(datum datum.Datum) gowid.IWidget {
 }
 
 // At implements the list.IBoundedWalker interface.
-func (f *DataWalker) At(pos list.IWalkerPosition) gowid.IWidget {
+func (dw *DataWalker) At(pos list.IWalkerPosition) gowid.IWidget {
 	index := int(pos.(list.ListPos))
-	datum, err := f.data.At(f.ctx, index)
+	datum, err := dw.data.At(dw.ctx, index)
 	if errors.Is(err, ErrOutOfBounds) {
 		return nil
 	} else if err != nil {
@@ -88,19 +87,19 @@ func (f *DataWalker) At(pos list.IWalkerPosition) gowid.IWidget {
 }
 
 // Focus implements the list.IBoundedWalker interface.
-func (f *DataWalker) Focus() list.IWalkerPosition {
-	return f.focus
+func (dw *DataWalker) Focus() list.IWalkerPosition {
+	return dw.focus
 }
 
 // SetFocus implements the list.IBoundedWalker interface.
-func (f *DataWalker) SetFocus(pos list.IWalkerPosition, app gowid.IApp) {
-	f.focus = pos
+func (dw *DataWalker) SetFocus(pos list.IWalkerPosition, app gowid.IApp) {
+	dw.focus = pos
 }
 
 // Next implements the list.IBoundedWalker interface.
-func (f *DataWalker) Next(ipos list.IWalkerPosition) list.IWalkerPosition {
+func (dw *DataWalker) Next(ipos list.IWalkerPosition) list.IWalkerPosition {
 	pos := ipos.(list.ListPos)
-	length, err := f.data.Length(f.ctx)
+	length, err := dw.data.Length(dw.ctx)
 	if err != nil {
 		log.Fatalf("failed to get the length for data: %v", err)
 	}
@@ -112,7 +111,7 @@ func (f *DataWalker) Next(ipos list.IWalkerPosition) list.IWalkerPosition {
 }
 
 // Previous implements the list.IBoundedWalker interface.
-func (f *DataWalker) Previous(ipos list.IWalkerPosition) list.IWalkerPosition {
+func (dw *DataWalker) Previous(ipos list.IWalkerPosition) list.IWalkerPosition {
 	pos := ipos.(list.ListPos)
 	if int(pos) == 0 {
 		return list.ListPos(-1)
@@ -122,8 +121,8 @@ func (f *DataWalker) Previous(ipos list.IWalkerPosition) list.IWalkerPosition {
 }
 
 // Length implements the list.IBoundedWalker interface.
-func (f *DataWalker) Length() int {
-	length, err := f.data.Length(f.ctx)
+func (dw *DataWalker) Length() int {
+	length, err := dw.data.Length(dw.ctx)
 	if err != nil {
 		log.Fatalf("failed to get the length for data: %v", err)
 	}
