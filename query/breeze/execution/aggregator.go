@@ -173,7 +173,7 @@ type stddev struct {
 
 func (s *stddev) ingest(v interface{}) {
 	var ok bool
-	var floatVal float64 = 0
+	var floatVal float64
 	if floatVal, ok = convertPotentialNumber(v); ok {
 	} else if boolValue, ok := convertPotentialBool(v); ok {
 		if boolValue {

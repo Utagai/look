@@ -3,16 +3,11 @@ package data
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/utagai/look/datum"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-)
-
-const (
-	maxMongoDBConnectWaitTime = 10 * time.Second
 )
 
 var (
@@ -63,7 +58,10 @@ func NewMongoDBData(uri, dbName, collName string, datums []datum.Datum) (*MongoD
 }
 
 func loadDataIntoMongoDB(ctx context.Context, coll *mongo.Collection, datums []datum.Datum) error {
-	coll.Drop(ctx)
+	if err := coll.Drop(ctx); err != nil {
+		return fmt.Errorf("failed to initially drop collection: %w", err)
+	}
+
 	datumInterfaces := make([]interface{}, len(datums))
 	for i, datum := range datums {
 		datumInterfaces[i] = datum

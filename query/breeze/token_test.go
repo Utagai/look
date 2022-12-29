@@ -262,10 +262,10 @@ func TestTokenizerPosition(t *testing.T) {
 	})
 
 	// Get to second token ('9.8').
-	tok = tokenizer.Next()
+	_ = tokenizer.Next()
 
 	// Get to end
-	tok = tokenizer.Next()
+	_ = tokenizer.Next()
 
 	t.Run("tokenizer position after EOF is correct", func(t *testing.T) {
 		// NOTE: Position() follows the semantics of the scanner package's

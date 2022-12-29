@@ -54,8 +54,7 @@ func (dw *DataWalker) Last() list.IWalkerPosition {
 }
 
 func createWidgetFor(datum datum.Datum) gowid.IWidget {
-	var res gowid.IWidget
-	res = selectable.New(
+	return selectable.New(
 		palettemap.New(
 			hpadding.New(
 				text.NewFromContent(
@@ -69,7 +68,6 @@ func createWidgetFor(datum datum.Datum) gowid.IWidget {
 			palettemap.Map{},
 		),
 	)
-	return res
 }
 
 // At implements the list.IBoundedWalker interface.
