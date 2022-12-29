@@ -80,16 +80,7 @@ func TestTokenizerRecognizesScannerTokens(t *testing.T) {
 		breeze.TokenString,
 	}
 	tokenizer := breeze.NewTokenizer(input)
-	actualTokens := make([]breeze.Token, 0, len(expectedTokens))
-	for i := 0; i < len(expectedTokens); i++ {
-		tok := tokenizer.Next()
-		if tok == breeze.TokenEOF {
-			t.Fatal("expected there to be more tokens, but there was none")
-		}
-		actualTokens = append(actualTokens, tok)
-	}
-
-	require.Equal(t, expectedTokens, actualTokens)
+	expectTokens(t, tokenizer, expectedTokens)
 }
 
 func TestTokenizerText(t *testing.T) {
@@ -152,19 +143,11 @@ func TestTokenizerPeek(t *testing.T) {
 	})
 }
 
-// We want to make sure that Next() at the end of a input string does not give
-// the user a false boolean flag while still giving a meaningful (non-EOF)
-// token.
-func TestTokenizerGivesFalseAndEOFAtEnd(t *testing.T) {
+func TestTokenizerSimple(t *testing.T) {
 	input := "hello 9.8"
 	tokenizer := breeze.NewTokenizer(input)
 
-	tok := tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenIdent)
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenFloat)
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenEOF)
+	expectTokens(t, tokenizer, []breeze.Token{breeze.TokenIdent, breeze.TokenFloat})
 }
 
 func TestTokenizerWithDotPrefixedTokens(t *testing.T) {
@@ -184,56 +167,45 @@ func TestTokenizerWithFunctionStyle(t *testing.T) {
 	input := "hello foo(2, \"hi\")"
 	tokenizer := breeze.NewTokenizer(input)
 
-	tok := tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenIdent, "expected TokenIdent")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenIdent, "expected TokenIdent")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenLParen, "expected TokenLParen")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenInt, "expected TokenInt")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenComma, "expected TokenComma")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenString, "expected TokenString")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenRParen, "expected TokenRParen")
+	expectTokens(t, tokenizer, []breeze.Token{
+		breeze.TokenIdent,
+		breeze.TokenIdent,
+		breeze.TokenLParen,
+		breeze.TokenInt,
+		breeze.TokenComma,
+		breeze.TokenString,
+		breeze.TokenRParen,
+	})
 }
 
-func TestDetectsBinaryOpTokens(t *testing.T) {
+func TestTokenizerDetectsBinaryOpTokens(t *testing.T) {
 	input := "+ - / *"
 	tokenizer := breeze.NewTokenizer(input)
 
-	tok := tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenPlus, "expected TokenPlus")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenMinus, "expected TokenMinus")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenDivide, "expected TokenPlus")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenMultiply, "expected TokenMinus")
+	expectTokens(t, tokenizer, []breeze.Token{
+		breeze.TokenPlus,
+		breeze.TokenMinus,
+		breeze.TokenDivide,
+		breeze.TokenMultiply,
+	})
 }
 
-func TestDetectsArrayBrackets(t *testing.T) {
+func TestTokenizerDetectsArrayBrackets(t *testing.T) {
 	input := "[1,2]"
 	tokenizer := breeze.NewTokenizer(input)
 
-	tok := tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenLSqBracket, "expected TokenLSqBracket")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenInt, "expected TokenInt")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenComma, "expected TokenComma")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenInt, "expected TokenInt")
-	tok = tokenizer.Next()
-	require.Equal(t, tok, breeze.TokenRSqBracket, "expected TokenRSqBracket")
-
+	expectTokens(t, tokenizer, []breeze.Token{
+		breeze.TokenLSqBracket,
+		breeze.TokenInt,
+		breeze.TokenComma,
+		breeze.TokenInt,
+		breeze.TokenRSqBracket,
+	})
 }
 
-// Basically, tokens found inside of a string should be detected as indivual
-// tokens. The whole string should be one TokenString.
-func TestKnownTokensInStringAreNotDetected(t *testing.T) {
+// Basically, tokens found inside of a string should not be detected
+// as indivual tokens. The whole string should be one TokenString.
+func TestTokenizerKnownTokensInStringAreNotDetected(t *testing.T) {
 	allExampleStrings := make([]string, expectedNumBreezeTokenTypes)
 	for i := 0; i < expectedNumBreezeTokenTypes; i++ {
 		allExampleStrings[i] = tokenToExampleStr[breeze.Token(i)]
@@ -299,4 +271,21 @@ func TestTokenStringerIsExhaustive(t *testing.T) {
 		tokenStr := breeze.Token(expectedNumBreezeTokenTypes).String()
 		t.Fatalf("got a value for token number %d, but did not expect to: %q", expectedNumBreezeTokenTypes, tokenStr)
 	})
+}
+
+func expectTokens(t *testing.T, tokenizer breeze.Tokenizer, expectedTokens []breeze.Token) {
+	for i, expectedToken := range expectedTokens {
+		actualToken := tokenizer.Next()
+		if actualToken == breeze.TokenEOF {
+			t.Fatalf("expected %d tokens, but found only %d", len(expectedTokens), i+1)
+			return
+		}
+		require.Equal(t, actualToken, expectedToken, fmt.Sprintf("expected %q, got %q", expectedToken.String(), actualToken.String()))
+	}
+
+	tok := tokenizer.Next()
+	if tok != breeze.TokenEOF {
+		t.Fatalf("expected there to be only %d tokens, but found at least one extra one (%q)", len(expectedTokens), tok.String())
+		return
+	}
 }
