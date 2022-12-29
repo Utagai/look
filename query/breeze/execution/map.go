@@ -7,7 +7,7 @@ import (
 	"github.com/utagai/look/query/breeze"
 )
 
-func executeMap(filter *breeze.Map, stream datum.DatumStream) *MapStream {
+func executeMap(filter *breeze.Map, stream datum.Stream) *MapStream {
 	return &MapStream{
 		Map:    filter,
 		source: stream,
@@ -17,7 +17,7 @@ func executeMap(filter *breeze.Map, stream datum.DatumStream) *MapStream {
 // MapStream is an implementation of datum.Stream for the filter stage.
 type MapStream struct {
 	*breeze.Map
-	source datum.DatumStream
+	source datum.Stream
 }
 
 // Next implements the datum.DatumStream interface.

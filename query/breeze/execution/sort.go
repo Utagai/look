@@ -8,7 +8,7 @@ import (
 	"github.com/utagai/look/query/breeze"
 )
 
-func executeSort(sort *breeze.Sort, stream datum.DatumStream) *SortStream {
+func executeSort(sort *breeze.Sort, stream datum.Stream) *SortStream {
 	return &SortStream{
 		Sort:   sort,
 		source: stream,
@@ -19,8 +19,8 @@ func executeSort(sort *breeze.Sort, stream datum.DatumStream) *SortStream {
 type SortStream struct {
 	*breeze.Sort
 	sortedDatums []datum.Datum
-	source       datum.DatumStream
-	sortedSource datum.DatumStream
+	source       datum.Stream
+	sortedSource datum.Stream
 }
 
 // Next implements the DatumStream interface.
@@ -41,7 +41,7 @@ func (ss *SortStream) sortStream() error {
 	sortable := sortableDatums{datums: datums, fieldName: ss.Field}
 	sort.Sort(sortable)
 	ss.sortedDatums = sortable.datums
-	ss.sortedSource = datum.NewDatumSliceStream(sortable.datums)
+	ss.sortedSource = datum.NewSliceStream(sortable.datums)
 
 	return nil
 }

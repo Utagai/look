@@ -4,11 +4,11 @@ import (
 	"io"
 )
 
-type DatumStream interface {
+type Stream interface {
 	Next() (Datum, error)
 }
 
-func StreamToSlice(stream DatumStream) ([]Datum, error) {
+func StreamToSlice(stream Stream) ([]Datum, error) {
 	datums := []Datum{}
 	for {
 		datum, err := stream.Next()

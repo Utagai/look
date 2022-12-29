@@ -8,9 +8,9 @@ import (
 )
 
 // Execute executes the given series of stages on the given datum stream.
-func Execute(stream datum.DatumStream, stages []breeze.Stage) (datum.DatumStream, error) {
+func Execute(stream datum.Stream, stages []breeze.Stage) (datum.Stream, error) {
 	for _, stage := range stages {
-		var newStream datum.DatumStream
+		var newStream datum.Stream
 		switch ts := stage.(type) {
 		case *breeze.Filter:
 			newStream = executeFilter(ts, stream)

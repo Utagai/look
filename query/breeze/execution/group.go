@@ -8,7 +8,7 @@ import (
 	"github.com/utagai/look/query/breeze"
 )
 
-func executeGroup(group *breeze.Group, stream datum.DatumStream) *GroupStream {
+func executeGroup(group *breeze.Group, stream datum.Stream) *GroupStream {
 	return &GroupStream{
 		Group:  group,
 		source: stream,
@@ -18,8 +18,8 @@ func executeGroup(group *breeze.Group, stream datum.DatumStream) *GroupStream {
 // GroupStream is an implementation of datum.DatumStream for the group stage.
 type GroupStream struct {
 	*breeze.Group
-	source        datum.DatumStream
-	groupedSource datum.DatumStream
+	source        datum.Stream
+	groupedSource datum.Stream
 }
 
 // Next implements the datum.DatumStream interface.
@@ -41,16 +41,16 @@ func (ss *GroupStream) groupSource() error {
 		aggregateResults[i] = ss.aggregateStream(source)
 	}
 
-	ss.groupedSource = datum.NewDatumSliceStream(aggregateResults)
+	ss.groupedSource = datum.NewSliceStream(aggregateResults)
 
 	return nil
 }
 
-func (ss *GroupStream) splitSource() []datum.DatumStream {
+func (ss *GroupStream) splitSource() []datum.Stream {
 	if ss.GroupByField == nil {
 		// If there isn't a group by condition then we are simply aggregating over
 		// the entire input, so return just the original input:
-		return []datum.DatumStream{ss.source}
+		return []datum.Stream{ss.source}
 	}
 
 	// Otherwise, we need to split apart the input stream by the group by field
@@ -82,10 +82,10 @@ func (ss *GroupStream) splitSource() []datum.DatumStream {
 	}
 
 	groupByFieldValues := table.Keys()
-	splitSources := make([]datum.DatumStream, len(groupByFieldValues))
+	splitSources := make([]datum.Stream, len(groupByFieldValues))
 	for i, groupByFieldValue := range groupByFieldValues {
 		aggregateFieldValues := table.Get(groupByFieldValue)
-		splitSources[i] = datum.NewDatumSliceStream(aggregateFieldValues.([]datum.Datum))
+		splitSources[i] = datum.NewSliceStream(aggregateFieldValues.([]datum.Datum))
 	}
 
 	return splitSources
@@ -112,7 +112,7 @@ func (ss *GroupStream) getAggregator() aggregator {
 	}
 }
 
-func (ss *GroupStream) aggregateStream(input datum.DatumStream) datum.Datum {
+func (ss *GroupStream) aggregateStream(input datum.Stream) datum.Datum {
 	agg := ss.getAggregator()
 
 	for datum, err := input.Next(); err != io.EOF; datum, err = input.Next() {

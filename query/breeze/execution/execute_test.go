@@ -52,7 +52,7 @@ func runExecutionTestCase(t *testing.T, tc executionTestCase) {
 	stages, err := parser.Parse()
 	require.NoError(t, err)
 
-	result, err := execution.Execute(datum.NewDatumSliceStream(tc.input), stages)
+	result, err := execution.Execute(datum.NewSliceStream(tc.input), stages)
 	if tc.expectedExecErr != nil {
 		require.Error(t, err)
 		require.ErrorIs(t, err, tc.expectedExecErr)

@@ -5,7 +5,7 @@ import (
 	"github.com/utagai/look/query/breeze"
 )
 
-func executeFilter(filter *breeze.Filter, stream datum.DatumStream) *FilterStream {
+func executeFilter(filter *breeze.Filter, stream datum.Stream) *FilterStream {
 	return &FilterStream{
 		Filter: filter,
 		source: stream,
@@ -15,7 +15,7 @@ func executeFilter(filter *breeze.Filter, stream datum.DatumStream) *FilterStrea
 // FilterStream is an implementation of datum.Stream for the filter stage.
 type FilterStream struct {
 	*breeze.Filter
-	source datum.DatumStream
+	source datum.Stream
 }
 
 // Next implements the datum.DatumStream interface.

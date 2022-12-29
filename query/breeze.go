@@ -22,7 +22,7 @@ func (s *LiquidQueryExecutor) Find(q string, datums []datum.Datum) ([]datum.Datu
 		return nil, fmt.Errorf("%w:\n%v", ErrUnableToParseQuery, parseErr.ErrorDescription())
 	}
 
-	var stream datum.DatumStream = datum.NewDatumSliceStream(datums)
+	var stream datum.Stream = datum.NewSliceStream(datums)
 	stream, err = execution.Execute(stream, stages)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute: %w", err)
