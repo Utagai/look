@@ -12,6 +12,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.19.x
+          cache: true
 
       - name: Build
         run: go build -v ./...
@@ -24,5 +25,6 @@ jobs:
 
       - name: Spin up MongoDB
         run: docker run -d -p 27017:27017 mongo:latest
+
       - name: Test
         run: go test -v ./...
