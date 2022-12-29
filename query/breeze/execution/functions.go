@@ -3,6 +3,7 @@ package execution
 import (
 	"fmt"
 	"math"
+	"regexp"
 
 	"github.com/utagai/look/query/breeze"
 )
@@ -16,6 +17,10 @@ func executeFunction(function *breeze.Function, args []breeze.Concrete) (breeze.
 		return err.ToEmbeddedDatumErrorMessage(), nil
 	}
 
+	if err := funcValidator.ValidateValues(args); err != nil {
+		return nil, err
+	}
+
 	switch function.Name {
 	case "pow":
 		untypedBase, err := args[0].Interface()
@@ -23,6 +28,7 @@ func executeFunction(function *breeze.Function, args []breeze.Concrete) (breeze.
 			return nil, err
 		}
 		base := untypedBase.(float64)
+
 		untypedExp, err := args[1].Interface()
 		if err != nil {
 			return nil, err
@@ -30,6 +36,22 @@ func executeFunction(function *breeze.Function, args []breeze.Concrete) (breeze.
 		exp := untypedExp.(float64)
 
 		return pow(base, exp), nil
+	case "regex":
+		untypedMatchee, err := args[0].Interface()
+		if err != nil {
+			return nil, err
+		}
+		matchee := untypedMatchee.(string)
+
+		untypedPattern, err := args[1].Interface()
+		if err != nil {
+			return nil, err
+		}
+		// This will always compile because we've already validated it in
+		// the validator for regex.
+		pattern := regexp.MustCompile(untypedPattern.(string))
+
+		return regex(matchee, pattern), nil
 	case "hello":
 		return hello(), nil
 	}
@@ -41,6 +63,13 @@ func pow(base float64, exp float64) *breeze.Scalar {
 	return &breeze.Scalar{
 		Kind:        breeze.ScalarKindNumber,
 		Stringified: fmt.Sprintf("%f", math.Pow(base, exp)),
+	}
+}
+
+func regex(matchee string, pattern *regexp.Regexp) *breeze.Scalar {
+	return &breeze.Scalar{
+		Kind:        breeze.ScalarKindBool,
+		Stringified: fmt.Sprintf("%t", len(pattern.FindString(matchee)) > 0),
 	}
 }
 
