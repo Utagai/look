@@ -30,26 +30,6 @@ import (
 *     cause failures or issues can cause development friction.
 **/
 
-/*
-Cases to think about:
-	* sort
-	* map
-	* project
-	* expressions
-		- scalars
-		- field ref
-		- functions
-		- combination of above
-	* array
-		- empty
-		- singleton
-		- N scalars
-		- N function evals
-		- N field refs
-		- N combos
-		- nested arrays
-**/
-
 type executionTestCase struct {
 	name              string
 	input             []datum.Datum
@@ -1869,10 +1849,3 @@ func TestFunctions(t *testing.T) {
 
 	runExecutionTestCases(t, tcs)
 }
-
-/*
-Cases:
-  * do the above, but without a group key
-    * don't need to be 1:1, just get the basic happy paths
-  * missing group key field
-**/
