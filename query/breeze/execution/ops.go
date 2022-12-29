@@ -2,6 +2,7 @@ package execution
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/utagai/look/datum"
 	"github.com/utagai/look/query/breeze"
@@ -17,6 +18,12 @@ func evaluateOp(left, right breeze.Concrete, op breeze.BinaryOp, datum datum.Dat
 		return evaluateMultiply(left, right, op, datum)
 	case breeze.BinaryOpDivide:
 		return evaluateDivide(left, right, op, datum)
+	case breeze.BinaryOpEquals:
+		return evaluateComparisonOp(left, right, op, datum)
+	case breeze.BinaryOpGeq:
+		return evaluateComparisonOp(left, right, op, datum)
+	case breeze.BinaryOpContains:
+		return evaluateContains(left, right, datum)
 	default:
 		panic(fmt.Sprintf("unrecognized operator: %q", op))
 	}
@@ -86,6 +93,38 @@ func evaluateDivide(left, right breeze.Concrete, op breeze.BinaryOp, datum datum
 	}, nil
 }
 
+func evaluateComparisonOp(left, right breeze.Concrete, op breeze.BinaryOp, datum datum.Datum) (*breeze.Scalar, error) {
+	var desiredComparison Comparison = Equal
+	switch op {
+	case breeze.BinaryOpEquals:
+		desiredComparison = Equal
+	case breeze.BinaryOpGeq:
+		desiredComparison = Lesser
+	default:
+		panic(fmt.Sprintf("unreachable: evaluateComparisonOp() called with %q", op))
+	}
+
+	leftIf, err := left.Interface()
+	if err != nil {
+		return nil, err
+	}
+
+	rightIf, err := right.Interface()
+	if err != nil {
+		return nil, err
+	}
+
+	return boolToConcrete(Compare(leftIf, rightIf) == desiredComparison), nil
+}
+
+func evaluateContains(left, right breeze.Concrete, datum datum.Datum) (*breeze.Scalar, error) {
+	if err := checkTypes(left, breeze.ScalarKindString, right, breeze.ScalarKindString); err != nil {
+		return err.ToEmbeddedDatumErrorMessage(), nil
+	}
+
+	return boolToConcrete(strings.Contains(left.GetStringRepr(), right.GetStringRepr())), nil
+}
+
 func checkTypes(
 	actualLeft breeze.Concrete, expectedLeft breeze.ScalarKind,
 	actualRight breeze.Concrete, expectedRight breeze.ScalarKind,
@@ -112,4 +151,11 @@ func getLeftAndRightNums(left breeze.Concrete, right breeze.Concrete) (float64, 
 	}
 
 	return leftNum.(float64), rightNum.(float64), nil
+}
+
+func boolToConcrete(b bool) *breeze.Scalar {
+	return &breeze.Scalar{
+		Kind:        breeze.ScalarKindBool,
+		Stringified: fmt.Sprintf("%t", b),
+	}
 }

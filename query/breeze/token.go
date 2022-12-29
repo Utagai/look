@@ -272,6 +272,10 @@ func (t *Tokenizer) convertIdentToken(tok rune) Token {
 	case "exists":
 		return TokenExists
 	case "!exists":
+		// HACK: This is likely not how we should be doing
+		// this... instead, we should be parsing the unary operator as an
+		// expr, and then use ! as its own operator that applies to that
+		// expr, inverting its final value.
 		return TokenExistsNot
 	case "false":
 		return TokenFalse

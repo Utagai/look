@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 )
 
@@ -126,29 +127,30 @@ func (p *Parser) parseStage() (Stage, error) {
 }
 
 func (p *Parser) parseFilter() (*Filter, error) {
-	uChecks := []*UnaryCheck{}
-	bChecks := []*BinaryCheck{}
+	exprs := []Expr{}
 	for {
-		if token, _ := p.tokenizer.Peek(); token == TokenStageSeparator || token == TokenEOF {
+		token, _ := p.tokenizer.Peek()
+		if token == TokenStageSeparator || token == TokenEOF {
 			break // No more checks to parse.
+		} else if token == TokenComma {
+			p.tokenizer.Next()
+			continue
 		}
-		uCheck, bCheck, err := p.parseCheck()
+
+		expr, err := p.parseExpr(p.tokenizer.Next())
 		if err == io.EOF {
 			break // No more checks to parse.
 		} else if err != nil {
-			return nil, fmt.Errorf("failed to parse check: %w", err)
+			return nil, fmt.Errorf("failed to parse filter expression: %w", err)
 		}
 
-		switch {
-		case uCheck != nil:
-			uChecks = append(uChecks, uCheck)
-		case bCheck != nil:
-			bChecks = append(bChecks, bCheck)
-		default:
-			panic("unreachable, if err == nil => uCheck | bCheck cannot be nil")
-		}
+		exprs = append(exprs, expr)
 	}
-	return &Filter{UnaryChecks: uChecks, BinaryChecks: bChecks}, nil
+
+	if len(exprs) > 0 {
+		log.Printf("Returning exprs: %+v", exprs[0])
+	}
+	return &Filter{Exprs: exprs}, nil
 }
 
 func (p *Parser) parseSort() (*Sort, error) {
@@ -224,36 +226,6 @@ func (p *Parser) parseBy() bool {
 	return false
 }
 
-func (p *Parser) parseCheck() (*UnaryCheck, *BinaryCheck, error) {
-	field, err := p.parseField()
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse field: %w", err)
-	}
-
-	uOp, bOp, err := p.parseOp()
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse op: %w", err)
-	}
-
-	if uOp != "" {
-		return &UnaryCheck{
-			Field: field,
-			Op:    uOp,
-		}, nil, nil
-	}
-
-	value, err := p.parseExpr(p.tokenizer.Next())
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse constant value: %w", err)
-	}
-
-	return nil, &BinaryCheck{
-		Field: field,
-		Expr:  value,
-		Op:    bOp,
-	}, nil
-}
-
 func (p *Parser) parseAssignment() (*FieldAssignment, error) {
 	field, err := p.parseField()
 	if err != nil {
@@ -291,40 +263,6 @@ func (p *Parser) parseField() (string, error) {
 	}
 
 	return "", fmt.Errorf("expected a field identifier, but got %q (%s)", p.tokenizer.Text(), token.String())
-}
-
-func (p *Parser) parseOp() (UnaryOp, BinaryCmpOp, error) {
-	token := p.tokenizer.Next()
-	if token == TokenEOF {
-		return "", "", errors.New("expected an operator, but reached end of query")
-	}
-
-	if uOp, err := p.parseUnaryOp(token); err == nil {
-		return uOp, "", nil
-	} else if bOp, err := p.parseBinaryCmpOp(token); err == nil {
-		return "", bOp, nil
-	}
-
-	return "", "", fmt.Errorf("unrecognized operator: %q (%v)", p.tokenizer.Text(), token)
-}
-
-func (p *Parser) parseUnaryOp(token Token) (UnaryOp, error) {
-	switch token {
-	case TokenExists, TokenExistsNot:
-		return UnaryOp(p.tokenizer.Text()), nil
-	default:
-		return "", fmt.Errorf("unrecognized unary operator: %q (%v)", p.tokenizer.Text(), token)
-	}
-
-}
-
-func (p *Parser) parseBinaryCmpOp(token Token) (BinaryCmpOp, error) {
-	switch token {
-	case TokenGEQ, TokenEquals, TokenContains:
-		return BinaryCmpOp(p.tokenizer.Text()), nil
-	default:
-		return "", fmt.Errorf("unrecognized binary operator: %q (%v)", p.tokenizer.Text(), token)
-	}
 }
 
 func (p *Parser) parseEquals(token Token) error {
@@ -511,6 +449,12 @@ func (p *Parser) parseBinaryOp(token Token) (BinaryOp, error) {
 		return BinaryOpMultiply, nil
 	case TokenDivide:
 		return BinaryOpDivide, nil
+	case TokenEquals:
+		return BinaryOpEquals, nil
+	case TokenGEQ:
+		return BinaryOpGeq, nil
+	case TokenContains:
+		return BinaryOpContains, nil
 	}
 
 	return "", fmt.Errorf("unrecognized binary operator: %q (%v)", p.tokenizer.Text(), token)
@@ -592,6 +536,10 @@ func (p *Parser) parseFieldRef(token Token) (*FieldRef, error) {
 
 	if !strings.HasPrefix(fieldRefText, ".") {
 		return nil, fmt.Errorf("field references must start with '.'")
+	}
+
+	if len(fieldRefText) == 1 { // It is just the '.'
+		return nil, fmt.Errorf("missing field name")
 	}
 
 	return &FieldRef{

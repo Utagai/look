@@ -102,6 +102,7 @@ var functionValidators = map[string]FunctionValidator{
 	"pow":   &powValidator{},
 	"hello": &helloValidator{},
 	"regex": &regexValidator{},
+	// TODO: We need to create functions for exists() and notexists().
 }
 
 // LookupFuncValidator looks up a function by its name and returns its validator

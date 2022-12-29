@@ -18,6 +18,12 @@ const (
 	BinaryOpMultiply BinaryOp = "*"
 	// BinaryOpDivide is the equality operation.
 	BinaryOpDivide BinaryOp = "/"
+	// BinaryOpEquals is the equality operation.
+	BinaryOpEquals BinaryOp = "="
+	// BinaryOpGeq is the greater-than-or-equal operation.
+	BinaryOpGeq BinaryOp = ">"
+	// BinaryOpContains is the contains operation.
+	BinaryOpContains BinaryOp = "contains"
 )
 
 // ExprKind denotes the kind of expression.
@@ -248,53 +254,9 @@ type Value interface {
 	ValueKind() ValueKind
 }
 
-// UnaryOp enumerates the kinds of unary operations in breeze.
-type UnaryOp string
-
-const (
-	// UnaryOpExists is the field existence operator.
-	UnaryOpExists UnaryOp = "exists"
-	// UnaryOpExistsNot is the field non-existence operator.
-	UnaryOpExistsNot = "!exists"
-)
-
-// UnaryCheck is a filter condition for a filter that uses a unary operation.
-type UnaryCheck struct {
-	Field string
-	Op    UnaryOp
-}
-
-func (c *UnaryCheck) String() string {
-	return fmt.Sprintf("%s %s", c.Field, c.Op)
-}
-
-// BinaryCmpOp enumerates the kinds of binary comparison operations in breeze.
-type BinaryCmpOp string
-
-const (
-	// BinaryOpEquals is the equality operation.
-	BinaryOpEquals BinaryCmpOp = "="
-	// BinaryOpGeq is the greater-than-or-equal operation.
-	BinaryOpGeq = ">"
-	// BinaryOpContains is the contains operation.
-	BinaryOpContains = "contains"
-)
-
-// BinaryCheck is a filter condition for filter that uses a binary operation.
-type BinaryCheck struct {
-	Field string
-	Expr  Expr
-	Op    BinaryCmpOp
-}
-
-func (c *BinaryCheck) String() string {
-	return fmt.Sprintf("%s %s %v", c.Field, c.Op, c.Expr)
-}
-
 // Filter is a stage that applies a series of filters to the data.
 type Filter struct {
-	UnaryChecks  []*UnaryCheck
-	BinaryChecks []*BinaryCheck
+	Exprs []Expr
 }
 
 // Name implements the Stage interface.

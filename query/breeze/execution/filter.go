@@ -28,18 +28,24 @@ outer:
 			return nil, err
 		}
 
-		for _, check := range fs.Filter.UnaryChecks {
-			// If we failed, move onto the next datum.
-			if !executeUnaryCheck(check, datum) {
+		for _, expr := range fs.Filter.Exprs {
+			val, err := evaluateExpr(expr, datum)
+			if err != nil {
+				return nil, err
+			}
+
+			if val == nil {
 				continue outer
 			}
-		}
 
-		for _, check := range fs.Filter.BinaryChecks {
-			// If we failed, move onto the next datum.
-			if pass, err := executeBinaryCheck(check, datum); err != nil {
-				return nil, err
-			} else if !pass {
+			if res, ok := val.(bool); ok {
+				if !res {
+					// If any of these results return false, then the whole
+					// filter condition for the datum returns false as they are
+					// all implicitly AND'd together.
+					continue outer
+				}
+			} else {
 				continue outer
 			}
 		}
