@@ -20,6 +20,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+
       - name: Spin up MongoDB
         run: docker run -d -p 27017:27017 mongo:latest
       - name: Test
