@@ -16,8 +16,11 @@ jobs:
       - name: Build
         run: go build -v ./...
 
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Spin up MongoDB
         run: docker run -d -p 27017:27017 mongo:latest
-
       - name: Test
         run: go test -v ./...
