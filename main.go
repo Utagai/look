@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
-	"strings"
 
 	"github.com/gcla/gowid"
 	"github.com/gcla/gowid/examples"
@@ -122,9 +120,6 @@ func initializeGowid(d data.Data) {
 	queryTextbox.OnTextSet(gowid.WidgetCallback{
 		Name: "on query text change",
 		WidgetChangedFunction: func(app gowid.IApp, w gowid.IWidget) {
-			if newText := completeSurrounds(queryTextbox.Text(), queryTextbox.CursorPos()); newText != queryTextbox.Text() {
-				queryTextbox.SetText(newText, app)
-			}
 			newData, err := d.Find(context.Background(), queryTextbox.Text())
 			if errors.Is(err, query.ErrUnableToParseQuery) {
 				log.Printf("incomplete query: %q", queryTextbox.Text())
@@ -168,55 +163,4 @@ func initializeGowid(d data.Data) {
 	examples.ExitOnErr(err)
 
 	app.SimpleMainLoop()
-}
-
-type surrounder struct {
-	left  string
-	right string
-}
-
-// completeSurrounds auto-completes things like brackets and quotes in the query
-// string.
-func completeSurrounds(text string, pos int) string {
-	if pos+1 > len(text) {
-		return text
-	}
-
-	prefix := text[:pos+1]
-	suffix := text[pos+1:]
-
-	surrounders := []surrounder{
-		{
-			left:  "{",
-			right: "}",
-		},
-		{
-			left:  "[",
-			right: "]",
-		},
-		{
-			left:  "\"",
-			right: "\"",
-		},
-		{
-			left:  "'",
-			right: "'",
-		},
-	}
-
-	for _, surrounder := range surrounders {
-		if newText := surround(prefix, suffix, pos, surrounder); newText != text {
-			return newText
-		}
-	}
-
-	return text
-}
-
-func surround(prefix, suffix string, pos int, surrounder surrounder) string {
-	if strings.HasSuffix(prefix, surrounder.left) && !strings.HasPrefix(suffix, surrounder.right) {
-		return fmt.Sprintf("%s%s%s", prefix, surrounder.right, suffix)
-	}
-
-	return fmt.Sprintf("%s%s", prefix, suffix)
 }
