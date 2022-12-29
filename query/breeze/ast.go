@@ -102,40 +102,40 @@ type Scalar struct {
 }
 
 // ValueKind implements the Value interface.
-func (c *Scalar) ValueKind() ValueKind {
+func (s *Scalar) ValueKind() ValueKind {
 	return ValueKindScalar
 }
 
 // GetStringRepr implements the Expr interface.
-func (c *Scalar) GetStringRepr() string {
-	return c.Stringified
+func (s *Scalar) GetStringRepr() string {
+	return s.Stringified
 }
 
 // ExprKind implements the Expr interface.
-func (c *Scalar) ExprKind() ExprKind {
+func (s *Scalar) ExprKind() ExprKind {
 	return ExprKindTerm
 }
 
 // ConcreteKind implements the Concrete interface.
 // TODO: The member variable 'c' does not match the starting 'S' of scalar.
-func (c *Scalar) ConcreteKind() ConcreteKind {
+func (s *Scalar) ConcreteKind() ConcreteKind {
 	return ConcreteKindScalar
 }
 
 // Interface implements the Concrete interface.
-func (c *Scalar) Interface() (interface{}, error) {
-	switch c.Kind {
+func (s *Scalar) Interface() (interface{}, error) {
+	switch s.Kind {
 	case ScalarKindString:
-		return c.Stringified, nil
+		return s.Stringified, nil
 	case ScalarKindNumber:
-		f64, _ := strconv.ParseFloat(c.Stringified, 64)
+		f64, _ := strconv.ParseFloat(s.Stringified, 64)
 		return f64, nil
 	case ScalarKindBool:
-		return c.Stringified == "true", nil
+		return s.Stringified == "true", nil
 	case ScalarKindNull:
 		return nil, nil
 	default:
-		panic(fmt.Sprintf("unexpected const kind: %q", c.Kind))
+		panic(fmt.Sprintf("unexpected const kind: %q", s.Kind))
 	}
 }
 
