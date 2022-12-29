@@ -1,4 +1,4 @@
-name: look CI
+name: build
 
 on: [push]
 
