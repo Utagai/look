@@ -1870,11 +1870,11 @@ func TestFunctions(t *testing.T) {
 			expectedResult: []datum.Datum{
 				{
 					"a":   1,
-					"res": "[TYPE ERR: expected number, got 'foo' (scalar)]%!(EXTRA breeze.ScalarKind=string)",
+					"res": "[TYPE ERR: expected number, got 'foo' (string)]",
 				},
 				{
 					"a":   2,
-					"res": "[TYPE ERR: expected number, got 'foo' (scalar)]%!(EXTRA breeze.ScalarKind=string)",
+					"res": "[TYPE ERR: expected number, got 'foo' (string)]",
 				},
 			},
 		},
@@ -1914,11 +1914,11 @@ func TestFunctions(t *testing.T) {
 			expectedResult: []datum.Datum{
 				{
 					"a":   1,
-					"res": "[TYPE ERR: expected string, got '1' (scalar)]%!(EXTRA breeze.ScalarKind=number)",
+					"res": "[TYPE ERR: expected string, got '1' (number)]",
 				},
 				{
 					"a":   2,
-					"res": "[TYPE ERR: expected string, got '2' (scalar)]%!(EXTRA breeze.ScalarKind=number)",
+					"res": "[TYPE ERR: expected string, got '2' (number)]",
 				},
 			},
 		},
