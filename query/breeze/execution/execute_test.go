@@ -1878,6 +1878,50 @@ func TestFunctions(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "regex successful execution",
+			input: []datum.Datum{
+				{
+					"a": "hello world",
+				},
+				{
+					"a": "goodbye world",
+				},
+			},
+			query: `map res = regex(.a, "hello")`,
+			expectedResult: []datum.Datum{
+				{
+					"a":   "hello world",
+					"res": true,
+				},
+				{
+					"a":   "goodbye world",
+					"res": false,
+				},
+			},
+		},
+		{
+			name: "regex wrong type",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 2,
+				},
+			},
+			query: `map res = regex(.a, "foo")`,
+			expectedResult: []datum.Datum{
+				{
+					"a":   1,
+					"res": "[TYPE ERR: expected string, got '1' (scalar)]%!(EXTRA breeze.ScalarKind=number)",
+				},
+				{
+					"a":   2,
+					"res": "[TYPE ERR: expected string, got '2' (scalar)]%!(EXTRA breeze.ScalarKind=number)",
+				},
+			},
+		},
 	}
 
 	runExecutionTestCases(t, tcs)
