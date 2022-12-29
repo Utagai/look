@@ -24,7 +24,6 @@ var (
 )
 
 type MongoDBData struct {
-	// TODO: We should have a way to clean these up.
 	client    *mongo.Client
 	resultSet *indexableResult
 	cache     *mongoDBDataCache

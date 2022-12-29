@@ -12,7 +12,6 @@ var (
 )
 
 // Data is an in-memory group of JSON items.
-// TODO: These methods should probably take a context and return an error (replacing bool when exists).
 type Data interface {
 	// At returns the datum at the given index. If the given index is
 	// out-of-bounds (< 0 || > .Length()), then this should return (nil, false).

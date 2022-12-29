@@ -19,7 +19,7 @@ const (
 	// If we ever have issues with this, we can make everything off of iota and
 	// write a conversion function.
 
-	// TODO: OK, so this is technically wrong. In particular, we should not be
+	// HACK: OK, so this is technically wrong. In particular, we should not be
 	// making tokens for every 'keyword' in the language here. We should only be
 	// identifying idents here, and the parser level that has more context can
 	// decide how to interpret the ident, namely for the sake of determining if a

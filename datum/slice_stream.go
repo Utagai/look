@@ -4,7 +4,6 @@ import (
 	"io"
 )
 
-// TODO: This should be in datum package.
 type DatumSliceStream struct {
 	datums []Datum
 	i      int

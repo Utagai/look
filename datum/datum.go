@@ -10,7 +10,7 @@ type Datum map[string]interface{}
 func (d Datum) String() string {
 	jsonString, err := json.Marshal(d)
 	if err != nil {
-		// TODO: Should we handle this a bit better?
+		// Datums are always created from JSON initially, so this should never error.
 		panic(err)
 	}
 

@@ -8,16 +8,12 @@ import (
 )
 
 // Parser parses breeze queries.
-// TODO: It is weird that this parser can only run once. I think we should be
-// make this create actual parser instances or something that do expire, or
-// something.
 type Parser struct {
 	input     string
 	tokenizer Tokenizer
 }
 
 // NewParser creates a Parser.
-// TODO: This should take in a map of function -> validators.
 func NewParser(input string) *Parser {
 	return &Parser{
 		input:     input,
@@ -136,8 +132,6 @@ func (p *Parser) parseFilter() (*Filter, error) {
 		if token, _ := p.tokenizer.Peek(); token == TokenStageSeparator || token == TokenEOF {
 			break // No more checks to parse.
 		}
-		// TODO: I think our code might actually be a lot cleaner if we went with a single
-		// Check type that covers both the unary & binary case.
 		uCheck, bCheck, err := p.parseCheck()
 		if err == io.EOF {
 			break // No more checks to parse.
@@ -207,8 +201,6 @@ func (p *Parser) parseMap() (*Map, error) {
 			break // No more checks to parse.
 		}
 
-		// TODO: I think our code might actually be a lot cleaner if we went with a single
-		// Check type that covers both the unary & binary case.
 		assignment, err := p.parseAssignment()
 		if err == io.EOF {
 			break // No more checks to parse.
@@ -294,18 +286,10 @@ func (p *Parser) parseField() (string, error) {
 		return "", errors.New("expected a field, but reached end of query")
 	}
 
-	// TODO: When we fix the fact that we probably shouldn't have token types for
-	// each keyword, we can revert this back to TokenIdent, I think.
 	if token == TokenIdent || token == TokenString {
 		return p.tokenizer.Text(), nil
 	}
 
-	// TODO: We should make this error more obvious in its meaning. What we are
-	// really trying to say is that we expected a field, but we got some other
-	// kind of identifier here.
-	// In general, I think many of our errors of of this kind ("expected X, but
-	// got %q"). I think what we really wanna do is something along the lines of
-	// "expected X, but got %q (%T)" (but without exposing internal types).
 	return "", fmt.Errorf("expected a field identifier, but got %q (%s)", p.tokenizer.Text(), token.String())
 }
 
@@ -430,16 +414,22 @@ func (p *Parser) parseExpr(token Token) (Expr, error) {
 }
 
 func (p *Parser) applyPrecedence(leftExpr Expr, leftOp BinaryOp, rightExpr Expr, rightIsParenthesized bool) *BinaryExpr {
-	// Fixes the precedence before committing to the binary expr.
-	// Classically, this is achieved implicitly through the recursion tree, the
-	// textbook example being parseTerm and parseFactor functions. I decided to
-	// try something different to see if the code gets more readable, since the
-	// classical approach involves building the shape of the AST _implicitly_,
-	// which seems a bad decision for a trait so important (and it took me
-	// personally a while to see how precedence is encoded into the call stack).
-	// TODO: That said, this if statement is not easy to look at and moving
-	// around trees aren't easy to visualize either... I'll let this sit for now
-	// and revisit it later (or, if this is buggy, I'll probably just give up).
+	// HACK(?): Fixes the precedence before committing to the binary expr.
+	// Classically, this is achieved implicitly through the recursion
+	// tree, the textbook example being parseTerm and parseFactor
+	// functions. I decided to try something different to see if the
+	// code gets more readable, since the classical approach involves
+	// building the shape of the AST _implicitly_, which seems a bad
+	// decision for a trait so important (and it took me personally a
+	// while to see how precedence is encoded into the call stack). In
+	// other words, I think it is more readable to explicitly handle
+	// precedence in the parser logic rather than have it done
+	// implicitly through construction.  All that said, this if
+	// statement is not easy to look at and moving around trees aren't
+	// easy to visualize either... so maybe the readability improvement
+	// is minor. Furthermore, maybe my thinking is buggy here! I'll let
+	// this sit for now and revisit it later (or, if this is buggy, I'll
+	// probably just give up and do it 'the right way').
 	if rightBinaryExpr, ok := rightExpr.(*BinaryExpr); ok &&
 		!rightIsParenthesized &&
 		getBinaryOpPrecedence(leftOp) > getBinaryOpPrecedence(rightBinaryExpr.Op) {
@@ -463,17 +453,12 @@ func (p *Parser) applyPrecedence(leftExpr Expr, leftOp BinaryOp, rightExpr Expr,
 	}
 }
 
-// TODO: This function (and likely others) have similar constructs that are
-// representable by parser combinators AND and OR. Making a generic function
-// that can handle this could be possible, even without generics in Go. Possibly
-// it would look ugly, so maybe we can keep this comment here until Go has
-// generics.
 func (p *Parser) parseValue(token Token) (Value, error) {
 	if token == TokenEOF {
 		return nil, errors.New("expected a value, but reached end of query")
 	}
 
-	// The follow attempts at parsing the possibilities is actually _incorrect_.
+	// The following attempts at parsing the possibilities is actually _incorrect_.
 	// If any of these fail midway through their parse, then the tokenizer will
 	// have advanced past where token in this context is, meaning the later parse
 	// functions will fail.

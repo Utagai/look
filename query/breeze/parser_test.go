@@ -408,8 +408,6 @@ func TestParser(t *testing.T) {
 				},
 			},
 		},
-		// TODO: These tests below are for maps. We should take some time at some
-		// point to further flesh these out e.g. with more cases, combinations, etc.
 		{
 			query: "map foo = 4.2",
 			stages: []breeze.Stage{
@@ -744,7 +742,6 @@ func TestParser(t *testing.T) {
 				},
 			},
 		},
-		// TODO: Yea, we obviously need to be better about the error message here.
 		{
 			query:  "map foo = 3 * (5 + 2 LOL",
 			errMsg: "failed to parse: failed to parse assignment: expected a closing paranthesis, but got \"LOL\"",

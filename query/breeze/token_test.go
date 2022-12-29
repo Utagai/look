@@ -205,7 +205,6 @@ func TestDetectsBinaryOpTokens(t *testing.T) {
 	tokenizer := breeze.NewTokenizer(input)
 
 	tok := tokenizer.Next()
-	// TODO: We can factor out these require.Equal() token checks to a helper.
 	require.Equal(t, tok, breeze.TokenPlus, "expected TokenPlus")
 	tok = tokenizer.Next()
 	require.Equal(t, tok, breeze.TokenMinus, "expected TokenMinus")

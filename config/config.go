@@ -25,7 +25,6 @@ type Config struct {
 	Source  *os.File
 	Backend struct {
 		Type BackendType
-		// TODO: Memory should be a string denoting the memory-based QL.
 		Memory  bool
 		MongoDB string
 	}
@@ -69,9 +68,6 @@ func Get() (*Config, error) {
 	}
 
 	// Custom fields.
-	// TODO: I think this means the user has to do -custom=true, when we'd ideally
-	// have them either omit it for false, or just do -custom for true. Should
-	// verify this.
 	if *customParsePtr {
 		parseFields, err := custom.ParseFields(flag.Args())
 		if err != nil {
