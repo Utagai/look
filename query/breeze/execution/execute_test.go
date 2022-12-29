@@ -75,6 +75,7 @@ func runExecutionTestCase(t *testing.T, tc executionTestCase) {
 
 	result, err := execution.Execute(datum.NewDatumSliceStream(tc.input), stages)
 	if tc.expectedExecErr != nil {
+		require.Error(t, err)
 		require.ErrorIs(t, err, tc.expectedExecErr)
 		return
 	}
@@ -82,6 +83,7 @@ func runExecutionTestCase(t *testing.T, tc executionTestCase) {
 
 	actualDatums, err := datum.StreamToSlice(result)
 	if tc.expectedStreamErr != nil {
+		require.Error(t, err)
 		require.ErrorIs(t, err, tc.expectedStreamErr)
 		return
 	}
