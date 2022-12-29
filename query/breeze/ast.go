@@ -7,7 +7,6 @@ import (
 )
 
 // BinaryOp enumerates the kinds of binary operations in breeze.
-// TODO: This is confusing when used alongside BinaryCmpOp.
 type BinaryOp string
 
 const (

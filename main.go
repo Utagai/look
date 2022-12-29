@@ -43,15 +43,13 @@ func main() {
 		}
 	}
 
-	// TODO: This is dangerous if the source is large.
+	// FIXME: This is dangerous if the source is large.
 	bytes, err := ioutil.ReadAll(src)
 	if err != nil {
 		log.Fatalf("failed to read all the bytes from the source (%q): %v", cfg.Source.Name(), err)
 	}
 
 	datums := []datum.Datum{}
-	// TODO: We should probably do something more abstracted here than just
-	// auto-unmarshalling from JSON.
 	if err := json.Unmarshal(bytes, &datums); err != nil {
 		log.Fatalf("failed to unmarshal data into JSON: %v", err)
 	}
@@ -180,8 +178,6 @@ type surrounder struct {
 
 // completeSurrounds auto-completes things like brackets and quotes in the query
 // string.
-// TODO: This is probably something we should embed into our own custom
-// implementation of the text box, along with things like syntax highlighting.
 func completeSurrounds(text string, pos int) string {
 	if pos+1 > len(text) {
 		return text

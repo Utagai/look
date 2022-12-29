@@ -41,7 +41,6 @@ var testDatums = func() []datum.Datum {
 // can't create a slice of these constructors unless we make them both return
 // the same type (the shared interface), so here we are.
 func newMemoryData(_ *testing.T) data.Data {
-	// TODO: We should also be testing liquid here.
 	return data.NewMemoryData(testDatums, query.NewSubstringQueryExecutor())
 }
 

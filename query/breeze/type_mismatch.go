@@ -3,8 +3,6 @@ package breeze
 import "fmt"
 
 // TypeMismatchErr describes a type validation error in finer detail.
-// TODO: This should bein the execution package since it is currently only
-// exercised at runtime.
 type TypeMismatchErr struct {
 	ExpectedKind string
 	Actual       Concrete
