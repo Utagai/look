@@ -1,7 +1,5 @@
 package execution
 
-// TODO: Rename this file to op.go.
-
 import (
 	"fmt"
 	"strings"

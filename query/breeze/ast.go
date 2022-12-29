@@ -92,10 +92,6 @@ const (
 )
 
 // Scalar is a single-dimensional constant value.
-// TODO: Can be confused with const keywords.
-// TODO: Do you think it would be better to have implementations of the concrete
-// interface for each type, e.g. StringScalar, NumberScalar instead of a single
-// one?
 type Scalar struct {
 	Kind        ScalarKind
 	Stringified string
@@ -117,7 +113,6 @@ func (s *Scalar) ExprKind() ExprKind {
 }
 
 // ConcreteKind implements the Concrete interface.
-// TODO: The member variable 'c' does not match the starting 'S' of scalar.
 func (s *Scalar) ConcreteKind() ConcreteKind {
 	return ConcreteKindScalar
 }
@@ -218,7 +213,6 @@ func (f *Function) ValueKind() ValueKind {
 }
 
 // GetStringRepr implements the Value interface.
-// TODO: Test this?
 func (f *Function) GetStringRepr() string {
 	argsStrSlice := make([]string, len(f.Args))
 	for i := range f.Args {
@@ -234,7 +228,6 @@ func (f *Function) ExprKind() ExprKind {
 }
 
 // ValueKind enumerates the kinds of values in breeze expressions.
-// TODO: Move this and Value to the top, above const and fieldref.
 type ValueKind string
 
 const (
@@ -252,7 +245,6 @@ const (
 // function.
 type Value interface {
 	Expr
-	// TODO: Rename this to ValueKind() for consistency with Expr.
 	ValueKind() ValueKind
 }
 
@@ -313,8 +305,7 @@ func (f *Filter) Name() string {
 // Sort is a stage that sorts the data.
 type Sort struct {
 	Descending bool
-	// TODO: Sort via multiple fields?
-	Field string
+	Field      string
 }
 
 // Name implements the Stage interface.
@@ -329,7 +320,6 @@ type Stage interface {
 
 // Group is a stage that performs grouping of data and aggregates computations
 // over them.
-// TODO: Rename to reduce, or is reduce the wrong word?
 type Group struct {
 	AggFunc        AggregateFunc
 	GroupByField   *string
@@ -367,7 +357,6 @@ func (m *Map) Name() string {
 
 // FieldAssignment is a remapping of a field, found in maps.
 type FieldAssignment struct {
-	Field string
-	// TODO: We should possibly be able to handle non-binary exprs.
+	Field      string
 	Assignment Expr
 }

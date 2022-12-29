@@ -1,7 +1,5 @@
 package execution
 
-// TODO: Rename this file to filter.go.
-
 import (
 	"fmt"
 

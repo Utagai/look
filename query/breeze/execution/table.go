@@ -6,13 +6,6 @@ import "fmt"
 // for each, uses an actual map. Exceptions exist for bool and null, whose
 // value space is small enough to effectively hardcode with a field.
 type table struct {
-	// TODO: This table does not support arrays. Now, we could attempt to add yet
-	// another map here for holding arrays, but that may get hairy...
-	// I wonder if making this hold breeze.Concrete is a better solution?
-	// In particular, I think we're going to need to be able to ensure that each
-	// breeze.Concrete has a way of providing a unique string/number to identify
-	// itself amongst all other breeze.Concrete besides an equivalently valued
-	// one.
 	stringMap    map[string]interface{}
 	numberMap    map[float64]interface{}
 	boolMap      map[bool]interface{}

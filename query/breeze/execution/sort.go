@@ -34,7 +34,6 @@ func (ss *SortStream) Next() (datum.Datum, error) {
 }
 
 func (ss *SortStream) sortStream() error {
-	// TODO: Dangerous if source is large.
 	datums, err := datum.StreamToSlice(ss.source)
 	if err != nil {
 		return fmt.Errorf("failed to read data: %w", err)
@@ -47,7 +46,6 @@ func (ss *SortStream) sortStream() error {
 	return nil
 }
 
-// TODO: This maybe should not be done in memory.
 type sortableDatums struct {
 	datums    []datum.Datum
 	fieldName string

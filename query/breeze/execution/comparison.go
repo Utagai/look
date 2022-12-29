@@ -217,8 +217,6 @@ func convertPotentialNull(a interface{}) (interface{}, bool) {
 
 // Generics could not come sooner. I think they might help with this file.
 func convertPotentialArray(a interface{}) ([]interface{}, bool) {
-	// TODO: We might be missing other int types, though it is unclear if it
-	// matters. Likely this code changes substantially with generics?
 	if arr, ok := a.([]interface{}); ok {
 		return arr, true
 	} else if arr, ok := a.([]int); ok {

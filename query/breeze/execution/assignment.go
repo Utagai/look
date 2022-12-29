@@ -14,6 +14,5 @@ func executeAssignment(assignment breeze.FieldAssignment, datum datum.Datum) err
 		return fmt.Errorf("failed to evaluate assignment: %w", err)
 	}
 	datum[fieldToAssign] = newValue
-	// TODO: This should eventually return something...
 	return nil
 }

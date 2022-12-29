@@ -513,8 +513,6 @@ func (p *Parser) parseBinaryOp(token Token) (BinaryOp, error) {
 		return BinaryOpDivide, nil
 	}
 
-	// TODO: The error message here assumes that p.tokenizer.Text() holds the
-	// token passed in, but this is not guaranteed by the caller.
 	return "", fmt.Errorf("unrecognized binary operator: %q (%v)", p.tokenizer.Text(), token)
 }
 

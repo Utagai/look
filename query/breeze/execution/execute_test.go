@@ -51,12 +51,11 @@ Cases to think about:
 **/
 
 type executionTestCase struct {
-	name            string
-	input           []datum.Datum
-	query           string
-	expectedResult  []datum.Datum
-	expectedExecErr error
-	// TODO: Unclear if we'll actually need this.
+	name              string
+	input             []datum.Datum
+	query             string
+	expectedResult    []datum.Datum
+	expectedExecErr   error
 	expectedStreamErr error
 }
 
@@ -664,7 +663,6 @@ func TestSort(t *testing.T) {
 				},
 			},
 		},
-		// TODO: Missing sort field.
 	}
 
 	runExecutionTestCases(t, tcs)
@@ -688,8 +686,6 @@ func TestAggregations(t *testing.T) {
 			query: "group sum a",
 			expectedResult: []datum.Datum{
 				{
-					// TODO: We are probably gonna want proper comparisons for floats here
-					// that have a tolerance.
 					"a": 6.0,
 				},
 			},
@@ -985,8 +981,6 @@ func TestAggregations(t *testing.T) {
 			},
 		},
 		{
-			// TODO: These names all stutter because they begin with the stage name,
-			// but the test function already includes the stage name.
 			name: "min with null",
 			input: []datum.Datum{
 				{
@@ -1445,30 +1439,6 @@ func TestAggregations(t *testing.T) {
 				},
 			},
 		},
-		// TODO: This test is flaky because the winner is non-deterministic.
-		// We need to either remove the non-determinism from the mode
-		// implementation, implement a standalone test for mode ties, or extend this
-		// test 'framework' with support for non-deterministic result sets.
-		// {
-		// 	name: "mode tie",
-		// 	input: []datum.Datum{
-		// 		{
-		// 			"a": 0,
-		// 		},
-		// 		{
-		// 			"a": 1,
-		// 		},
-		// 		{
-		// 			"a": 2,
-		// 		},
-		// 	},
-		// 	query: "group mode a",
-		// 	expectedResult: []datum.Datum{
-		// 		{
-		// 			"a": 0.0,
-		// 		},
-		// 	},
-		// },
 		{
 			name:  "mode no datums",
 			input: []datum.Datum{},
@@ -1553,30 +1523,6 @@ func TestAggregations(t *testing.T) {
 				},
 			},
 		},
-		// TODO: This test will panic/fail until we upgrade table.go to handle
-		// arrays.
-		// TODO: Once we do the above, we will also need to update the table_test.go
-		// tests.
-		// {
-		// 	name: "mode array",
-		// 	input: []datum.Datum{
-		// 		{
-		// 			"a": []int{1, 2, 3},
-		// 		},
-		// 		{
-		// 			"a": []int{3, 4, 5},
-		// 		},
-		// 		{
-		// 			"a": []int{1, 2, 3},
-		// 		},
-		// 	},
-		// 	query: "group mode a",
-		// 	expectedResult: []datum.Datum{
-		// 		{
-		// 			"a": []int{1, 2, 4},
-		// 		},
-		// 	},
-		// },
 	}
 
 	runExecutionTestCases(t, tcs)
@@ -1584,9 +1530,6 @@ func TestAggregations(t *testing.T) {
 
 func TestAggregationsUnsupportedTypes(t *testing.T) {
 	tcs := []executionTestCase{
-		// TODO: Below will follow a variety of groups against types that are
-		// currently not supported and will always to 0 or some other zero-ish
-		// value (until we add support for it).
 		{
 			name: "sum with string",
 			input: []datum.Datum{

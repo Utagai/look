@@ -30,8 +30,6 @@ func evaluateExprToConcrete(expr breeze.Expr, datum datum.Datum) (breeze.Concret
 }
 
 func evaluateValue(value breeze.Value, datum datum.Datum) (breeze.Concrete, error) {
-	// TODO: Later, this can return things like function or field reference. In
-	// these cases, we can't just cast into a native go type.
 	switch value.ValueKind() {
 	case breeze.ValueKindScalar:
 		scalarValue := value.(*breeze.Scalar)

@@ -9,8 +9,6 @@ type aggregator interface {
 	aggregate() interface{}
 }
 
-// TODO: We could (and possibly should) convert this to use breeze.Concrete or
-// something.
 type sum struct {
 	numberTotal float64
 	numNumbers  int
@@ -22,7 +20,6 @@ type sum struct {
 	numBools  int
 }
 
-// TODO: This can overflow, and so can some other agg functions.
 func (s *sum) ingest(v interface{}) {
 	if floatValue, ok := convertPotentialNumber(v); ok {
 		s.numberTotal += floatValue
