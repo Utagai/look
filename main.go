@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"strings"
 
@@ -44,7 +43,7 @@ func main() {
 	}
 
 	// FIXME: This is dangerous if the source is large.
-	bytes, err := ioutil.ReadAll(src)
+	bytes, err := io.ReadAll(src)
 	if err != nil {
 		log.Fatalf("failed to read all the bytes from the source (%q): %v", cfg.Source.Name(), err)
 	}

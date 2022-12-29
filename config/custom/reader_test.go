@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -75,7 +74,7 @@ func newCustomFieldsReader(t *testing.T, src io.Reader) io.Reader {
 }
 
 func runTest(t *testing.T, cfr io.Reader, expectedLines []line) {
-	actualJSON, err := ioutil.ReadAll(cfr)
+	actualJSON, err := io.ReadAll(cfr)
 	if err != io.EOF {
 		require.NoError(t, err)
 	}

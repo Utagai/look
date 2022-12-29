@@ -384,6 +384,9 @@ func (p *Parser) parseExpr(token Token) (Expr, error) {
 
 	if token == TokenLParen {
 		leftExpr, err = p.parseExpr(p.tokenizer.Next())
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse expression: %w", err)
+		}
 		if p.tokenizer.Next() != TokenRParen {
 			return nil, fmt.Errorf("expected a closing paranthesis, but got %q", p.tokenizer.Text())
 		}
