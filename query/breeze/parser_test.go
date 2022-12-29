@@ -465,6 +465,43 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
+			query:  `map foo = pow(2)`,
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got: \"pow\"), field reference (field references must start with '.'), function (expected 2 args, got 1), or array (expected array to start with '[', but found \")\")",
+		},
+		{
+			query:  `map foo = pow(2, 2, 2)`,
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got: \"pow\"), field reference (field references must start with '.'), function (expected 2 args, got 3), or array (expected array to start with '[', but found \")\")",
+		},
+		{
+			query: `map foo = regex("hello world", "hello")`,
+			stages: []breeze.Stage{
+				&breeze.Map{
+					Assignments: []breeze.FieldAssignment{
+						{
+							Field: "foo",
+							Assignment: &breeze.Function{
+								Name: "regex",
+								Args: []breeze.Expr{
+									&breeze.Scalar{
+										Kind:        breeze.ScalarKindString,
+										Stringified: "hello world",
+									},
+									&breeze.Scalar{
+										Kind:        breeze.ScalarKindString,
+										Stringified: "hello",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			query:  `map foo = regex("blah")`,
+			errMsg: "failed to parse: failed to parse assignment: failed to parse value in expr: failed to parse a value; expected a constant value (expected a constant value, but got: \"regex\"), field reference (field references must start with '.'), function (expected 2 args, got 1), or array (expected array to start with '[', but found \")\")",
+		},
+		{
 			query: "map foo = pow(.bar, pow(3, \"2\"))", // Invalid function call, but not at parse time.
 			stages: []breeze.Stage{
 				&breeze.Map{
