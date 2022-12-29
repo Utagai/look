@@ -69,9 +69,9 @@ func TestData(t *testing.T) {
 			return dataTestCase{
 				constructor: newMongoDBData,
 				getSingleQuery: func(i int) string {
-					return fmt.Sprintf("[{\"$match\": {\"baz\": \"hello world: %d!\"}}]", i)
+					return fmt.Sprintf(`[{"$match": {"baz": "hello world: %d!"}}]`, i)
 				},
-				multipleQuery: "[{\"$match\": {\"baz\": {\"$regex\": \"hello world: 1\"}}}]",
+				multipleQuery: `[{"$match": {"baz": {"$regex": "hello world: 1"}}}]`,
 			}
 		}(),
 	}
