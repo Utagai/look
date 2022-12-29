@@ -1832,6 +1832,57 @@ func TestAggregationsUnsupportedTypes(t *testing.T) {
 	runExecutionTestCases(t, tcs)
 }
 
+func TestFunctions(t *testing.T) {
+	tcs := []executionTestCase{
+		{
+			name: "pow successful execution",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 2,
+				},
+			},
+			query: "map res = pow(.a, 2)",
+			expectedResult: []datum.Datum{
+				{
+					"a":   1,
+					"res": 1.0,
+				},
+				{
+					"a":   2,
+					"res": 4.0,
+				},
+			},
+		},
+		{
+			name: "pow wrong type",
+			input: []datum.Datum{
+				{
+					"a": 1,
+				},
+				{
+					"a": 2,
+				},
+			},
+			query: `map res = pow(.a, "foo")`,
+			expectedResult: []datum.Datum{
+				{
+					"a":   1,
+					"res": "[TYPE ERR: expected number, got 'foo' (scalar)]%!(EXTRA breeze.ScalarKind=string)",
+				},
+				{
+					"a":   2,
+					"res": "[TYPE ERR: expected number, got 'foo' (scalar)]%!(EXTRA breeze.ScalarKind=string)",
+				},
+			},
+		},
+	}
+
+	runExecutionTestCases(t, tcs)
+}
+
 /*
 Cases:
   * do the above, but without a group key
