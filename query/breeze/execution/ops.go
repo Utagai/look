@@ -30,7 +30,7 @@ func evaluateOp(left, right breeze.Concrete, op breeze.BinaryOp, datum datum.Dat
 }
 
 func evaluatePlus(left, right breeze.Concrete, op breeze.BinaryOp, datum datum.Datum) (*breeze.Scalar, error) {
-	if err := checkTypes(left, breeze.ScalarKindNumber, right, breeze.ScalarKindNumber); err != nil {
+	if err := checkScalarTypes(left, breeze.ScalarKindNumber, right, breeze.ScalarKindNumber); err != nil {
 		return err.ToEmbeddedDatumErrorMessage(), nil
 	}
 
@@ -46,7 +46,7 @@ func evaluatePlus(left, right breeze.Concrete, op breeze.BinaryOp, datum datum.D
 }
 
 func evaluateMinus(left, right breeze.Concrete, op breeze.BinaryOp, datum datum.Datum) (*breeze.Scalar, error) {
-	if err := checkTypes(left, breeze.ScalarKindNumber, right, breeze.ScalarKindNumber); err != nil {
+	if err := checkScalarTypes(left, breeze.ScalarKindNumber, right, breeze.ScalarKindNumber); err != nil {
 		return err.ToEmbeddedDatumErrorMessage(), nil
 	}
 
@@ -62,7 +62,7 @@ func evaluateMinus(left, right breeze.Concrete, op breeze.BinaryOp, datum datum.
 }
 
 func evaluateMultiply(left, right breeze.Concrete, op breeze.BinaryOp, datum datum.Datum) (*breeze.Scalar, error) {
-	if err := checkTypes(left, breeze.ScalarKindNumber, right, breeze.ScalarKindNumber); err != nil {
+	if err := checkScalarTypes(left, breeze.ScalarKindNumber, right, breeze.ScalarKindNumber); err != nil {
 		return err.ToEmbeddedDatumErrorMessage(), nil
 	}
 
@@ -78,7 +78,7 @@ func evaluateMultiply(left, right breeze.Concrete, op breeze.BinaryOp, datum dat
 }
 
 func evaluateDivide(left, right breeze.Concrete, op breeze.BinaryOp, datum datum.Datum) (*breeze.Scalar, error) {
-	if err := checkTypes(left, breeze.ScalarKindNumber, right, breeze.ScalarKindNumber); err != nil {
+	if err := checkScalarTypes(left, breeze.ScalarKindNumber, right, breeze.ScalarKindNumber); err != nil {
 		return err.ToEmbeddedDatumErrorMessage(), nil
 	}
 
@@ -118,14 +118,14 @@ func evaluateComparisonOp(left, right breeze.Concrete, op breeze.BinaryOp, datum
 }
 
 func evaluateContains(left, right breeze.Concrete, datum datum.Datum) (*breeze.Scalar, error) {
-	if err := checkTypes(left, breeze.ScalarKindString, right, breeze.ScalarKindString); err != nil {
+	if err := checkScalarTypes(left, breeze.ScalarKindString, right, breeze.ScalarKindString); err != nil {
 		return err.ToEmbeddedDatumErrorMessage(), nil
 	}
 
 	return boolToConcrete(strings.Contains(left.GetStringRepr(), right.GetStringRepr())), nil
 }
 
-func checkTypes(
+func checkScalarTypes(
 	actualLeft breeze.Concrete, expectedLeft breeze.ScalarKind,
 	actualRight breeze.Concrete, expectedRight breeze.ScalarKind,
 ) *breeze.TypeMismatchErr {
