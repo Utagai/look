@@ -291,6 +291,12 @@ func binaryOpToToken(bOp BinaryOp) Token {
 		return TokenMultiply
 	case BinaryOpDivide:
 		return TokenDivide
+	case BinaryOpEquals:
+		return TokenEquals
+	case BinaryOpGeq:
+		return TokenGEQ
+	case BinaryOpContains:
+		return TokenContains
 	default:
 		panic(fmt.Sprintf("unrecognized binary op: %v", bOp))
 	}
@@ -304,6 +310,9 @@ func getBinaryOpPrecedence(bOp BinaryOp) int {
 		TokenDivide:   1,
 		TokenPlus:     0,
 		TokenMinus:    0,
+		TokenEquals:   -1,
+		TokenGEQ:      -1,
+		TokenContains: -1,
 	}
 
 	bOpToken := binaryOpToToken(bOp)
