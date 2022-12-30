@@ -2,6 +2,7 @@ package execution
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/utagai/look/datum"
 	"github.com/utagai/look/query/breeze"
@@ -110,6 +111,20 @@ func goValueToConcrete(val interface{}) breeze.Concrete {
 			Kind:        breeze.ScalarKindBool,
 			Stringified: fmt.Sprintf("%t", tval),
 		}
+	}
+
+	// HACK(?): Is there a way to avoid reflection here? Perhaps the
+	// tickets related to introducing better type safety/generics could
+	// help here, but isn't clear to me how since I'm not familiar
+	// enough with generics at the time of writing this comment.
+	if reflect.TypeOf(val).Kind() == reflect.Slice {
+		valArr := reflect.ValueOf(val)
+		var arr breeze.Array = make([]breeze.Expr, valArr.Len())
+		for i := 0; i < valArr.Len(); i++ {
+			elem := valArr.Index(i).Interface()
+			arr[i] = goValueToConcrete(elem)
+		}
+		return arr
 	}
 
 	panic(fmt.Sprintf("unrecognized base type: %T", val))

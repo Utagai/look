@@ -86,7 +86,7 @@ func TestFilter(t *testing.T) {
 					"a": 3,
 				},
 			},
-			query: "filter a = 2",
+			query: "filter .a = 2",
 			expectedResult: []datum.Datum{
 				{
 					"a": 2,
@@ -106,7 +106,7 @@ func TestFilter(t *testing.T) {
 					"a": false,
 				},
 			},
-			query: "filter a = false",
+			query: "filter .a = false",
 			expectedResult: []datum.Datum{
 				{
 					"a": false,
@@ -126,7 +126,7 @@ func TestFilter(t *testing.T) {
 					"a": "!",
 				},
 			},
-			query: "filter a = \"world\"", // Using 'world' fails at parse. Do we want to support '?
+			query: "filter .a = \"world\"",
 			expectedResult: []datum.Datum{
 				{
 					"a": "world",
@@ -146,7 +146,7 @@ func TestFilter(t *testing.T) {
 					"a": "world",
 				},
 			},
-			query: "filter a = null", // Using 'world' fails at parse. Do we want to support '?
+			query: "filter .a = null",
 			expectedResult: []datum.Datum{
 				{
 					"a": nil,
@@ -166,7 +166,7 @@ func TestFilter(t *testing.T) {
 					"a": []int{7, 8, 9},
 				},
 			},
-			query: "filter a = [4,5,6]", // Using 'world' fails at parse. Do we want to support '?
+			query: "filter .a = [4,5,6]",
 			expectedResult: []datum.Datum{
 				{
 					"a": []int{4, 5, 6},
@@ -189,7 +189,7 @@ func TestFilter(t *testing.T) {
 					"b": 7,
 				},
 			},
-			query: "filter a = .b",
+			query: "filter .a = .b",
 			expectedResult: []datum.Datum{
 				{
 					"a": 4,
@@ -210,7 +210,7 @@ func TestFilter(t *testing.T) {
 					"a": 4,
 				},
 			},
-			query: "filter a = pow(2,2)",
+			query: "filter .a = pow(2,2)",
 			expectedResult: []datum.Datum{
 				{
 					"a": 4,
@@ -230,7 +230,7 @@ func TestFilter(t *testing.T) {
 					"a": 3,
 				},
 			},
-			query: "filter a = 2",
+			query: "filter .a = 2",
 			expectedResult: []datum.Datum{
 				{
 					"a": 2,
@@ -239,6 +239,104 @@ func TestFilter(t *testing.T) {
 					"a": 2,
 				},
 			},
+		},
+		{
+			name: "filter bare field reference",
+			input: []datum.Datum{
+				{
+					"a": 2,
+				},
+				{
+					"a": true,
+				},
+				{
+					"a": 3,
+				},
+			},
+			query: "filter .a",
+			expectedResult: []datum.Datum{
+				{
+					"a": true,
+				},
+			},
+		},
+		{
+			name: "filter bare function call",
+			input: []datum.Datum{
+				{
+					"a": 2,
+				},
+				{
+					"b": 4,
+				},
+				{
+					"a": 3,
+				},
+			},
+			query: "filter exists(.b)",
+			expectedResult: []datum.Datum{
+				{
+					"b": 4,
+				},
+			},
+		},
+		{
+			name: "filter bare constant true",
+			input: []datum.Datum{
+				{
+					"a": 2,
+				},
+				{
+					"b": 4,
+				},
+				{
+					"a": 3,
+				},
+			},
+			query: "filter true",
+			expectedResult: []datum.Datum{
+				{
+					"a": 2,
+				},
+				{
+					"b": 4,
+				},
+				{
+					"a": 3,
+				},
+			},
+		},
+		{
+			name: "filter bare constant false",
+			input: []datum.Datum{
+				{
+					"a": 2,
+				},
+				{
+					"b": 4,
+				},
+				{
+					"a": 3,
+				},
+			},
+			query:          "filter false",
+			expectedResult: []datum.Datum{},
+		},
+		{
+			name: "filter bare constant non-bool",
+			input: []datum.Datum{
+				{
+					"a": 2,
+				},
+				{
+					"b": 4,
+				},
+				{
+					"a": 3,
+				},
+			},
+			query:          "filter 4",
+			expectedResult: []datum.Datum{},
 		},
 		{
 			name: "filter returning zero results",
@@ -253,7 +351,7 @@ func TestFilter(t *testing.T) {
 					"a": 3,
 				},
 			},
-			query:          "filter a = 4",
+			query:          "filter .a = 4",
 			expectedResult: []datum.Datum{},
 		},
 		{
@@ -295,7 +393,7 @@ func TestFilter(t *testing.T) {
 					"a": 3,
 				},
 			},
-			query: "filter a = [3, \"hi there\", [1,2,3]]",
+			query: "filter .a = [3, \"hi there\", [1,2,3]]",
 			expectedResult: []datum.Datum{
 				{
 					"a": []interface{}{3, "hi there", []int{1, 2, 3}},
@@ -305,7 +403,7 @@ func TestFilter(t *testing.T) {
 		{
 			name:           "filter on empty input",
 			input:          []datum.Datum{},
-			query:          "filter a = 3",
+			query:          "filter .a = 3",
 			expectedResult: []datum.Datum{},
 		},
 		{
@@ -315,7 +413,7 @@ func TestFilter(t *testing.T) {
 				{},
 				{},
 			},
-			query:          "filter a = 3",
+			query:          "filter .a = 3",
 			expectedResult: []datum.Datum{},
 		},
 		{

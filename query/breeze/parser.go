@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 )
 
@@ -147,9 +146,6 @@ func (p *Parser) parseFilter() (*Filter, error) {
 		exprs = append(exprs, expr)
 	}
 
-	if len(exprs) > 0 {
-		log.Printf("Returning exprs: %+v", exprs[0])
-	}
 	return &Filter{Exprs: exprs}, nil
 }
 
