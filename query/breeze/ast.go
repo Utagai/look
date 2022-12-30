@@ -70,7 +70,10 @@ const (
 	ConcreteKindScalar = "scalar"
 	// ConcreteKindArray refers to arrays.
 	ConcreteKindArray = "array"
-	// ConcreteKindDoc = "doc"
+	// ConcreteKindMissing refers to a somewhat special value indicating a field reference for a non-existent field.
+	ConcreteKindMissing = "missing"
+	// ConcreteKindObject refers to objects.
+	// ConcreteKindObject = "object"
 )
 
 // Concrete represents a breeze expression & value that can be evaluated to a
@@ -185,6 +188,33 @@ func (a Array) Interface() (interface{}, error) {
 	}
 
 	return goArr, nil
+}
+
+type Missing struct{}
+
+// ValueKind implements the Value interface.
+func (s *Missing) ValueKind() ValueKind {
+	return ValueKindFieldRef
+}
+
+// GetStringRepr implements the Expr interface.
+func (s *Missing) GetStringRepr() string {
+	return "missing"
+}
+
+// ExprKind implements the Expr interface.
+func (s *Missing) ExprKind() ExprKind {
+	return ExprKindTerm
+}
+
+// ConcreteKind implements the Concrete interface.
+func (s *Missing) ConcreteKind() ConcreteKind {
+	return ConcreteKindMissing
+}
+
+// Interface implements the Concrete interface.
+func (s *Missing) Interface() (interface{}, error) {
+	return "missing", nil
 }
 
 // FieldRef is a reference to a field of a datum.

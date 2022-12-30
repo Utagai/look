@@ -52,6 +52,14 @@ func executeFunction(function *breeze.Function, args []breeze.Concrete) (breeze.
 		pattern := regexp.MustCompile(untypedPattern.(string))
 
 		return regex(matchee, pattern), nil
+	case "exists":
+		return boolToConcrete(args[0].ConcreteKind() != breeze.ConcreteKindMissing), nil
+	case "notexists":
+		// HACK: This is likely not how we should be doing
+		// this... instead, we should be parsing the unary operator as an
+		// expr, and then use ! as its own operator that applies to that
+		// expr, inverting its final value.
+		return boolToConcrete(args[0].ConcreteKind() == breeze.ConcreteKindMissing), nil
 	case "hello":
 		return hello(), nil
 	}

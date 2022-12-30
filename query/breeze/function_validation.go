@@ -98,11 +98,26 @@ func (r *regexValidator) ValidateValues(args []Concrete) error {
 	return nil
 }
 
+type existsValidator struct{}
+
+func (e *existsValidator) ExpectedNumArgs() int {
+	return 1
+}
+
+func (e *existsValidator) ValidateTypes(args []Concrete) *TypeMismatchErr {
+	return nil
+}
+
+func (e *existsValidator) ValidateValues(args []Concrete) error {
+	return nil
+}
+
 var functionValidators = map[string]FunctionValidator{
-	"pow":   &powValidator{},
-	"hello": &helloValidator{},
-	"regex": &regexValidator{},
-	// TODO: We need to create functions for exists() and notexists().
+	"pow":       &powValidator{},
+	"hello":     &helloValidator{},
+	"regex":     &regexValidator{},
+	"exists":    &existsValidator{},
+	"notexists": &existsValidator{},
 }
 
 // LookupFuncValidator looks up a function by its name and returns its validator

@@ -43,8 +43,6 @@ const (
 	TokenEquals
 	TokenGEQ
 	TokenContains
-	TokenExists
-	TokenExistsNot
 
 	// Binary expression operations:
 	TokenPlus
@@ -94,10 +92,6 @@ func (t Token) String() string {
 		return "Equals"
 	case TokenGEQ:
 		return "GEQ"
-	case TokenExists:
-		return "Exists"
-	case TokenExistsNot:
-		return "Not Exists"
 	case TokenPlus:
 		return "Plus"
 	case TokenMinus:
@@ -269,14 +263,6 @@ func (t *Tokenizer) convertIdentToken(tok rune) Token {
 		return TokenMap
 	case "contains":
 		return TokenContains
-	case "exists":
-		return TokenExists
-	case "!exists":
-		// HACK: This is likely not how we should be doing
-		// this... instead, we should be parsing the unary operator as an
-		// expr, and then use ! as its own operator that applies to that
-		// expr, inverting its final value.
-		return TokenExistsNot
 	case "false":
 		return TokenFalse
 	case "true":

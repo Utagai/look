@@ -8,12 +8,12 @@ import (
 )
 
 func evaluateExpr(expr breeze.Expr, datum datum.Datum) (interface{}, error) {
-	breezeConst, err := evaluateExprToConcrete(expr, datum)
+	breezeConcrete, err := evaluateExprToConcrete(expr, datum)
 	if err != nil {
 		return nil, fmt.Errorf("failed to evaluate to constant: %w", err)
 	}
 
-	return breezeConst.Interface()
+	return breezeConcrete.Interface()
 }
 
 func evaluateExprToConcrete(expr breeze.Expr, datum datum.Datum) (breeze.Concrete, error) {
@@ -55,7 +55,11 @@ func evaluateValue(value breeze.Value, datum datum.Datum) (breeze.Concrete, erro
 }
 
 func evaluateFieldRef(fieldRef *breeze.FieldRef, datum datum.Datum) breeze.Concrete {
-	return goValueToConcrete(datum[fieldRef.Field])
+	val, ok := datum[fieldRef.Field]
+	if !ok {
+		return &breeze.Missing{}
+	}
+	return goValueToConcrete(val)
 }
 
 func evaluateFunction(function *breeze.Function, datum datum.Datum) (breeze.Concrete, error) {
